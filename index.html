@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#fbf7f2" />
+  <title>Orden de Piñata · Laureles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+</head>
+<body>
+
+  <!-- Fondo animado -->
+  <div class="bg-gradient"></div>
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob blob--1"></span>
+    <span class="blob blob--2"></span>
+    <span class="blob blob--3"></span>
+  </div>
+  <div class="bg-sparkles" aria-hidden="true"></div>
+
+  <!-- Canvas para confetti -->
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <!-- Barra de progreso -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__dot"></span>
+      <span class="brand__name">Piñatería Laureles</span>
+    </div>
+    <div class="progress" id="progress" aria-hidden="true">
+      <span class="progress__fill" id="progressFill"></span>
+    </div>
+    <button class="btn-ghost btn-icon btn-admin" id="btnAdmin" aria-label="Administrar" title="Panel de administración">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+      <span class="badge-pill" id="adminBadge" hidden>0</span>
+    </button>
+    <button class="btn-ghost btn-icon btn-back" id="btnBack" aria-label="Volver">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </header>
+
+  <main class="stage">
+
+    <!-- ============== PANTALLA 0: BIENVENIDA ============== -->
+    <section class="screen screen--welcome is-active" data-screen="welcome">
+      <div class="welcome">
+        <div class="welcome__art">
+          <!-- Piñata estrella SVG animada -->
+          <svg class="pinata-float" viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Cuerda -->
+            <line x1="150" y1="0" x2="150" y2="60" stroke="#1a1414" stroke-width="2" stroke-dasharray="3 3" opacity="0.35"/>
+
+            <!-- Estrella de 6 picos (piñata tradicional) -->
+            <g transform="translate(150 170)">
+              <g class="star-points">
+                <polygon points="0,-140 -27,-58 27,-58" fill="url(#gRed)"/>
+                <polygon points="121,-70 64,-6 37,-52" fill="url(#gYellow)"/>
+                <polygon points="121,70 37,52 64,6" fill="url(#gCyan)"/>
+                <polygon points="0,140 27,58 -27,58" fill="url(#gGreen)"/>
+                <polygon points="-121,70 -64,6 -37,52" fill="url(#gPurple)"/>
+                <polygon points="-121,-70 -37,-52 -64,-6" fill="url(#gPink)"/>
+              </g>
+              <circle r="64" fill="url(#gPink)"/>
+              <circle r="64" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-dasharray="4 6"/>
+              <circle r="42" fill="url(#gPurple)" opacity="0.85"/>
+              <g class="fringes">
+                <circle r="3" cx="-30" cy="-10" fill="#fff"/>
+                <circle r="3" cx="25" cy="-15" fill="#fff"/>
+                <circle r="3" cx="0" cy="20" fill="#fff"/>
+                <circle r="2.5" cx="-15" cy="25" fill="#ffe066"/>
+                <circle r="2.5" cx="20" cy="15" fill="#5ee7ff"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="welcome__text">
+          <span class="eyebrow">Hechas a mano · Laureles</span>
+          <h1 class="title">
+            Orden de <span class="gradient-text">Piñata</span>
+          </h1>
+          <p class="subtitle">Ordena tu piñata perfecta en menos de un minuto. Estrella clásica o personalizada, tú eliges.</p>
+
+          <button class="btn-primary btn-lg" id="btnStart">
+            <span>Crear mi orden</span>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <div class="welcome__meta">
+            <div class="meta-item">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Recogida en Laureles</span>
+            </div>
+            <div class="meta-item">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span>Respuesta rápida</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA 1: TIPO DE PIÑATA ============== -->
+    <section class="screen" data-screen="type">
+      <div class="screen__header">
+        <span class="step-tag">Paso 1 de 4</span>
+        <h2>Elige el tipo de piñata</h2>
+        <p class="muted">Selecciona una opción para continuar</p>
+      </div>
+
+      <div class="type-grid">
+        <button class="type-card" data-type="estrella">
+          <div class="type-card__art">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g transform="translate(100 100)">
+                <polygon points="0,-88 -18,-38 18,-38" fill="url(#gRed)"/>
+                <polygon points="76,-44 40,-4 23,-34" fill="url(#gYellow)"/>
+                <polygon points="76,44 23,34 40,4" fill="url(#gCyan)"/>
+                <polygon points="0,88 18,38 -18,38" fill="url(#gGreen)"/>
+                <polygon points="-76,44 -40,4 -23,34" fill="url(#gPurple)"/>
+                <polygon points="-76,-44 -23,-34 -40,-4" fill="url(#gPink)"/>
+                <circle r="40" fill="url(#gPink)"/>
+                <circle r="40" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              </g>
+            </svg>
+          </div>
+          <div class="type-card__body">
+            <h3>Estrella clásica</h3>
+            <p>La tradicional de 7 picos con tu temática favorita.</p>
+          </div>
+          <span class="type-card__badge">Popular</span>
+        </button>
+
+        <button class="type-card" data-type="personalizada">
+          <div class="type-card__art type-card__art--custom">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="gCustom" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ff5ea0"/><stop offset="0.5" stop-color="#c77dff"/><stop offset="1" stop-color="#5ee7ff"/>
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="70" fill="url(#gCustom)" opacity="0.9"/>
+              <path d="M70 115l18-22 18 22 14-16 20 24H60z" fill="#fff" opacity="0.95"/>
+              <circle cx="125" cy="82" r="7" fill="#fff"/>
+              <path d="M100 40l5 12 12 2-9 9 2 12-10-6-10 6 2-12-9-9 12-2z" fill="#ffe066"/>
+            </svg>
+          </div>
+          <div class="type-card__body">
+            <h3>Personalizada</h3>
+            <p>Envíanos una imagen y la recreamos tal como la imaginas.</p>
+          </div>
+          <span class="type-card__badge type-card__badge--alt">A tu gusto</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA 2A: DETALLES ESTRELLA ============== -->
+    <section class="screen" data-screen="estrella">
+      <div class="screen__header">
+        <span class="step-tag">Paso 2 de 4</span>
+        <h2>Tu piñata estrella</h2>
+        <p class="muted">Elige los colores y la temática</p>
+      </div>
+
+      <!-- Vista previa dinámica: estrella de 6 picos -->
+      <div class="star-preview">
+        <svg id="starSvg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g transform="translate(150 150)" class="star-preview__group">
+            <g id="starPoints">
+              <polygon id="p0" points="0,-120 -23,-50 23,-50"/>
+              <polygon id="p1" points="104,-60 55,-5 32,-45"/>
+              <polygon id="p2" points="104,60 32,45 55,5"/>
+              <polygon id="p3" points="0,120 23,50 -23,50"/>
+              <polygon id="p4" points="-104,60 -55,5 -32,45"/>
+              <polygon id="p5" points="-104,-60 -32,-45 -55,-5"/>
+            </g>
+            <circle id="starBody" r="55" />
+            <circle r="55" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-dasharray="4 5"/>
+            <circle id="starCenter" r="36" opacity="0.85"/>
+            <text id="starEmoji" y="16" text-anchor="middle" font-size="54">🪅</text>
+          </g>
+        </svg>
+        <span class="star-preview__label" id="starLabel">Tu piñata</span>
+      </div>
+
+      <!-- Selector de colores -->
+      <div class="field">
+        <div class="field__row">
+          <label class="field__label">Colores</label>
+          <span class="counter" id="colorsCounter">0 de 8</span>
+        </div>
+        <p class="field__hint">Toca para elegir. Puedes usar de 1 a 8 colores. La vista previa va mostrando cómo se verá.</p>
+        <div class="colors-grid" id="colorsGrid">
+          <!-- Inyectado por JS -->
+        </div>
+        <button type="button" class="add-color-btn" id="addColorBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Agregar otro color
+        </button>
+        <input type="color" id="colorPicker" hidden aria-hidden="true" />
+      </div>
+
+      <!-- Temática / Personaje -->
+      <div class="field">
+        <label class="field__label" for="tematica">Personaje o temática</label>
+        <p class="field__hint">Elige una temática o escribe la tuya</p>
+        <div class="theme-suggestions" id="themeSuggestions">
+          <button class="chip-sugg" data-theme="Spiderman" data-emoji="🕸️"><span class="chip-emoji">🕸️</span>Spiderman</button>
+          <button class="chip-sugg" data-theme="Superhéroe" data-emoji="🦸"><span class="chip-emoji">🦸</span>Superhéroe</button>
+          <button class="chip-sugg" data-theme="Batman" data-emoji="🦇"><span class="chip-emoji">🦇</span>Batman</button>
+          <button class="chip-sugg" data-theme="Unicornio" data-emoji="🦄"><span class="chip-emoji">🦄</span>Unicornio</button>
+          <button class="chip-sugg" data-theme="Princesa" data-emoji="👑"><span class="chip-emoji">👑</span>Princesa</button>
+          <button class="chip-sugg" data-theme="Sirenita" data-emoji="🧜‍♀️"><span class="chip-emoji">🧜‍♀️</span>Sirenita</button>
+          <button class="chip-sugg" data-theme="Bluey" data-emoji="🐾"><span class="chip-emoji">🐾</span>Bluey</button>
+          <button class="chip-sugg" data-theme="Dinosaurio" data-emoji="🦖"><span class="chip-emoji">🦖</span>Dinosaurio</button>
+          <button class="chip-sugg" data-theme="Fútbol" data-emoji="⚽"><span class="chip-emoji">⚽</span>Fútbol</button>
+          <button class="chip-sugg" data-theme="Carros" data-emoji="🏎️"><span class="chip-emoji">🏎️</span>Carros</button>
+          <button class="chip-sugg" data-theme="Mario Bros" data-emoji="🍄"><span class="chip-emoji">🍄</span>Mario Bros</button>
+          <button class="chip-sugg" data-theme="Mariposa" data-emoji="🦋"><span class="chip-emoji">🦋</span>Mariposa</button>
+          <button class="chip-sugg" data-theme="Espacio" data-emoji="🚀"><span class="chip-emoji">🚀</span>Espacio</button>
+          <button class="chip-sugg" data-theme="Arcoíris" data-emoji="🌈"><span class="chip-emoji">🌈</span>Arcoíris</button>
+          <button class="chip-sugg" data-theme="Flores" data-emoji="🌸"><span class="chip-emoji">🌸</span>Flores</button>
+          <button class="chip-sugg" data-theme="Corazones" data-emoji="💖"><span class="chip-emoji">💖</span>Corazones</button>
+        </div>
+        <input type="text" id="tematica" class="input" placeholder="O escribe otra temática..." />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="estrellaNotas">Notas adicionales (opcional)</label>
+        <textarea id="estrellaNotas" class="textarea" rows="3" placeholder="¿Algún detalle especial que debamos saber?"></textarea>
+      </div>
+
+      <button class="btn-primary btn-lg btn-next" data-next>Continuar
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- ============== PANTALLA 2B: PERSONALIZADA ============== -->
+    <section class="screen" data-screen="personalizada">
+      <div class="screen__header">
+        <span class="step-tag">Paso 2 de 4</span>
+        <h2>Cuéntanos tu idea</h2>
+        <p class="muted">Sube una imagen de referencia y descríbela</p>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Imagen de referencia</label>
+        <label class="uploader" id="uploader">
+          <input type="file" id="imgInput" accept="image/*" hidden />
+          <div class="uploader__placeholder" id="uploaderPlaceholder">
+            <div class="uploader__icon">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="uploader__text">
+              <strong>Toca para subir una imagen</strong>
+              <span>JPG, PNG o HEIC · Máx 10MB</span>
+            </div>
+          </div>
+          <div class="uploader__preview" id="uploaderPreview" hidden>
+            <img id="previewImg" alt="Vista previa" />
+            <button type="button" class="uploader__remove" id="removeImg" aria-label="Eliminar imagen">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </label>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="descripcion">Descripción</label>
+        <p class="field__hint">¿Quieres el mismo estilo, colores o funciones? Cuéntanos todo.</p>
+        <textarea id="descripcion" class="textarea" rows="5" placeholder="Ej: Quiero que sea exactamente como la imagen, con los mismos colores. Que tenga alitas que se puedan mover..."></textarea>
+      </div>
+
+      <!-- Sugerencias rápidas -->
+      <div class="field">
+        <label class="field__label">Agrega rápido</label>
+        <div class="quick-tags" id="quickTags">
+          <button class="chip-sugg" data-add="Mismos colores de la imagen.">🎨 Mismos colores</button>
+          <button class="chip-sugg" data-add="Mismo estilo de la imagen.">✨ Mismo estilo</button>
+          <button class="chip-sugg" data-add="Con brillos y escarcha.">🌟 Con brillos</button>
+          <button class="chip-sugg" data-add="Con detalles 3D.">🧩 Detalles 3D</button>
+        </div>
+      </div>
+
+      <button class="btn-primary btn-lg btn-next" data-next>Continuar
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- ============== PANTALLA 3: FECHA ============== -->
+    <section class="screen" data-screen="fecha">
+      <div class="screen__header">
+        <span class="step-tag">Paso 3 de 4</span>
+        <h2>¿Cuándo la quieres?</h2>
+        <p class="muted">Elige el día para recoger tu piñata</p>
+      </div>
+
+      <!-- Calendario custom -->
+      <div class="calendar" id="calendar">
+        <div class="calendar__header">
+          <button class="cal-nav" id="calPrev" aria-label="Mes anterior">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="calendar__title" id="calTitle">Mes Año</div>
+          <button class="cal-nav" id="calNext" aria-label="Mes siguiente">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="calendar__weekdays">
+          <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+        <div class="calendar__days" id="calDays"></div>
+      </div>
+
+      <div class="selected-date" id="selectedDate" hidden>
+        <div class="selected-date__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+          <span class="selected-date__label">Recogida el</span>
+          <strong class="selected-date__value" id="selectedDateText">—</strong>
+        </div>
+      </div>
+
+      <div class="pickup-info">
+        <div class="pickup-info__pin">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <strong>Recoger en Laureles</strong>
+          <span>Te enviamos la dirección exacta al confirmar</span>
+        </div>
+      </div>
+
+      <button class="btn-primary btn-lg btn-next" data-next disabled>Continuar
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- ============== PANTALLA 4: CONTACTO ============== -->
+    <section class="screen" data-screen="contacto">
+      <div class="screen__header">
+        <span class="step-tag">Paso 4 de 4</span>
+        <h2>Tus datos</h2>
+        <p class="muted">Para contactarte y confirmar tu orden</p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="nombre">Nombre del cliente</label>
+        <input type="text" id="nombre" class="input" placeholder="¿Cómo se llama?" autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="telefono">WhatsApp / Teléfono</label>
+        <input type="tel" id="telefono" class="input" placeholder="Ej: 300 123 4567" autocomplete="tel" inputmode="tel" />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="atendidoPor">Atendido por</label>
+        <input type="text" id="atendidoPor" class="input" placeholder="Nombre de quien toma la orden" />
+      </div>
+
+      <!-- Pago -->
+      <div class="field">
+        <label class="field__label">Estado de pago</label>
+        <div class="pay-toggle">
+          <button class="pay-btn pay-btn--no is-active" id="payNo" type="button">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            No pagado
+          </button>
+          <button class="pay-btn pay-btn--yes" id="payYes" type="button">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Pagado
+          </button>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="summary" id="summary">
+        <div class="summary__title">Resumen de tu orden</div>
+        <dl class="summary__list" id="summaryList"></dl>
+      </div>
+
+      <button class="btn-primary btn-lg btn-success" id="btnSubmit">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        Enviar orden por WhatsApp
+      </button>
+
+      <p class="micro">Al enviar se abrirá WhatsApp con tu orden lista. Nosotros te confirmamos en minutos.</p>
+    </section>
+
+    <!-- ============== PANTALLA 5: ÉXITO ============== -->
+    <section class="screen screen--success" data-screen="exito">
+      <div class="success">
+        <div class="success__check">
+          <svg viewBox="0 0 52 52">
+            <circle class="success__circle" cx="26" cy="26" r="24" fill="none"/>
+            <path class="success__tick" fill="none" d="M14 27l8 8 16-18"/>
+          </svg>
+        </div>
+        <h2>¡Orden enviada!</h2>
+        <p class="muted">Revisamos los detalles y te confirmamos por WhatsApp en unos minutos.</p>
+        <div class="success__meta" id="successOrderId"></div>
+        <button class="btn-ghost" id="btnRestart">Crear otra orden</button>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA 6: ADMIN / DASHBOARD ============== -->
+    <section class="screen screen--admin" data-screen="admin">
+      <div class="admin-header">
+        <div>
+          <span class="step-tag">Panel</span>
+          <h2>Órdenes</h2>
+          <p class="muted" id="adminSubtitle">Gestiona las piñatas pendientes</p>
+        </div>
+        <button class="btn-ghost btn-icon" id="btnAdminConfig" aria-label="Configuración">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </div>
+
+      <div class="admin-stats" id="adminStats">
+        <div class="stat stat--pending"><span class="stat__num" data-stat="pendiente">0</span><small>Pendientes</small></div>
+        <div class="stat stat--duda"><span class="stat__num" data-stat="duda">0</span><small>Con duda</small></div>
+        <div class="stat stat--lista"><span class="stat__num" data-stat="lista">0</span><small>Listas</small></div>
+      </div>
+
+      <div class="admin-filters" id="adminFilters">
+        <button class="filter-chip is-active" data-filter="todas">Todas</button>
+        <button class="filter-chip" data-filter="pendiente">Pendientes</button>
+        <button class="filter-chip" data-filter="con-duda">Con duda</button>
+        <button class="filter-chip" data-filter="lista">Listas</button>
+        <button class="filter-chip" data-filter="entregada">Entregadas</button>
+      </div>
+
+      <div class="orders-list" id="ordersList">
+        <!-- Inyectado por JS -->
+      </div>
+
+      <div class="admin-empty" id="adminEmpty" hidden>
+        <div class="admin-empty__icon">🪅</div>
+        <h3>Sin órdenes aún</h3>
+        <p class="muted">Las nuevas órdenes aparecerán aquí en cuanto lleguen.</p>
+      </div>
+
+      <button class="btn-ghost btn-lg" id="btnExitAdmin" style="margin-top: 20px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Ir al inicio
+      </button>
+    </section>
+
+  </main>
+
+  <!-- ============== MODAL: CONFIGURACIÓN ============== -->
+  <div class="modal" id="configModal" hidden>
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h3>Configuración</h3>
+        <button class="btn-ghost btn-icon" data-close-modal aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div class="field">
+          <label class="field__label" for="cfgWhatsapp">WhatsApp de la piñatería</label>
+          <p class="field__hint">Número al que llegan las órdenes nuevas (con código de país, sin +).</p>
+          <input type="tel" id="cfgWhatsapp" class="input" placeholder="Ej: 573001234567" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="cfgNombre">Nombre del negocio</label>
+          <input type="text" id="cfgNombre" class="input" placeholder="Piñatería Laureles" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="cfgDireccion">Dirección de recogida (opcional)</label>
+          <input type="text" id="cfgDireccion" class="input" placeholder="Ej: Cra 80 # 45-23, Laureles" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="cfgPin">PIN de acceso al panel (opcional)</label>
+          <p class="field__hint">Deja vacío para acceder sin PIN.</p>
+          <input type="text" id="cfgPin" class="input" placeholder="Ej: 1234" inputmode="numeric" maxlength="8" />
+        </div>
+        <div class="modal__actions">
+          <button class="btn-ghost" data-close-modal>Cancelar</button>
+          <button class="btn-primary" id="btnSaveConfig">Guardar</button>
+        </div>
+        <details class="danger-zone">
+          <summary>Zona peligrosa</summary>
+          <button class="btn-danger" id="btnClearOrders">Borrar todas las órdenes</button>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== MODAL: PIN ============== -->
+  <div class="modal" id="pinModal" hidden>
+    <div class="modal__backdrop"></div>
+    <div class="modal__content modal__content--sm">
+      <div class="modal__body" style="text-align:center;">
+        <div class="pin-icon">🔒</div>
+        <h3>Ingresa el PIN</h3>
+        <p class="muted">Acceso al panel de administración</p>
+        <input type="password" id="pinInput" class="input input--pin" inputmode="numeric" maxlength="8" />
+        <div class="modal__actions">
+          <button class="btn-ghost" id="btnPinCancel">Cancelar</button>
+          <button class="btn-primary" id="btnPinOk">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== MODAL: DETALLE DE ORDEN ============== -->
+  <div class="modal" id="orderModal" hidden>
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h3 id="orderModalTitle">Detalle de orden</h3>
+        <button class="btn-ghost btn-icon" data-close-modal aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal__body" id="orderModalBody">
+        <!-- Inyectado por JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Defs SVG globales para reutilizar gradientes en todas las pantallas -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="gPink" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ff5ea0"/><stop offset="1" stop-color="#ff2d6f"/>
+      </linearGradient>
+      <linearGradient id="gYellow" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffe066"/><stop offset="1" stop-color="#ffb000"/>
+      </linearGradient>
+      <linearGradient id="gCyan" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5ee7ff"/><stop offset="1" stop-color="#00b4d8"/>
+      </linearGradient>
+      <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#c77dff"/><stop offset="1" stop-color="#7b2cbf"/>
+      </linearGradient>
+      <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#a8ff78"/><stop offset="1" stop-color="#52c41a"/>
+      </linearGradient>
+      <linearGradient id="gOrange" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffb46b"/><stop offset="1" stop-color="#ff6b35"/>
+      </linearGradient>
+      <linearGradient id="gRed" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ff8a8a"/><stop offset="1" stop-color="#e63946"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <script src="script.js"></script>
+</body>
+</html>
