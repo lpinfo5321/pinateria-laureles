@@ -1310,6 +1310,32 @@ function renderAdmin() {
   } else {
     sub.textContent = `${ordenes.length} órden${ordenes.length === 1 ? "" : "es"} en total`;
   }
+
+  // Aviso si notificaciones no están activadas
+  let notifBanner = $("#notifActivateBanner");
+  const perm = ("Notification" in window) ? Notification.permission : "unsupported";
+  if (perm !== "granted" && perm !== "unsupported") {
+    if (!notifBanner) {
+      notifBanner = document.createElement("div");
+      notifBanner.id = "notifActivateBanner";
+      notifBanner.style.cssText = "background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;color:#92400e;cursor:pointer";
+      notifBanner.innerHTML = `<span style="font-size:20px">🔔</span><span style="flex:1">Activa las <strong>notificaciones</strong> para saber cuándo llega una orden nueva</span><button style="border:0;background:#f59e0b;color:#fff;font-weight:800;font-size:12px;padding:7px 14px;border-radius:10px;cursor:pointer;font-family:inherit;white-space:nowrap" id="notifActivateBtn">Activar</button>`;
+      list.parentElement.insertBefore(notifBanner, list);
+    }
+    document.getElementById("notifActivateBtn")?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const r = await requestNotificationPermission();
+      if (r.ok) {
+        notifBanner.remove();
+        showToast("🔔 Notificaciones activadas");
+        setTimeout(() => showSystemNotification("🪅 ¡Listo!", "Recibirás aviso de nuevas órdenes", "test-welcome"), 400);
+      } else if (r.message) {
+        alert(r.message);
+      }
+    });
+  } else if (notifBanner) {
+    notifBanner.remove();
+  }
 }
 
 function renderOrderCard(o, cfg) {
