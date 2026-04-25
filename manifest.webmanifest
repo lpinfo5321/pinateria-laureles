@@ -4,7 +4,7 @@
   "description": "Vista de producción para el taller de Laureles.",
   "id": "/taller",
   "start_url": "/taller",
-  "scope": "/taller",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fbf7f2",

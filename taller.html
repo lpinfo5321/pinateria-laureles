@@ -536,21 +536,32 @@ initCloud();
 
 /* ── Instalación PWA ── */
 let _deferredInstall = null;
-const installBar  = document.getElementById("installBar");
-const btnInstall  = document.getElementById("btnInstallTaller");
-const btnClose    = document.getElementById("btnInstallClose");
-const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+const installBar   = document.getElementById("installBar");
+const btnInstall   = document.getElementById("btnInstallTaller");
+const btnClose     = document.getElementById("btnInstallClose");
+const _standalone  = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const _isIOS       = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const _isMobile    = _isIOS || /Android/i.test(navigator.userAgent);
 
-if (!isStandalone) {
+function showInstallBar() {
+  if (_standalone) return;          // ya está instalada
+  if (!installBar) return;
+  installBar.style.display = "flex";
+}
+
+if (!_standalone) {
+  // Android/Chrome/Edge: capturar evento nativo
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
     _deferredInstall = e;
-    installBar.style.display = "flex";
+    showInstallBar();
   });
 
-  // En iOS mostrar igual (instrucciones manuales)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS) setTimeout(() => { installBar.style.display = "flex"; }, 1500);
+  // Mostrar siempre en móvil después de un momento
+  // (en iOS beforeinstallprompt no existe, pero igual mostramos instrucciones)
+  if (_isMobile) {
+    setTimeout(showInstallBar, 1000);
+  }
 }
 
 window.addEventListener("appinstalled", () => {
@@ -560,18 +571,30 @@ window.addEventListener("appinstalled", () => {
 
 btnInstall?.addEventListener("click", async () => {
   if (_deferredInstall) {
+    // Chrome/Android: instalación con un clic
     _deferredInstall.prompt();
     const { outcome } = await _deferredInstall.userChoice;
     _deferredInstall = null;
     installBar.style.display = "none";
     if (outcome === "accepted") showToast("¡App instalada!");
+  } else if (_isIOS) {
+    alert(
+      "Para instalar en iPhone:\n\n" +
+      "1. Toca el botón Compartir ↑\n" +
+      "   (cuadrado con flecha, barra inferior de Safari)\n\n" +
+      "2. Desliza y toca\n" +
+      "   'Añadir a pantalla de inicio'\n\n" +
+      "3. Toca 'Añadir' arriba a la derecha\n\n" +
+      "¡Listo! Aparecerá el ícono en tu pantalla."
+    );
   } else {
-    const isIOS2 = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS2) {
-      alert("En iPhone:\n1. Toca el botón Compartir ↑ (barra inferior de Safari)\n2. Selecciona 'Añadir a pantalla de inicio'\n3. Toca 'Añadir'");
-    } else {
-      alert("En Android:\nToca el menú ⋮ → 'Instalar app' o 'Agregar a pantalla de inicio'");
-    }
+    alert(
+      "Para instalar:\n\n" +
+      "Chrome/Edge Android:\n" +
+      "Menú ⋮ → 'Instalar app'\n" +
+      "o 'Agregar a pantalla de inicio'\n\n" +
+      "Si no aparece la opción, recarga la página."
+    );
   }
 });
 
