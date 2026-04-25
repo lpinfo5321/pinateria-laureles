@@ -1224,23 +1224,55 @@ let _coloresTambor = [];
 
 async function pullColores(){
   if(!_sb) return;
-  // Usamos la columna "colores" (que siempre existe) con estructura {picos:[],tambor:[]}
-  const {data} = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
-  const stored = data?.colores;
-  const hasCategorias = stored && !Array.isArray(stored) && (stored.picos || stored.tambor);
-  if(hasCategorias){
-    _coloresPicos  = stored.picos?.length  ? stored.picos  : BASE_PICOS.map(c=>({...c}));
-    _coloresTambor = stored.tambor?.length ? stored.tambor : BASE_TAMBOR.map(c=>({...c}));
-  } else {
-    // Primera vez o formato legado: sembrar con colores base
+  try {
+    // Intentar leer de todas las columnas posibles
+    const {data, error} = await _sb.from("app_config")
+      .select("colores,colores_picos,colores_tambor")
+      .eq("id","default").maybeSingle();
+
+    if(error) throw error;
+
+    // Prioridad 1: columnas separadas colores_picos / colores_tambor
+    if(data?.colores_picos?.length){
+      _coloresPicos = data.colores_picos;
+    } else if(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length){
+      // Prioridad 2: columna colores con estructura {picos, tambor}
+      _coloresPicos = data.colores.picos;
+    } else {
+      _coloresPicos = BASE_PICOS.map(c=>({...c}));
+    }
+
+    if(data?.colores_tambor?.length){
+      _coloresTambor = data.colores_tambor;
+    } else if(data?.colores && !Array.isArray(data.colores) && data.colores.tambor?.length){
+      _coloresTambor = data.colores.tambor;
+    } else {
+      _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
+    }
+
+    // Si no había nada guardado, sembrar y guardar
+    const eraVacio = !data?.colores_picos?.length && !(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length);
+    if(eraVacio) _saveColoresInternal();
+
+  } catch(e) {
+    console.warn("pullColores sin datos, usando base:", e);
     _coloresPicos  = BASE_PICOS.map(c=>({...c}));
     _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
-    if(_sb){
-      _sb.from("app_config").upsert({
-        id:"default",
-        colores:{picos:_coloresPicos, tambor:_coloresTambor}
-      }).then(()=>{});
-    }
+  }
+}
+
+// Guarda internamente sin feedback visual (para semilla inicial)
+async function _saveColoresInternal(){
+  if(!_sb) return;
+  const payload = {id:"default", colores:{picos:_coloresPicos, tambor:_coloresTambor}};
+  let {error} = await _sb.from("app_config").upsert(payload);
+  if(error){
+    // Intentar también con columnas separadas
+    await _sb.from("app_config").upsert({
+      ...payload,
+      colores_picos: _coloresPicos,
+      colores_tambor: _coloresTambor
+    }).catch(()=>{});
   }
 }
 
@@ -1248,15 +1280,40 @@ async function saveColores(){
   const btn = document.getElementById("btnSaveColors");
   if(!_sb){ showToast("Sin conexión"); return; }
   btn.disabled = true; btn.textContent = "Guardando...";
+
   collectNamesFromDOM("picos");
   collectNamesFromDOM("tambor");
-  const {error} = await _sb.from("app_config").upsert({
+
+  console.log("Guardando colores — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length);
+
+  // Intentar guardar en todas las columnas disponibles
+  const payload = {
     id:"default",
-    colores:{picos:_coloresPicos, tambor:_coloresTambor}
-  });
+    colores: {picos:_coloresPicos, tambor:_coloresTambor},
+    colores_picos: _coloresPicos,
+    colores_tambor: _coloresTambor
+  };
+
+  let {error} = await _sb.from("app_config").upsert(payload);
+
+  if(error){
+    console.warn("Fallo con 3 columnas, intentando solo 'colores':", error.message);
+    // Fallback: solo columna colores (siempre existe)
+    ({error} = await _sb.from("app_config").upsert({
+      id:"default",
+      colores:{picos:_coloresPicos, tambor:_coloresTambor}
+    }));
+  }
+
   btn.disabled = false; btn.textContent = "Guardar colores";
-  if(error){ showToast("Error al guardar: "+error.message); return; }
-  showToast("✅ Colores guardados");
+
+  if(error){
+    console.error("Error guardando colores:", error);
+    showToast("❌ Error al guardar: "+error.message);
+    return;
+  }
+  showToast("✅ Colores guardados correctamente");
+  console.log("Colores guardados OK");
 }
 
 let _cpSection = "picos"; // sección activa del picker
