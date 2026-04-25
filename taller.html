@@ -126,6 +126,17 @@
     /* Toast */
     .toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.25s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* Banner instalar */
+    .install-bar{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,16px));left:50%;transform:translateX(-50%);z-index:200;width:min(420px,calc(100vw - 24px));display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;border-radius:18px;box-shadow:0 14px 40px -10px rgba(219,39,119,0.55),0 4px 14px -4px rgba(0,0,0,0.18);animation:slideInUp 0.4s cubic-bezier(.22,1,.36,1) both}
+    @keyframes slideInUp{from{transform:translate(-50%,30px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+    .install-bar__icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.18);display:grid;place-items:center;flex-shrink:0}
+    .install-bar__text{flex:1;min-width:0}
+    .install-bar__text strong{display:block;font-size:14px;font-weight:800;font-family:'Fraunces',serif}
+    .install-bar__text span{font-size:12px;opacity:0.9}
+    .install-bar__btn{border:0;cursor:pointer;padding:9px 14px;border-radius:12px;background:#fff;color:#db2777;font-weight:800;font-size:13px;white-space:nowrap;flex-shrink:0}
+    .install-bar__close{border:0;background:rgba(255,255,255,0.16);color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex-shrink:0;font-size:14px}
+    @media(display-mode:standalone){.install-bar{display:none!important}}
   </style>
 </head>
 <body>
@@ -188,6 +199,19 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Banner instalar taller como app -->
+  <div class="install-bar" id="installBar" style="display:none">
+    <div class="install-bar__icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+    </div>
+    <div class="install-bar__text">
+      <strong>Instalar Taller</strong>
+      <span>Acceso rápido desde tu celular</span>
+    </div>
+    <button class="install-bar__btn" id="btnInstallTaller">Instalar</button>
+    <button class="install-bar__close" id="btnInstallClose">✕</button>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -509,6 +533,51 @@ document.getElementById("filters").addEventListener("click",e=>{
 });
 
 initCloud();
+
+/* ── Instalación PWA ── */
+let _deferredInstall = null;
+const installBar  = document.getElementById("installBar");
+const btnInstall  = document.getElementById("btnInstallTaller");
+const btnClose    = document.getElementById("btnInstallClose");
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+
+if (!isStandalone) {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    _deferredInstall = e;
+    installBar.style.display = "flex";
+  });
+
+  // En iOS mostrar igual (instrucciones manuales)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) setTimeout(() => { installBar.style.display = "flex"; }, 1500);
+}
+
+window.addEventListener("appinstalled", () => {
+  installBar.style.display = "none";
+  showToast("¡App del taller instalada!");
+});
+
+btnInstall?.addEventListener("click", async () => {
+  if (_deferredInstall) {
+    _deferredInstall.prompt();
+    const { outcome } = await _deferredInstall.userChoice;
+    _deferredInstall = null;
+    installBar.style.display = "none";
+    if (outcome === "accepted") showToast("¡App instalada!");
+  } else {
+    const isIOS2 = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS2) {
+      alert("En iPhone:\n1. Toca el botón Compartir ↑ (barra inferior de Safari)\n2. Selecciona 'Añadir a pantalla de inicio'\n3. Toca 'Añadir'");
+    } else {
+      alert("En Android:\nToca el menú ⋮ → 'Instalar app' o 'Agregar a pantalla de inicio'");
+    }
+  }
+});
+
+btnClose?.addEventListener("click", () => {
+  installBar.style.display = "none";
+});
 </script>
 </body>
 </html>
