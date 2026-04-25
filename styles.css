@@ -2677,8 +2677,45 @@ textarea {
 /* En modo standalone (PWA instalada) ocultamos la barra superior fina y damos respiración */
 @media (display-mode: standalone) {
   body { padding-top: env(safe-area-inset-top); }
-  .install-banner { display: none !important; }
-  .btn-install-cta { display: none !important; }
+  .install-banner    { display: none !important; }
+  .btn-install-cta   { display: none !important; }
+  .btn-install-topbar { display: none !important; }
+}
+
+/* Botón "Instalar" en la topbar (siempre visible si no está instalada) */
+.btn-install-topbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 4px 12px -2px rgba(219, 39, 119, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-right: 4px;
+  animation: pulse-install 2.4s ease-in-out 1.5s infinite;
+}
+.btn-install-topbar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -2px rgba(219, 39, 119, 0.55);
+}
+.btn-install-topbar:active { transform: translateY(0); }
+@keyframes pulse-install {
+  0%, 100% { box-shadow: 0 4px 12px -2px rgba(219, 39, 119, 0.45), 0 0 0 0 rgba(236, 72, 153, 0.5); }
+  50%      { box-shadow: 0 4px 12px -2px rgba(219, 39, 119, 0.45), 0 0 0 8px rgba(236, 72, 153, 0); }
+}
+@media (max-width: 380px) {
+  .btn-install-topbar span { display: none; }
+  .btn-install-topbar { padding: 7px 9px; }
 }
 
 /* ============================================================

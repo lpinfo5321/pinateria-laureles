@@ -2106,7 +2106,23 @@ async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
     _swReg = reg;
-    // Esperar a que esté activo (importante en móvil para mostrar notificaciones)
+
+    // Detectar nueva versión y aplicarla automáticamente
+    reg.addEventListener("updatefound", () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener("statechange", () => {
+        if (sw.state === "installed" && navigator.serviceWorker.controller) {
+          // Hay una nueva versión esperando: pedirle que tome control
+          sw.postMessage({ type: "skip-waiting" });
+        }
+      });
+    });
+
+    // Buscar updates al volver a la app
+    setInterval(() => reg.update().catch(() => {}), 60 * 1000);
+
+    // Esperar a que esté activo
     if (!reg.active) {
       await new Promise((resolve) => {
         const sw = reg.installing || reg.waiting;
@@ -2114,7 +2130,6 @@ async function registerServiceWorker() {
         sw.addEventListener("statechange", () => {
           if (sw.state === "activated") resolve();
         });
-        // timeout de seguridad
         setTimeout(resolve, 5000);
       });
     }
@@ -2124,6 +2139,19 @@ async function registerServiceWorker() {
     return null;
   }
 }
+
+/* Auto-recarga cuando un nuevo SW toma control (excepto primera instalación) */
+(function setupSWAutoReload() {
+  if (!("serviceWorker" in navigator)) return;
+  let firstControl = !navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (firstControl) { firstControl = false; return; }
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+})();
 
 async function getReadySW() {
   if (!("serviceWorker" in navigator)) return null;
@@ -2153,41 +2181,43 @@ function detectPlatform() {
 
 /* ─── Banner + Modal de Instalar app ─── */
 function initInstallPrompt() {
-  const banner   = $("#installBanner");
-  const btnYes   = $("#btnInstallPWA");
-  const btnNope  = $("#btnInstallDismiss");
-  const btnCTA   = $("#btnOpenInstall");
+  const banner    = $("#installBanner");
+  const btnYes    = $("#btnInstallPWA");
+  const btnNope   = $("#btnInstallDismiss");
+  const btnCTA    = $("#btnOpenInstall");
+  const btnTopbar = $("#btnInstallTopbar");
 
-  const { isIOS, isAndroid, isMobile, isStandalone } = detectPlatform();
+  const { isStandalone } = detectPlatform();
 
   // Capturar el evento nativo de instalación (Chrome/Edge/Android)
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     _deferredInstallPrompt = e;
-    // Cuando ya tenemos prompt nativo, mostrar banner
-    if (banner && !isStandalone) {
-      const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
-      if (!dismissed) banner.hidden = false;
-    }
+    if (banner && !isStandalone) banner.hidden = false;
   });
 
   window.addEventListener("appinstalled", () => {
-    if (banner) banner.hidden = true;
-    if (btnCTA) btnCTA.hidden = true;
+    if (banner)    banner.hidden = true;
+    if (btnCTA)    btnCTA.hidden = true;
+    if (btnTopbar) btnTopbar.hidden = true;
     closeAllModals();
     _deferredInstallPrompt = null;
     showToast("¡App instalada en tu dispositivo!");
   });
 
-  // ─── Botón CTA de la pantalla de bienvenida ───
-  if (btnCTA) {
-    if (!isStandalone) {
+  // ─── Si la app NO está instalada → siempre mostrar accesos a instalación ───
+  if (!isStandalone) {
+    if (btnTopbar) {
+      btnTopbar.hidden = false;
+      btnTopbar.addEventListener("click", openInstallModal);
+    }
+    if (btnCTA) {
       btnCTA.hidden = false;
       btnCTA.addEventListener("click", openInstallModal);
     }
   }
 
-  // ─── Banner ───
+  // ─── Banner inferior ───
   if (banner && btnYes && btnNope) {
     btnYes.addEventListener("click", () => {
       banner.hidden = true;
@@ -2195,27 +2225,20 @@ function initInstallPrompt() {
     });
     btnNope.addEventListener("click", () => {
       banner.hidden = true;
-      localStorage.setItem("pinata-install-dismissed", "1");
     });
   }
 
-  // ─── Mostrar el modal automáticamente la primera vez ───
+  // ─── Mostrar el modal automáticamente al primer ingreso de cada sesión ───
   if (!isStandalone) {
-    const seenIntro = localStorage.getItem("pinata-install-seen") === "1";
-    if (!seenIntro) {
-      // Esperar un poco para no abrumar al cargar
+    // Usamos sessionStorage (se borra al cerrar pestaña) en lugar de localStorage
+    const shownThisSession = sessionStorage.getItem("pinata-install-shown") === "1";
+    if (!shownThisSession) {
       setTimeout(() => {
         if (!detectPlatform().isStandalone) {
           openInstallModal();
-          localStorage.setItem("pinata-install-seen", "1");
+          sessionStorage.setItem("pinata-install-shown", "1");
         }
-      }, 1800);
-    } else if (isMobile && banner) {
-      // En móvil, mostrar banner persistente si no fue rechazado
-      const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
-      if (!dismissed) {
-        setTimeout(() => { banner.hidden = false; }, 2500);
-      }
+      }, 1500);
     }
   }
 }
