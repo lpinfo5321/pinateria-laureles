@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS public.app_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Agregar columna colores si no existe (ejecutar si la tabla ya existe)
+ALTER TABLE public.app_config ADD COLUMN IF NOT EXISTS colores JSONB DEFAULT '[]'::jsonb;
+
 INSERT INTO public.app_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
 -- ───── Actualización automática de updated_at ─────

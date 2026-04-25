@@ -87,9 +87,28 @@ const COLORES_BASE = [
   { id: "negro",      nombre: "Negro",       hex: "#1a1a1a" },
 ];
 
-// Lista mutable: empieza con los base y se agregan custom
+// Lista mutable: empieza con los base, se reemplaza con la del cloud si existe
 let COLORES = [...COLORES_BASE];
-const MAX_COLORES = 8; // un poco más flexible
+const MAX_COLORES = 8;
+
+/**
+ * Aplica los colores configurados desde Supabase (taller).
+ * Solo reemplaza si hay al menos un color activo definido.
+ */
+function applyCloudColors(cloudColores) {
+  if (!Array.isArray(cloudColores) || cloudColores.length === 0) return;
+  const activos = cloudColores.filter(c => c.activo !== false && c.hex);
+  if (activos.length === 0) return;
+  COLORES = activos.map(c => ({
+    id:     c.id     || ("c_" + c.hex),
+    nombre: c.nombre || "Color",
+    hex:    c.hex,
+  }));
+  // Si ya estamos en la pantalla de estrella, re-renderizar
+  if (typeof renderColorSwatches === "function" && state && state.step === "estrella") {
+    renderColorSwatches();
+  }
+}
 
 /* ============================================================
    Orden de pantallas (usado para la barra de progreso)
@@ -1070,6 +1089,7 @@ async function pullAllFromCloud() {
       direccion:        cfg.data.direccion || "Laureles",
       pin:              cfg.data.pin       || "",
     };
+    applyCloudColors(cfg.data.colores || []);
   }
   persistLocal();
   if (state.step === "admin") renderAdmin();
@@ -1119,6 +1139,7 @@ function subscribeToCloudChanges() {
           direccion:        p.new.direccion || "Laureles",
           pin:              p.new.pin       || "",
         };
+        applyCloudColors(p.new.colores || []);
         persistLocal();
         if (state.step === "admin") renderAdmin();
       }
