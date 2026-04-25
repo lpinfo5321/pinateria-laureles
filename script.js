@@ -1538,7 +1538,6 @@ function renderOrderCard(o, cfg) {
   const pagado  = o.pagado;
   const _cfgWA  = (getConfig().whatsappPinatera || "").replace(/\D/g, "");
   const waPhone = (o.cliente?.telefono || "").replace(/\D/g, "");
-  const canCall = waPhone.length >= 7;
   const canAskLaureles = _cfgWA.length >= 7;
 
   // ── Piñata info ──
@@ -1604,10 +1603,6 @@ function renderOrderCard(o, cfg) {
         </button>
       ` : ""}
       ${o.estado === "lista" ? `
-        <button class="action-btn action-btn--whatsapp action-btn--full desktop-only" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          Avisar al cliente
-        </button>
         <button class="action-btn action-btn--neutral action-btn--full desktop-only" data-act="entregada" data-id="${o.id}">✓ Marcar entregada</button>
         <button class="action-btn action-btn--neutral desktop-only" data-act="revertir" data-id="${o.id}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
@@ -1682,7 +1677,7 @@ function handleOrderAction(act, id) {
   } else if (act === "preguntar") {
     preguntarCliente(id);
   } else if (act === "notificar") {
-    notificarCliente(id);
+    // Deshabilitado: el número del cliente es solo referencia, no se le envía WhatsApp
   } else if (act === "imprimir") {
     printTicket(id);
   } else if (act === "ver") {
@@ -2077,8 +2072,6 @@ function openOrderDetail(id) {
       </div>
     </div>`).join("") || `<p class="muted" style="font-size:13px">Sin eventos aún</p>`;
 
-  // Botones de acción dentro del detalle (incluyendo los que en tarjeta son solo desktop)
-  const canCall  = (o.cliente?.telefono || "").replace(/\D/g, "").length >= 7;
   const canLaur  = (cfg.whatsappPinatera || "").replace(/\D/g, "").length >= 7;
 
   body.innerHTML = `
@@ -2122,7 +2115,6 @@ function openOrderDetail(id) {
               <button class="detail-act-btn detail-act-btn--primary" data-act="marcar-lista" data-id="${o.id}">Marcar lista</button>
             ` : ""}
             ${o.estado === "lista" ? `
-              <button class="detail-act-btn detail-act-btn--wa" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>Avisar al cliente</button>
               <button class="detail-act-btn" data-act="entregada" data-id="${o.id}">Marcar entregada</button>
             ` : ""}
             ${o.estado !== "lista" && o.estado !== "entregada" ? `
