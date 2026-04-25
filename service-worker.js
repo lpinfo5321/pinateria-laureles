@@ -8,7 +8,7 @@
    - Permite mensajería desde la app (showOrderNotification).
    ============================================================ */
 
-const CACHE_VERSION = "pinata-v1.5.0";
+const CACHE_VERSION = "pinata-v1.6.0";
 // Solo cacheamos assets estáticos (iconos y manifest)
 // JS y CSS siempre se sirven frescos desde la red
 const APP_SHELL = [
@@ -63,6 +63,8 @@ self.addEventListener("fetch", (event) => {
   const alwaysNetwork =
     pathname === "/" ||
     pathname === "/index.html" ||
+    pathname === "/taller" ||
+    pathname === "/taller.html" ||
     pathname.includes("script.js") ||
     pathname.includes("styles.css") ||
     pathname.includes("supabase-config.js");
