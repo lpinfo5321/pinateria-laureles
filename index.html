@@ -517,6 +517,22 @@
         </div>
 
         <div class="field">
+          <label class="field__label">Vista para el taller (Laureles)</label>
+          <p class="field__hint">Comparte este enlace con quienes hacen las piñatas. Solo pueden ver órdenes y marcar como listas.</p>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-primary btn-sm" id="btnCopyTaller">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copiar enlace
+            </button>
+            <button type="button" class="btn-ghost btn-sm" id="btnOpenTaller">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Abrir taller
+            </button>
+          </div>
+          <div style="font-size:12px;color:rgba(26,20,20,0.45);margin-top:8px;font-family:monospace;background:rgba(0,0,0,0.03);padding:8px 10px;border-radius:8px;word-break:break-all;" id="tallerUrlDisplay"></div>
+        </div>
+
+        <div class="field">
           <label class="field__label">Instalar app en este dispositivo</label>
           <p class="field__hint">Agrega la app a la pantalla de inicio para acceso rápido y notificaciones.</p>
           <button type="button" class="btn-primary" id="btnInstallFromConfig" style="width:100%;margin-top:6px;">

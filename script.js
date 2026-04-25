@@ -2104,6 +2104,27 @@ function initModals() {
 
   // Config modal
   $("#btnAdminConfig").addEventListener("click", openConfigModal);
+  // Taller link
+  const btnCopyTaller = document.getElementById("btnCopyTaller");
+  const btnOpenTaller = document.getElementById("btnOpenTaller");
+  const tallerUrl = window.location.origin + "/taller";
+  const tallerDisplay = document.getElementById("tallerUrlDisplay");
+  if (tallerDisplay) tallerDisplay.textContent = tallerUrl;
+  if (btnCopyTaller) {
+    btnCopyTaller.addEventListener("click", () => {
+      navigator.clipboard.writeText(tallerUrl).then(() => {
+        showToast("¡Enlace copiado!");
+        btnCopyTaller.textContent = "¡Copiado!";
+        setTimeout(() => { btnCopyTaller.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar enlace`; }, 2000);
+      }).catch(() => {
+        prompt("Copia este enlace:", tallerUrl);
+      });
+    });
+  }
+  if (btnOpenTaller) {
+    btnOpenTaller.addEventListener("click", () => window.open(tallerUrl, "_blank"));
+  }
+
   const btnInstallFromConfig = $("#btnInstallFromConfig");
   if (btnInstallFromConfig) {
     btnInstallFromConfig.addEventListener("click", () => {
