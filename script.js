@@ -1385,11 +1385,11 @@ function renderOrderCard(o, cfg) {
       ` : ""}
 
       ${o.estado === "lista" ? `
-        <button class="action-btn action-btn--whatsapp action-btn--full" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
+        <button class="action-btn action-btn--whatsapp action-btn--full desktop-only" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
           Avisar al cliente que está lista
         </button>
-        <button class="action-btn action-btn--neutral action-btn--full" data-act="entregada" data-id="${o.id}">
+        <button class="action-btn action-btn--neutral action-btn--full desktop-only" data-act="entregada" data-id="${o.id}">
           Marcar entregada
         </button>
       ` : ""}
@@ -1401,25 +1401,25 @@ function renderOrderCard(o, cfg) {
         </button>
       ` : ""}
 
-      <button class="action-btn action-btn--print" data-act="imprimir" data-id="${o.id}">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Imprimir
-      </button>
-
       <button class="action-btn action-btn--neutral" data-act="ver" data-id="${o.id}">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Ver detalle
-      </button>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver detalle
+        </button>
 
-      <button class="action-btn ${o.pagado ? "action-btn--neutral" : "action-btn--whatsapp"}" data-act="toggle-pago" data-id="${o.id}">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        ${o.pagado ? "Quitar pago" : "Marcar pagado"}
-      </button>
+      <button class="action-btn action-btn--print desktop-only" data-act="imprimir" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir
+        </button>
 
-      <button class="action-btn action-btn--danger" data-act="eliminar" data-id="${o.id}">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        Eliminar
-      </button>
+      <button class="action-btn ${o.pagado ? "action-btn--neutral" : "action-btn--whatsapp"} desktop-only" data-act="toggle-pago" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          ${o.pagado ? "Quitar pago" : "Marcar pagado"}
+        </button>
+
+      <button class="action-btn action-btn--danger desktop-only" data-act="eliminar" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Eliminar
+        </button>
 
     </div>
     <div class="order-card__date">Creada: ${formatDateTime(o.creada)}</div>
@@ -1587,58 +1587,133 @@ function notificarCliente(id) {
 function openOrderDetail(id) {
   const o = getOrders().find(x => x.id === id);
   if (!o) return;
-  const body = $("#orderModalBody");
+  const body  = $("#orderModalBody");
   const title = $("#orderModalTitle");
-  title.textContent = `Orden #${String(o.numero).padStart(3, "0")}`;
+  const num   = String(o.numero).padStart(3, "0");
+  title.textContent = `Orden #${num}`;
 
-  let tipoSection = "";
+  const cfg = getConfig();
+  const estadoBadge = {
+    "pendiente":  { label: "Pendiente",  color: "#f59e0b" },
+    "con-duda":   { label: "Con duda",   color: "#ec4899" },
+    "lista":      { label: "Lista",      color: "#22c55e" },
+    "entregada":  { label: "Entregada",  color: "#6366f1" },
+  }[o.estado] || { label: o.estado, color: "#999" };
+
+  // Sección visual de la piñata
+  let visualHtml = "";
   if (o.tipo === "estrella") {
-    const dots = (o.estrella?.colores || [])
-      .map(c => `<span class="summary-dot" style="background:${c.hex}" title="${c.nombre}"></span>`).join("");
-    const nombres = (o.estrella?.colores || []).map(c => c.nombre).join(", ");
-    tipoSection = `
-      <div class="order-detail__section">
-        <h4>Piñata estrella (6 picos)</h4>
-        <div class="order-detail__row"><strong>Colores (${o.estrella?.colores?.length || 0})</strong><span><div class="summary-colors__dots">${dots}</div></span></div>
-        <div class="order-detail__row"><strong>Paleta</strong><span>${nombres}</span></div>
-        <div class="order-detail__row"><strong>Temática</strong><span>${o.estrella?.emoji || ""} ${escapeHTML(o.estrella?.tematica || "—")}</span></div>
-        ${o.estrella?.notas ? `<div class="order-detail__row"><strong>Notas</strong><span>${escapeHTML(o.estrella.notas)}</span></div>` : ""}
-      </div>
-    `;
+    const colores = o.estrella?.colores || [];
+    const dotsHtml = colores.map(c => `
+      <div class="detail-color-chip">
+        <span class="detail-color-dot" style="background:${c.hex}"></span>
+        <span>${escapeHTML(c.nombre)}</span>
+      </div>`).join("");
+    visualHtml = `
+      <div class="detail-visual detail-visual--star">
+        <div class="detail-visual__label">Estrella 6 picos</div>
+        <div class="detail-colors-grid">${dotsHtml}</div>
+        ${o.estrella?.tematica ? `<div class="detail-tematica">${o.estrella.emoji || "🎭"} ${escapeHTML(o.estrella.tematica)}</div>` : ""}
+        ${o.estrella?.notas ? `<p class="detail-nota">${escapeHTML(o.estrella.notas)}</p>` : ""}
+      </div>`;
   } else {
-    tipoSection = `
-      <div class="order-detail__section">
-        <h4>Piñata personalizada</h4>
-        ${o.personalizada?.imagen ? `<img class="order-detail__img" src="${o.personalizada.imagen}" alt="Referencia"/>` : ""}
-        <div class="order-detail__row"><strong>Descripción</strong><span>${escapeHTML(o.personalizada?.descripcion || "—")}</span></div>
-      </div>
-    `;
+    const img = o.personalizada?.imagen
+      ? `<img class="detail-photo" src="${o.personalizada.imagen}" alt="Referencia de la piñata"/>`
+      : `<div class="detail-photo--empty">Sin foto de referencia</div>`;
+    visualHtml = `
+      <div class="detail-visual detail-visual--custom">
+        ${img}
+        ${o.personalizada?.descripcion ? `<p class="detail-desc">${escapeHTML(o.personalizada.descripcion)}</p>` : ""}
+      </div>`;
   }
 
-  const hist = (o.historial || []).slice().reverse().map(h => `
-    <div class="order-detail__row">
-      <strong>${escapeHTML(h.accion)}</strong>
-      <span>${formatDateTime(h.fecha)}</span>
-    </div>
-  `).join("");
+  // Historial
+  const histHtml = (o.historial || []).slice().reverse().map(h => `
+    <div class="detail-hist-row">
+      <span class="detail-hist-dot"></span>
+      <div>
+        <div class="detail-hist-act">${escapeHTML(h.accion)}</div>
+        <div class="detail-hist-time">${formatDateTime(h.fecha)}</div>
+      </div>
+    </div>`).join("") || `<p class="muted" style="font-size:13px">Sin eventos aún</p>`;
+
+  // Botones de acción dentro del detalle (incluyendo los que en tarjeta son solo desktop)
+  const canCall  = (o.cliente?.telefono || "").replace(/\D/g, "").length >= 7;
+  const canLaur  = (cfg.whatsappPinatera || "").replace(/\D/g, "").length >= 7;
 
   body.innerHTML = `
-    <div class="order-detail__section">
-      <h4>Cliente</h4>
-      <div class="order-detail__row"><strong>Nombre</strong><span>${escapeHTML(o.cliente?.nombre || "—")}</span></div>
-      <div class="order-detail__row"><strong>Teléfono</strong><span>${escapeHTML(o.cliente?.telefono || "—")}</span></div>
-    </div>
-    ${tipoSection}
-    <div class="order-detail__section">
-      <h4>Recogida</h4>
-      <div class="order-detail__row"><strong>Fecha</strong><span>${formatDateLong(o.recogida)}</span></div>
-      <div class="order-detail__row"><strong>Punto</strong><span>${getConfig().direccion || "Laureles"}</span></div>
-    </div>
-    <div class="order-detail__section">
-      <h4>Historial</h4>
-      ${hist || '<div class="muted" style="font-size:13px">Sin eventos</div>'}
+    <div class="detail-layout">
+
+      <!-- Columna izquierda: visual + info piñata -->
+      <div class="detail-col detail-col--left">
+        ${visualHtml}
+      </div>
+
+      <!-- Columna derecha: datos + acciones -->
+      <div class="detail-col detail-col--right">
+
+        <!-- Estado + pago -->
+        <div class="detail-header-row">
+          <span class="detail-estado" style="background:${estadoBadge.color}20;color:${estadoBadge.color};border:1.5px solid ${estadoBadge.color}40">${estadoBadge.label}</span>
+          <span class="detail-pago ${o.pagado ? "is-paid" : "is-unpaid"}">${o.pagado ? "Pagado" : "Sin pagar"}</span>
+        </div>
+
+        <!-- Cliente -->
+        <div class="detail-section">
+          <div class="detail-section__title">Cliente</div>
+          <div class="detail-row"><span class="detail-lbl">Nombre</span><span>${escapeHTML(o.cliente?.nombre || "—")}</span></div>
+          <div class="detail-row"><span class="detail-lbl">Teléfono</span><span>${escapeHTML(o.cliente?.telefono || "—")}</span></div>
+          ${o.atendido ? `<div class="detail-row"><span class="detail-lbl">Atendido por</span><span>${escapeHTML(o.atendido)}</span></div>` : ""}
+        </div>
+
+        <!-- Recogida -->
+        <div class="detail-section">
+          <div class="detail-section__title">Recogida</div>
+          <div class="detail-row"><span class="detail-lbl">Fecha</span><span><strong>${formatDateLong(o.recogida)}</strong></span></div>
+          <div class="detail-row"><span class="detail-lbl">Lugar</span><span>${escapeHTML(cfg.direccion || "Laureles")}</span></div>
+          <div class="detail-row"><span class="detail-lbl">Creada</span><span>${formatDateTime(o.creada)}</span></div>
+        </div>
+
+        <!-- Acciones completas (siempre disponibles en el detalle) -->
+        <div class="detail-section">
+          <div class="detail-section__title">Acciones</div>
+          <div class="detail-actions-grid">
+            ${o.estado !== "lista" && o.estado !== "entregada" ? `
+              <button class="detail-act-btn detail-act-btn--primary" data-act="marcar-lista" data-id="${o.id}">Marcar lista</button>
+            ` : ""}
+            ${o.estado === "lista" ? `
+              <button class="detail-act-btn detail-act-btn--wa" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>Avisar al cliente</button>
+              <button class="detail-act-btn" data-act="entregada" data-id="${o.id}">Marcar entregada</button>
+            ` : ""}
+            ${o.estado !== "lista" && o.estado !== "entregada" ? `
+              <button class="detail-act-btn detail-act-btn--wa" data-act="preguntar" data-id="${o.id}" ${!canLaur ? "disabled" : ""}>Preguntar a Laureles</button>
+            ` : ""}
+            <button class="detail-act-btn" data-act="toggle-pago" data-id="${o.id}">${o.pagado ? "Quitar pago" : "Marcar pagado"}</button>
+            <button class="detail-act-btn" data-act="imprimir" data-id="${o.id}">Imprimir ticket</button>
+            <button class="detail-act-btn detail-act-btn--danger" data-act="eliminar" data-id="${o.id}">Eliminar orden</button>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="detail-section">
+          <div class="detail-section__title">Historial</div>
+          <div class="detail-hist">${histHtml}</div>
+        </div>
+
+      </div>
     </div>
   `;
+
+  // Delegar clicks de acciones dentro del modal
+  body.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    const bid = btn.dataset.id;
+    closeAllModals();
+    setTimeout(() => handleOrderAction(act, bid), 100);
+  }, { once: true });
+
   openModal("#orderModal");
 }
 
