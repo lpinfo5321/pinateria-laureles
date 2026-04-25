@@ -981,6 +981,9 @@ function saveOrder(orden) {
   orden.historial = [{ fecha: Date.now(), accion: "Orden creada" }];
   _mem.ordenes.unshift(orden);
   persistLocal();
+  // Marcar para no notificarnos a nosotros mismos cuando vuelva por realtime
+  _recentlyCreatedIds.add(orden.id);
+  setTimeout(() => _recentlyCreatedIds.delete(orden.id), 30000);
   cloudSaveOrder(orden);
   return orden;
 }
@@ -1087,6 +1090,7 @@ function subscribeToCloudChanges() {
     .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (p) => {
       if (p.eventType === "INSERT" || p.eventType === "UPDATE") {
         const o = rowToOrder(p.new);
+        const isNew = !_mem.ordenes.some(x => x.id === o.id);
         const idx = _mem.ordenes.findIndex(x => x.id === o.id);
         if (idx >= 0) _mem.ordenes[idx] = o;
         else          _mem.ordenes.unshift(o);
@@ -1095,6 +1099,11 @@ function subscribeToCloudChanges() {
         persistLocal();
         if (state.step === "admin") renderAdmin();
         flashBadgeNew();
+
+        // Solo notificar para órdenes nuevas que NO acaben de salir de este dispositivo
+        if (p.eventType === "INSERT" && isNew && !_recentlyCreatedIds.has(o.id)) {
+          notifyNewOrder(o);
+        }
       } else if (p.eventType === "DELETE") {
         _mem.ordenes = _mem.ordenes.filter(x => x.id !== p.old.id);
         persistLocal();
@@ -2011,6 +2020,7 @@ function openConfigModal() {
   $("#cfgNombre").value = cfg.nombreNegocio || "";
   $("#cfgDireccion").value = cfg.direccion || "";
   $("#cfgPin").value = cfg.pin || "";
+  updateNotifStatusUI();
   openModal("#configModal");
 }
 
@@ -2054,6 +2064,282 @@ function requestAdminAccess() {
   } else {
     renderAdmin();
     goTo("admin");
+  }
+}
+
+/* ============================================================
+   PWA · INSTALACIÓN, NOTIFICACIONES Y SONIDO
+   ============================================================ */
+let _deferredInstallPrompt = null;
+let _swReg                 = null;
+const _recentlyCreatedIds  = new Set();
+const NOTIF_PREF_KEY       = "pinata-notif-pref";
+
+/* ─── Service Worker ─── */
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    _swReg = reg;
+    return reg;
+  } catch (e) {
+    console.warn("SW register error:", e);
+    return null;
+  }
+}
+
+/* ─── Banner Instalar app (Android/Chrome/Edge) ─── */
+function initInstallPrompt() {
+  const banner   = $("#installBanner");
+  const btnYes   = $("#btnInstallPWA");
+  const btnNope  = $("#btnInstallDismiss");
+  if (!banner || !btnYes) return;
+
+  const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
+  const isStandalone =
+    window.matchMedia && window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  // No mostrar si ya está instalada
+  if (isStandalone) return;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _deferredInstallPrompt = e;
+    if (!dismissed) banner.hidden = false;
+  });
+
+  btnYes.addEventListener("click", async () => {
+    if (!_deferredInstallPrompt) {
+      banner.hidden = true;
+      // En iOS y otros sin beforeinstallprompt, mostrar instrucciones
+      showIOSInstallTip();
+      return;
+    }
+    _deferredInstallPrompt.prompt();
+    const { outcome } = await _deferredInstallPrompt.userChoice;
+    _deferredInstallPrompt = null;
+    banner.hidden = true;
+    if (outcome === "accepted") {
+      showToast("¡App instalada!");
+    }
+  });
+
+  btnNope.addEventListener("click", () => {
+    banner.hidden = true;
+    localStorage.setItem("pinata-install-dismissed", "1");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    banner.hidden = true;
+    showToast("¡App instalada en tu dispositivo!");
+  });
+
+  // iOS: si parece iPhone/iPad y no está en standalone, mostramos botón al primer intento
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => { banner.hidden = false; }, 1500);
+  }
+}
+
+function showIOSInstallTip() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) {
+    alert(
+      "Para instalar en iPhone:\n\n" +
+      "1. Toca el botón Compartir (cuadrado con flecha hacia arriba)\n" +
+      "2. Selecciona 'Añadir a pantalla de inicio'\n" +
+      "3. Toca 'Añadir'\n\n" +
+      "¡Listo! La app aparecerá como un ícono normal."
+    );
+  } else {
+    alert(
+      "Para instalar:\n\n" +
+      "Chrome/Edge: menú (⋮) → 'Instalar app' o 'Agregar a pantalla de inicio'\n\n" +
+      "Si no ves la opción, asegúrate de estar en https://"
+    );
+  }
+}
+
+/* ─── Notificaciones del sistema ─── */
+function notifPermissionState() {
+  if (!("Notification" in window)) return "unsupported";
+  return Notification.permission;
+}
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    showToast("Tu navegador no soporta notificaciones");
+    return "unsupported";
+  }
+  if (Notification.permission === "granted") return "granted";
+  if (Notification.permission === "denied") {
+    alert("Las notificaciones están bloqueadas. Actívalas desde la configuración de tu navegador (candado al lado de la URL → Notificaciones → Permitir).");
+    return "denied";
+  }
+  const result = await Notification.requestPermission();
+  return result;
+}
+
+function updateNotifStatusUI() {
+  const el = $("#notifStatus");
+  const btn = $("#btnEnableNotif");
+  if (!el || !btn) return;
+
+  const state = notifPermissionState();
+  if (state === "granted") {
+    el.textContent = "Estado: ACTIVADAS ✓";
+    el.className = "notif-status is-on";
+    btn.textContent = "Ya están activadas";
+    btn.disabled = true;
+  } else if (state === "denied") {
+    el.textContent = "Estado: bloqueadas por el navegador";
+    el.className = "notif-status is-off";
+    btn.textContent = "Cómo desbloquearlas";
+    btn.disabled = false;
+  } else if (state === "unsupported") {
+    el.textContent = "Estado: no soportadas en este dispositivo";
+    el.className = "notif-status is-off";
+    btn.disabled = true;
+  } else {
+    el.textContent = "Estado: desactivadas";
+    el.className = "notif-status is-off";
+    btn.textContent = "Activar notificaciones";
+    btn.disabled = false;
+  }
+}
+
+async function notifyNewOrder(orden) {
+  // Toast siempre (en pantalla)
+  showOrderToast(orden);
+
+  // Beep
+  playOrderChime();
+
+  // Vibración móvil
+  if (navigator.vibrate) {
+    try { navigator.vibrate([200, 100, 200, 100, 200]); } catch (_) {}
+  }
+
+  // Notificación del sistema (si tiene permiso)
+  if (notifPermissionState() !== "granted") return;
+
+  const num   = orden.numero ? String(orden.numero).padStart(3, "0") : "?";
+  const tipo  = orden.tipo === "estrella" ? "Estrella" : "Personalizada";
+  const cliente = (orden.cliente && orden.cliente.nombre) ? ` · ${orden.cliente.nombre}` : "";
+  const title = `Nueva orden #${num}`;
+  const body  = `${tipo}${cliente}`;
+
+  // Si está la PWA instalada → mejor por el SW (vibración + persistente)
+  if (_swReg && _swReg.active) {
+    _swReg.active.postMessage({
+      type: "show-notification",
+      title, body,
+      tag: `orden-${orden.id}`,
+    });
+  } else {
+    try {
+      const n = new Notification(title, {
+        body,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: `orden-${orden.id}`,
+      });
+      n.onclick = () => {
+        window.focus();
+        if (state.step !== "admin") requestAdminAccess();
+      };
+    } catch (e) {
+      console.warn("Notification error:", e);
+    }
+  }
+}
+
+/* ─── Toast in-app de nueva orden ─── */
+let _toastTimer = null;
+function showOrderToast(orden) {
+  const toast = $("#orderToast");
+  if (!toast) return;
+  const num    = orden.numero ? String(orden.numero).padStart(3, "0") : "?";
+  const tipo   = orden.tipo === "estrella" ? "Estrella" : "Personalizada";
+  const cliente = (orden.cliente && orden.cliente.nombre) ? ` · ${orden.cliente.nombre}` : "";
+  $("#orderToastTitle").textContent = `Nueva orden #${num}`;
+  $("#orderToastBody").textContent  = `${tipo}${cliente}`;
+  toast.hidden = false;
+  toast.classList.add("is-visible");
+
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => hideOrderToast(), 8000);
+
+  $("#orderToastBtn").onclick = () => {
+    hideOrderToast();
+    if (state.step !== "admin") requestAdminAccess();
+  };
+}
+function hideOrderToast() {
+  const toast = $("#orderToast");
+  if (!toast) return;
+  toast.classList.remove("is-visible");
+  setTimeout(() => { toast.hidden = true; }, 250);
+}
+
+/* ─── Sonido al llegar una orden (campanita) ─── */
+let _audioCtx = null;
+function playOrderChime() {
+  try {
+    if (!_audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      _audioCtx = new Ctx();
+    }
+    const ctx = _audioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+
+    // Dos notas: do agudo + sol agudo (campanita alegre)
+    [
+      { freq: 1175, t: 0.00, dur: 0.18 },
+      { freq: 1568, t: 0.18, dur: 0.30 },
+    ].forEach(({ freq, t, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + t);
+      osc.stop(now + t + dur + 0.02);
+    });
+  } catch (e) { /* silencioso */ }
+}
+
+/* ─── Botones del modal de configuración (notif) ─── */
+function initNotifControls() {
+  const btn = $("#btnEnableNotif");
+  const test = $("#btnTestNotif");
+  if (btn) {
+    btn.addEventListener("click", async () => {
+      const state = notifPermissionState();
+      if (state === "denied") {
+        alert("Las notificaciones están bloqueadas. Actívalas desde el navegador:\n\n• Toca el candado/ícono al lado de la URL\n• Busca 'Notificaciones'\n• Cámbialo a 'Permitir'");
+        return;
+      }
+      const r = await requestNotificationPermission();
+      updateNotifStatusUI();
+      if (r === "granted") showToast("✅ Notificaciones activadas");
+    });
+  }
+  if (test) {
+    test.addEventListener("click", () => {
+      notifyNewOrder({
+        id: "test_" + Date.now(),
+        numero: 999,
+        tipo: "estrella",
+        cliente: { nombre: "Prueba" },
+      });
+    });
   }
 }
 
@@ -2113,4 +2399,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Conectar a la nube (si está configurada) — no bloquea la UI
   initCloud().catch(e => console.warn("Cloud init error:", e));
+
+  // PWA: service worker + banner de instalación + controles de notificaciones
+  registerServiceWorker();
+  initInstallPrompt();
+  initNotifControls();
+
+  // Si la app abrió desde el shortcut "admin", entrar directo
+  const params = new URLSearchParams(location.search);
+  if (params.get("action") === "admin") requestAdminAccess();
 });

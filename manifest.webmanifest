@@ -1,0 +1,52 @@
+{
+  "name": "Piñatería Laureles · Órdenes",
+  "short_name": "Piñatas",
+  "description": "Toma y gestiona órdenes de piñatas en tiempo real.",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#fbf7f2",
+  "theme_color": "#ec4899",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva orden",
+      "short_name": "Nueva",
+      "description": "Crear una nueva orden de piñata",
+      "url": "/?source=pwa&action=new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Panel admin",
+      "short_name": "Admin",
+      "description": "Ver órdenes pendientes",
+      "url": "/?source=pwa&action=admin",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

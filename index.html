@@ -2,9 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#fbf7f2" />
-  <title>Orden de Piñata · Laureles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: dark)" />
+  <title>Piñatería Laureles · Órdenes</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+  <!-- iOS / Safari "instalar como app" -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Piñatas" />
+
+  <!-- SEO básico -->
+  <meta name="description" content="Toma y gestiona órdenes de piñatas en tiempo real · Piñatería Laureles." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -25,6 +42,33 @@
 
   <!-- Canvas para confetti -->
   <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <!-- Banner "Instalar app" (PWA) -->
+  <div class="install-banner" id="installBanner" hidden>
+    <div class="install-banner__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>
+      </svg>
+    </div>
+    <div class="install-banner__text">
+      <strong>Instalar Piñatas</strong>
+      <span>Acceso rápido y notificaciones en tu celular</span>
+    </div>
+    <button class="install-banner__btn" id="btnInstallPWA" type="button">Instalar</button>
+    <button class="install-banner__close" id="btnInstallDismiss" type="button" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- Toast de nueva orden (realtime) -->
+  <div class="order-toast" id="orderToast" hidden role="alert" aria-live="polite">
+    <div class="order-toast__icon" aria-hidden="true">🪅</div>
+    <div class="order-toast__text">
+      <strong id="orderToastTitle">Nueva orden</strong>
+      <span id="orderToastBody">Acaba de llegar una orden</span>
+    </div>
+    <button class="order-toast__btn" id="orderToastBtn" type="button">Ver</button>
+  </div>
 
   <!-- Barra de progreso -->
   <header class="topbar">
@@ -484,6 +528,17 @@
           <p class="field__hint">Deja vacío para acceder sin PIN.</p>
           <input type="text" id="cfgPin" class="input" placeholder="Ej: 1234" inputmode="numeric" maxlength="8" />
         </div>
+
+        <div class="field notif-field">
+          <label class="field__label">Notificaciones de órdenes</label>
+          <p class="field__hint">Recibe un aviso del sistema cuando llegue una orden nueva. Funciona mejor con la app instalada.</p>
+          <div class="notif-row">
+            <span class="notif-status" id="notifStatus">Estado: desactivadas</span>
+            <button type="button" class="btn-primary btn-sm" id="btnEnableNotif">Activar notificaciones</button>
+          </div>
+          <button type="button" class="btn-ghost btn-sm" id="btnTestNotif" style="margin-top:8px;">Probar notificación</button>
+        </div>
+
         <div class="modal__actions">
           <button class="btn-ghost" data-close-modal>Cancelar</button>
           <button class="btn-primary" id="btnSaveConfig">Guardar</button>
