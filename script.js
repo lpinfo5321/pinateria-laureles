@@ -1609,6 +1609,12 @@ function renderOrderCard(o, cfg) {
           Revertir
         </button>
       ` : ""}
+      ${o.estado === "entregada" ? `
+        <button class="action-btn action-btn--reactivar action-btn--full" data-act="reactivar" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          Reactivar orden
+        </button>
+      ` : ""}
       <button class="action-btn action-btn--neutral" data-act="ver" data-id="${o.id}">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Ver detalle
@@ -1687,6 +1693,13 @@ function handleOrderAction(act, id) {
       updateOrder(id, { estado: "pendiente" });
       addHistory(id, "Revertida a pendiente");
       showToast("↩️ Orden regresada a pendiente");
+      renderAdmin();
+    }
+  } else if (act === "reactivar") {
+    if (confirm(`¿Reactivar la orden #${String(orden.numero).padStart(3, "0")} de ${orden.cliente?.nombre || ""}? Volverá a Pendiente.`)) {
+      updateOrder(id, { estado: "pendiente" });
+      addHistory(id, "Reactivada — regresó a pendiente");
+      showToast("♻️ Orden reactivada");
       renderAdmin();
     }
   } else if (act === "editar") {

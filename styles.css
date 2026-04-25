@@ -1987,6 +1987,15 @@ textarea {
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.30);
 }
 
+.action-btn--reactivar {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border: 1.5px solid rgba(245, 158, 11, 0.3);
+}
+.action-btn--reactivar:hover {
+  background: rgba(245, 158, 11, 0.18);
+}
+
 .action-btn--danger {
   background: #fef2f2;
   border-color: rgba(239, 68, 68, 0.28);
