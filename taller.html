@@ -231,14 +231,26 @@
         <button class="settings-close" id="settingsClose">✕</button>
       </div>
       <div class="settings-body">
-        <div class="settings-section-title">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-          Colores disponibles
+
+        <!-- PICOS -->
+        <div class="settings-section-title" style="margin-top:4px">
+          <span style="font-size:16px">⭐</span> Colores para los picos
         </div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Estos son los colores que los clientes pueden elegir al hacer una orden de estrella.</p>
-        <div id="coloresList"></div>
-        <button class="btn-add-color" id="btnAddColor">+ Agregar color</button>
-        <button class="btn-save-colors" id="btnSaveColors">Guardar colores</button>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores que el cliente puede elegir para los 6 picos de la estrella.</p>
+        <div id="coloresList_picos"></div>
+        <button class="btn-add-color" id="btnAddColorPicos">+ Agregar color de picos</button>
+
+        <div style="height:1px;background:var(--border);margin:20px 0"></div>
+
+        <!-- TAMBOR -->
+        <div class="settings-section-title">
+          <span style="font-size:16px">🥁</span> Colores para el tambor
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores del cuerpo central de la piñata (máximo 2 al pedir).</p>
+        <div id="coloresList_tambor"></div>
+        <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
+
+        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar colores</button>
       </div>
     </div>
   </div>
@@ -1028,14 +1040,12 @@ function closeColorPicker(){
 
   document.getElementById("cpConfirm").addEventListener("click",()=>{
     const hex=hslToHex(_cpH,_cpS,_cpL);
-    if(_cpTargetIdx>=0 && _colores[_cpTargetIdx]){
-      _colores[_cpTargetIdx].hex=hex;
-      // Auto-nombre si sigue siendo genérico o vacío
-      const cur=_colores[_cpTargetIdx].nombre||"";
-      if(!cur || cur==="Nuevo color" || cur==="Color"){
-        _colores[_cpTargetIdx].nombre=hexToColorName(hex);
-      }
-      renderColoresList();
+    const arr=getArr(_cpSection);
+    if(_cpTargetIdx>=0 && arr[_cpTargetIdx]){
+      arr[_cpTargetIdx].hex=hex;
+      const cur=arr[_cpTargetIdx].nombre||"";
+      if(!cur||cur==="Nuevo color"||cur==="Color") arr[_cpTargetIdx].nombre=hexToColorName(hex);
+      renderColorSection(_cpSection);
     }
     closeColorPicker();
   });
@@ -1054,32 +1064,52 @@ function closeColorPicker(){
 ══════════════════════════════════════════════ */
 let _colores = [];
 
-const COLORES_BASE_TALLER = [
-  {id:"rojo",    nombre:"Rojo",        hex:"#e63946",activo:true},
-  {id:"rosa",    nombre:"Rosa",        hex:"#ff3d8f",activo:true},
-  {id:"fucsia",  nombre:"Fucsia",      hex:"#f72585",activo:true},
-  {id:"naranja", nombre:"Naranja",     hex:"#ff6b35",activo:true},
-  {id:"amarillo",nombre:"Amarillo",    hex:"#ffd60a",activo:true},
-  {id:"dorado",  nombre:"Dorado",      hex:"#ffba08",activo:true},
-  {id:"verde",   nombre:"Verde",       hex:"#52c41a",activo:true},
-  {id:"turquesa",nombre:"Turquesa",    hex:"#2ec4b6",activo:true},
-  {id:"azul",    nombre:"Azul",        hex:"#3a86ff",activo:true},
-  {id:"morado",  nombre:"Morado",      hex:"#8338ec",activo:true},
-  {id:"violeta", nombre:"Violeta",     hex:"#c77dff",activo:true},
-  {id:"blanco",  nombre:"Blanco",      hex:"#ffffff",activo:true},
-  {id:"negro",   nombre:"Negro",       hex:"#1a1a1a",activo:true},
-  {id:"plata",   nombre:"Plateado",    hex:"#c0c0c0",activo:true},
+const BASE_PICOS = [
+  {id:"rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
+  {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
+  {id:"fucsia",  nombre:"Fucsia",   hex:"#f72585",activo:true},
+  {id:"naranja", nombre:"Naranja",  hex:"#ff6b35",activo:true},
+  {id:"amarillo",nombre:"Amarillo", hex:"#ffd60a",activo:true},
+  {id:"dorado",  nombre:"Dorado",   hex:"#ffba08",activo:true},
+  {id:"verde",   nombre:"Verde",    hex:"#52c41a",activo:true},
+  {id:"turquesa",nombre:"Turquesa", hex:"#2ec4b6",activo:true},
+  {id:"azul",    nombre:"Azul",     hex:"#3a86ff",activo:true},
+  {id:"morado",  nombre:"Morado",   hex:"#8338ec",activo:true},
+  {id:"violeta", nombre:"Violeta",  hex:"#c77dff",activo:true},
+  {id:"blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
+  {id:"negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
+  {id:"plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
 ];
+const BASE_TAMBOR = [
+  {id:"t-rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
+  {id:"t-rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
+  {id:"t-naranja", nombre:"Naranja",  hex:"#ff6b35",activo:true},
+  {id:"t-amarillo",nombre:"Amarillo", hex:"#ffd60a",activo:true},
+  {id:"t-verde",   nombre:"Verde",    hex:"#52c41a",activo:true},
+  {id:"t-azul",    nombre:"Azul",     hex:"#3a86ff",activo:true},
+  {id:"t-morado",  nombre:"Morado",   hex:"#8338ec",activo:true},
+  {id:"t-blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
+  {id:"t-negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
+  {id:"t-plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
+];
+
+let _colores = [];       // legado (colores genéricos)
+let _coloresPicos  = [];
+let _coloresTambor = [];
 
 async function pullColores(){
   if(!_sb) return;
-  const {data} = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
-  if(data && Array.isArray(data.colores) && data.colores.length > 0){
-    _colores = data.colores;
-  } else {
-    // Primera vez: cargar colores básicos y guardarlos
-    _colores = COLORES_BASE_TALLER.map(c=>({...c}));
-    if(_sb) _sb.from("app_config").upsert({id:"default", colores:_colores}).then(()=>{});
+  const {data} = await _sb.from("app_config").select("colores,colores_picos,colores_tambor").eq("id","default").maybeSingle();
+  const seedNeeded = !data || (!data.colores_picos?.length && !data.colores_tambor?.length);
+  if(data?.colores_picos?.length)  _coloresPicos  = data.colores_picos;
+  else                             _coloresPicos  = BASE_PICOS.map(c=>({...c}));
+  if(data?.colores_tambor?.length) _coloresTambor = data.colores_tambor;
+  else                             _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
+  // Legado
+  if(data?.colores?.length)        _colores       = data.colores;
+  // Guardar seeds si era primera vez
+  if(seedNeeded && _sb){
+    _sb.from("app_config").upsert({id:"default", colores_picos:_coloresPicos, colores_tambor:_coloresTambor}).then(()=>{});
   }
 }
 
@@ -1087,77 +1117,93 @@ async function saveColores(){
   const btn = document.getElementById("btnSaveColors");
   if(!_sb){ showToast("Sin conexión"); return; }
   btn.disabled = true; btn.textContent = "Guardando...";
-  collectNamesFromDOM();
-  const {error} = await _sb.from("app_config").upsert({id:"default", colores:_colores});
+  collectNamesFromDOM("picos");
+  collectNamesFromDOM("tambor");
+  const {error} = await _sb.from("app_config").upsert({id:"default", colores_picos:_coloresPicos, colores_tambor:_coloresTambor});
   btn.disabled = false; btn.textContent = "Guardar colores";
   if(error){ showToast("Error al guardar"); return; }
   showToast("✅ Colores guardados");
 }
 
-function collectNamesFromDOM(){
-  document.querySelectorAll(".color-row[data-i]").forEach(row=>{
+let _cpSection = "picos"; // sección activa del picker
+
+function getArr(sec){ return sec==="picos" ? _coloresPicos : _coloresTambor; }
+function setArr(sec,arr){ if(sec==="picos") _coloresPicos=arr; else _coloresTambor=arr; }
+
+function collectNamesFromDOM(sec){
+  const arr=getArr(sec);
+  document.querySelectorAll(`.color-row[data-sec="${sec}"][data-i]`).forEach(row=>{
     const i=parseInt(row.dataset.i);
-    if(!_colores[i]) return;
+    if(!arr[i]) return;
     const n=row.querySelector(".color-name-edit");
-    if(n) _colores[i].nombre=n.value.trim()||"Color";
+    if(n) arr[i].nombre=n.value.trim()||"Color";
   });
 }
 
-function renderColoresList(){
-  const list=document.getElementById("coloresList");
+function renderColorSection(sec){
+  const arr=getArr(sec);
+  const listId=`coloresList_${sec}`;
+  const list=document.getElementById(listId);
   if(!list) return;
-  list.innerHTML=_colores.map((c,i)=>`
-    <div class="color-row ${c.activo===false?'inactive':''}" data-i="${i}">
-      <button class="color-swatch-btn" data-open="${i}" style="background:${esc(c.hex||'#ec4899')}" title="Cambiar color"></button>
-      <input type="text" class="color-name-edit" value="${esc(c.nombre||'')}" placeholder="Nombre del color">
-      <button class="color-toggle-btn ${c.activo===false?'off':'on'}" data-toggle="${i}">${c.activo===false?'Inactivo':'Activo'}</button>
-      <button class="color-delete-btn" data-del="${i}" title="Eliminar">✕</button>
+  list.innerHTML=arr.map((c,i)=>`
+    <div class="color-row ${c.activo===false?'inactive':''}" data-sec="${sec}" data-i="${i}">
+      <button class="color-swatch-btn" data-open="${i}" data-sec="${sec}" style="background:${esc(c.hex||'#ec4899')}" title="Cambiar color"></button>
+      <input type="text" class="color-name-edit" value="${esc(c.nombre||'')}" placeholder="Nombre">
+      <button class="color-toggle-btn ${c.activo===false?'off':'on'}" data-toggle="${i}" data-sec="${sec}">${c.activo===false?'Inactivo':'Activo'}</button>
+      <button class="color-delete-btn" data-del="${i}" data-sec="${sec}" title="Eliminar">✕</button>
     </div>
   `).join("");
 
   list.querySelectorAll("[data-open]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      collectNamesFromDOM();
-      const i=parseInt(btn.dataset.open);
-      openColorPicker(i, _colores[i]?.hex||"#ec4899", btn);
+      const s=btn.dataset.sec, i=parseInt(btn.dataset.open);
+      collectNamesFromDOM(s);
+      _cpSection=s;
+      openColorPicker(i, getArr(s)[i]?.hex||"#ec4899", btn);
     });
   });
   list.querySelectorAll("[data-toggle]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      collectNamesFromDOM();
-      const i=parseInt(btn.dataset.toggle);
-      _colores[i].activo=(_colores[i].activo===false)?true:false;
-      renderColoresList();
+      const s=btn.dataset.sec, i=parseInt(btn.dataset.toggle), arr=getArr(s);
+      collectNamesFromDOM(s);
+      arr[i].activo=(arr[i].activo===false)?true:false;
+      renderColorSection(s);
     });
   });
   list.querySelectorAll("[data-del]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      collectNamesFromDOM();
-      _colores.splice(parseInt(btn.dataset.del),1);
-      renderColoresList();
+      const s=btn.dataset.sec, arr=getArr(s);
+      collectNamesFromDOM(s);
+      arr.splice(parseInt(btn.dataset.del),1);
+      renderColorSection(s);
     });
   });
 }
 
-function addNewColor(){
-  collectNamesFromDOM();
+function addNewColor(sec){
+  collectNamesFromDOM(sec);
   const hex="#ec4899";
-  _colores.push({id:"c_"+Date.now(),nombre:hexToColorName(hex),hex,activo:true});
-  renderColoresList();
+  getArr(sec).push({id:`c_${sec}_${Date.now()}`,nombre:hexToColorName(hex),hex,activo:true});
+  renderColorSection(sec);
   setTimeout(()=>{
-    const rows=document.querySelectorAll(".color-row[data-i]");
+    const rows=document.querySelectorAll(`.color-row[data-sec="${sec}"]`);
     const last=rows[rows.length-1];
     if(last){ last.scrollIntoView({behavior:"smooth"}); last.querySelector("[data-open]")?.click(); }
   },80);
 }
 
-function openSettings(){ document.getElementById("settingsModal").style.display="block"; renderColoresList(); }
+function openSettings(){
+  document.getElementById("settingsModal").style.display="block";
+  renderColorSection("picos");
+  renderColorSection("tambor");
+}
 function closeSettings(){ document.getElementById("settingsModal").style.display="none"; closeColorPicker(); }
 
 document.getElementById("btnSettings").addEventListener("click", openSettings);
 document.getElementById("settingsClose").addEventListener("click", closeSettings);
 document.getElementById("settingsOverlay").addEventListener("click", closeSettings);
-document.getElementById("btnAddColor").addEventListener("click", addNewColor);
+document.getElementById("btnAddColorPicos").addEventListener("click",()=>addNewColor("picos"));
+document.getElementById("btnAddColorTambor").addEventListener("click",()=>addNewColor("tambor"));
 document.getElementById("btnSaveColors").addEventListener("click", saveColores);
 
 /* ── Instalación PWA ── */

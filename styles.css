@@ -2203,6 +2203,58 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   margin: 4px 0;
 }
 
+/* Selector modo picos */
+.pico-mode-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.pico-mode-btn {
+  border: 1.5px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pico-mode-btn.is-active {
+  background: linear-gradient(135deg, var(--pink-500), var(--magenta));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+}
+
+/* Toggle imagen */
+.imagen-toggle-group {
+  display: flex;
+  gap: 8px;
+}
+.imagen-toggle-btn {
+  flex: 1;
+  border: 1.5px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.imagen-toggle-btn.is-active {
+  background: linear-gradient(135deg, var(--pink-500), var(--magenta));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+}
+
 /* Grid de colores en modal de edición */
 .edit-colors-grid {
   display: flex;

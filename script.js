@@ -20,7 +20,12 @@ const state = {
   history: [],
   tipo: null, // 'estrella' | 'personalizada'
   estrella: {
-    colores: [], // array de objetos {id, nombre, hex}
+    // Nueva estructura
+    picos: { modo: "uno", colores: [] },   // modo: uno|dos|personalizado
+    tambor: { colores: [] },               // máx 2
+    imagen: { tiene: false, descripcion: "" },
+    // Legado (se rellena al guardar para compatibilidad)
+    colores: [],
     tematica: "",
     emoji: "🪅",
     notas: "",
@@ -91,18 +96,8 @@ const COLORES_BASE = [
 let COLORES = [];
 const MAX_COLORES = 8;
 
-function applyCloudColors(cloudColores) {
-  if (!Array.isArray(cloudColores)) return;
-  const activos = cloudColores.filter(c => c.activo !== false && c.hex);
-  // Si hay colores del taller, usarlos; si no, usar los base como respaldo
-  COLORES = activos.length > 0
-    ? activos.map(c => ({ id: c.id || ("c_" + c.hex), nombre: c.nombre || "Color", hex: c.hex }))
-    : [...COLORES_BASE];
-  // Re-renderizar si estamos en pantalla de estrella
-  if (typeof renderColorSwatches === "function" && state && state.step === "estrella") {
-    renderColorSwatches();
-  }
-}
+// applyCloudColors es definida en la sección de Estrella (arriba)
+// Esta función se llama desde pullAllFromCloud y desde el realtime de app_config
 
 /* ============================================================
    Orden de pantallas (usado para la barra de progreso)
@@ -208,7 +203,7 @@ $$(".type-card").forEach(card => {
     state.tipo = card.dataset.type;
     if (state.tipo === "estrella") {
       goTo("estrella");
-      renderColorSwatches(); // usa COLORES actual (del taller o base si no cargó aún)
+      initEstrellaPantalla();
     } else {
       goTo("personalizada");
     }
@@ -216,102 +211,174 @@ $$(".type-card").forEach(card => {
 });
 
 /* ============================================================
-   Pantalla Estrella (6 picos)
+   Pantalla Estrella — Picos, Tambor e Imagen
    ============================================================ */
-function renderColorSwatches() {
-  const grid = $("#colorsGrid");
-  grid.innerHTML = "";
 
-  if (COLORES.length === 0) {
-    // Aún cargando desde Supabase
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-muted);font-size:13px;font-weight:600">
-      <div style="font-size:28px;margin-bottom:8px">🎨</div>
-      Cargando colores del taller…
-    </div>`;
+// Colores por categoría cargados desde Supabase (se llenan en applyCloudColors)
+let COLORES_PICOS  = [];
+let COLORES_TAMBOR = [];
+
+function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
+  // Picos
+  const activosPicos = (cloudPicos || []).filter(c => c.activo !== false && c.hex);
+  COLORES_PICOS = activosPicos.length > 0
+    ? activosPicos.map(c => ({ id: c.id || ("cp_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
+    : COLORES_BASE.slice(0, 14);
+
+  // Tambor
+  const activosTambor = (cloudTambor || []).filter(c => c.activo !== false && c.hex);
+  COLORES_TAMBOR = activosTambor.length > 0
+    ? activosTambor.map(c => ({ id: c.id || ("ct_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
+    : COLORES_BASE.slice(0, 10);
+
+  // Legado: COLORES genérico (para edición de órdenes viejas)
+  COLORES = COLORES_PICOS;
+
+  // Re-renderizar si está en pantalla estrella
+  if (state && state.step === "estrella") {
+    renderPicosGrid();
+    renderTamborGrid();
+  }
+}
+
+/* ── Modo de picos ── */
+let _picoMode = "uno"; // uno | dos | personalizado
+const MAX_PICOS = 6;
+const MAX_TAMBOR = 2;
+
+function initEstrellaPantalla() {
+  renderPicosGrid();
+  renderTamborGrid();
+
+  // Botones modo picos
+  $$(".pico-mode-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$(".pico-mode-btn").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      _picoMode = btn.dataset.mode;
+      state.estrella.picos.modo = _picoMode;
+      // Limpiar selección al cambiar modo
+      state.estrella.picos.colores = [];
+      renderPicosGrid();
+    });
+  });
+
+  // Toggle imagen
+  $$(".imagen-toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$(".imagen-toggle-btn").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      const tiene = btn.dataset.val === "si";
+      state.estrella.imagen.tiene = tiene;
+      $("#imagenDescWrap").style.display = tiene ? "block" : "none";
+    });
+  });
+  $("#imagenDesc")?.addEventListener("input", e => {
+    state.estrella.imagen.descripcion = e.target.value.trim();
+  });
+}
+
+function renderSwatchGrid(container, colores, seleccionados, maxSel, onToggle) {
+  container.innerHTML = "";
+  if (colores.length === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1;padding:16px;text-align:center;color:var(--text-muted);font-size:13px;font-weight:600">🎨 Cargando colores del taller…</div>`;
     return;
   }
-
-  COLORES.forEach(c => {
+  colores.forEach(c => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "color-swatch";
     btn.dataset.id = c.id;
     btn.style.setProperty("--c", c.hex);
-    btn.setAttribute("aria-label", c.nombre);
     btn.title = c.nombre;
-    btn.addEventListener("click", () => toggleColor(c));
-    grid.appendChild(btn);
-  });
-  updateColorsUI();
-}
-
-function toggleColor(color) {
-  const idx = state.estrella.colores.findIndex(x => x.id === color.id);
-  if (idx >= 0) {
-    state.estrella.colores.splice(idx, 1);
-  } else {
-    if (state.estrella.colores.length >= MAX_COLORES) {
-      showToast(`Máximo ${MAX_COLORES} colores.`);
-      return;
-    }
-    state.estrella.colores.push(color);
-  }
-  updateColorsUI();
-  startColorCycle();
-}
-
-/* Color picker personalizado */
-function addCustomColor(hex) {
-  const cleanHex = hex.toLowerCase();
-  // ¿Ya existe?
-  const existing = COLORES.find(c => c.hex.toLowerCase() === cleanHex);
-  if (existing) {
-    // Solo seleccionarlo si no está ya
-    if (!state.estrella.colores.find(x => x.id === existing.id)) {
-      toggleColor(existing);
-    } else {
-      showToast("Ese color ya está seleccionado.");
-    }
-    return;
-  }
-  const newColor = {
-    id: "custom_" + Date.now(),
-    nombre: "Personalizado",
-    hex: cleanHex,
-    isCustom: true,
-  };
-  COLORES.push(newColor);
-  renderColorSwatches();
-  // Seleccionar automáticamente
-  if (state.estrella.colores.length < MAX_COLORES) {
-    state.estrella.colores.push(newColor);
-  }
-  updateColorsUI();
-  startColorCycle();
-}
-
-function updateColorsUI() {
-  const grid = $("#colorsGrid");
-  const counter = $("#colorsCounter");
-  const n = state.estrella.colores.length;
-
-  counter.textContent = `${n} de ${MAX_COLORES}`;
-  counter.classList.toggle("is-full", n === MAX_COLORES);
-
-  $$(".color-swatch", grid).forEach(btn => {
-    const idx = state.estrella.colores.findIndex(x => x.id === btn.dataset.id);
-    const oldBadge = btn.querySelector(".color-swatch__badge");
-    if (oldBadge) oldBadge.remove();
+    const idx = seleccionados.findIndex(x => x.id === c.id);
     if (idx >= 0) {
       btn.classList.add("is-active");
       const badge = document.createElement("span");
       badge.className = "color-swatch__badge";
       badge.textContent = idx + 1;
       btn.appendChild(badge);
-    } else {
-      btn.classList.remove("is-active");
     }
+    btn.addEventListener("click", () => onToggle(c));
+    container.appendChild(btn);
   });
+}
+
+function renderPicosGrid() {
+  const grid = $("#colorsGridPicos");
+  if (!grid) return;
+  const maxSel = _picoMode === "uno" ? 1 : _picoMode === "dos" ? 2 : MAX_PICOS;
+  const hint = $("#picoModeHint");
+  if (hint) {
+    hint.textContent = _picoMode === "uno" ? "Elige 1 color — se aplicará a los 6 picos." :
+                       _picoMode === "dos" ? "Elige 2 colores — se alternarán en los picos." :
+                       "Elige hasta 6 colores — uno por pico.";
+  }
+  renderSwatchGrid(grid, COLORES_PICOS, state.estrella.picos.colores, maxSel, (c) => {
+    const idx = state.estrella.picos.colores.findIndex(x => x.id === c.id);
+    if (idx >= 0) {
+      state.estrella.picos.colores.splice(idx, 1);
+    } else {
+      if (state.estrella.picos.colores.length >= maxSel) {
+        if (maxSel === 1) {
+          state.estrella.picos.colores = [c]; // reemplazar
+        } else {
+          showToast(`Máximo ${maxSel} colores para ${_picoMode === "dos" ? "este modo" : "los picos"}.`);
+          return;
+        }
+      } else {
+        state.estrella.picos.colores.push(c);
+      }
+    }
+    renderPicosGrid();
+    syncLegacyColores();
+    startColorCycle();
+  });
+}
+
+function renderTamborGrid() {
+  const grid = $("#colorsGridTambor");
+  if (!grid) return;
+  renderSwatchGrid(grid, COLORES_TAMBOR, state.estrella.tambor.colores, MAX_TAMBOR, (c) => {
+    const idx = state.estrella.tambor.colores.findIndex(x => x.id === c.id);
+    if (idx >= 0) {
+      state.estrella.tambor.colores.splice(idx, 1);
+    } else {
+      if (state.estrella.tambor.colores.length >= MAX_TAMBOR) {
+        showToast(`Máximo ${MAX_TAMBOR} colores para el tambor.`);
+        return;
+      }
+      state.estrella.tambor.colores.push(c);
+    }
+    const counter = $("#tamborCounter");
+    if (counter) counter.textContent = `${state.estrella.tambor.colores.length} de ${MAX_TAMBOR}`;
+    renderTamborGrid();
+    applyColorsToSvg();
+  });
+}
+
+function syncLegacyColores() {
+  // Para compatibilidad con el SVG y resumen, juntamos picos+tambor
+  state.estrella.colores = [...state.estrella.picos.colores, ...state.estrella.tambor.colores]
+    .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i);
+}
+
+// Legado: renderColorSwatches ahora solo es alias
+function renderColorSwatches() {
+  renderPicosGrid();
+  renderTamborGrid();
+}
+
+// Legado (addCustomColor ya no se usa en el nuevo flujo)
+function addCustomColor(hex) { }
+function updateColorsUI() { renderPicosGrid(); renderTamborGrid(); }
+function toggleColor(c) {
+  // Solo para compatibilidad con código viejo
+  const idx = state.estrella.picos.colores.findIndex(x => x.id === c.id);
+  if (idx >= 0) state.estrella.picos.colores.splice(idx, 1);
+  else state.estrella.picos.colores.push(c);
+  syncLegacyColores();
+  renderPicosGrid();
 }
 
 /* Ciclo animado: los colores rotan por los 6 picos cada intervalo */
@@ -455,15 +522,15 @@ $$(".btn-next").forEach(btn => {
 
 function validateScreen(screen) {
   if (screen === "estrella") {
-    if (state.estrella.colores.length === 0) {
-      showToast("Elige al menos 1 color.");
+    if (state.estrella.picos.colores.length === 0) {
+      showToast("Elige al menos 1 color para los picos.");
       return false;
     }
-    if (!state.estrella.tematica) {
-      showToast("Por favor elige o escribe una temática.");
-      $("#tematica").focus();
+    if (state.estrella.tambor.colores.length === 0) {
+      showToast("Elige al menos 1 color para el tambor.");
       return false;
     }
+    syncLegacyColores();
     return true;
   }
   if (screen === "personalizada") {
@@ -638,14 +705,17 @@ function renderSummary() {
 
   if (state.tipo === "estrella") {
     rows.push({ label: "Tipo", value: "Piñata estrella (6 picos)" });
-    const dotsHTML = state.estrella.colores
-      .map(c => `<span class="summary-dot" style="background:${c.hex}"></span>`)
-      .join("");
-    rows.push({
-      label: `Colores (${state.estrella.colores.length})`,
-      value: `<div class="summary-colors"><div class="summary-colors__dots">${dotsHTML}</div><span class="summary-colors__names">${state.estrella.colores.map(c => c.nombre).join(", ")}</span></div>`,
-      isHTML: true,
-    });
+    // Picos
+    const picosDots = state.estrella.picos.colores.map(c=>`<span class="summary-dot" style="background:${c.hex}"></span>`).join("");
+    const picosNames = state.estrella.picos.colores.map(c=>c.nombre).join(", ");
+    const modoLabel = {uno:"Todos iguales",dos:"2 alternados",personalizado:"Personalizado"}[state.estrella.picos.modo]||"";
+    rows.push({ label: `⭐ Picos — ${modoLabel}`, value:`<div class="summary-colors"><div class="summary-colors__dots">${picosDots}</div><span class="summary-colors__names">${picosNames||"—"}</span></div>`, isHTML:true });
+    // Tambor
+    const tamborDots = state.estrella.tambor.colores.map(c=>`<span class="summary-dot" style="background:${c.hex}"></span>`).join("");
+    const tamborNames = state.estrella.tambor.colores.map(c=>c.nombre).join(", ");
+    rows.push({ label:"🥁 Tambor", value:`<div class="summary-colors"><div class="summary-colors__dots">${tamborDots}</div><span class="summary-colors__names">${tamborNames||"—"}</span></div>`, isHTML:true });
+    // Imagen
+    if (state.estrella.imagen.tiene) rows.push({ label:"🖼️ Imagen", value: state.estrella.imagen.descripcion || "Sí" });
     rows.push({ label: "Temática", value: `${state.estrella.emoji} ${state.estrella.tematica || "—"}` });
     if (state.estrella.notas) rows.push({ label: "Notas", value: state.estrella.notas });
   } else if (state.tipo === "personalizada") {
@@ -732,9 +802,13 @@ function buildOrderMessage(orden) {
 
   if (orden.tipo === "estrella") {
     lines.push("🪅 *Tipo:* Piñata estrella (6 picos)");
-    const coloresTxt = orden.estrella.colores.map(c => c.nombre).join(", ");
-    lines.push(`🎨 *Colores (${orden.estrella.colores.length}):* ${coloresTxt}`);
-    lines.push(`${orden.estrella.emoji} *Temática:* ${orden.estrella.tematica}`);
+    const picos  = orden.estrella.picos?.colores  || orden.estrella.colores || [];
+    const tambor = orden.estrella.tambor?.colores || [];
+    const modo   = {uno:"Todos iguales",dos:"2 alternados",personalizado:"Personalizado"}[orden.estrella.picos?.modo]||"";
+    lines.push(`⭐ *Picos (${modo}):* ${picos.map(c=>c.nombre).join(", ")||"—"}`);
+    lines.push(`🥁 *Tambor:* ${tambor.map(c=>c.nombre).join(", ")||"—"}`);
+    if (orden.estrella.imagen?.tiene) lines.push(`🖼️ *Imagen:* ${orden.estrella.imagen.descripcion||"Sí"}`);
+    if (orden.estrella.tematica) lines.push(`${orden.estrella.emoji} *Temática:* ${orden.estrella.tematica}`);
     if (orden.estrella.notas) lines.push(`📝 *Notas:* ${orden.estrella.notas}`);
   } else {
     lines.push("🎨 *Tipo:* Personalizada");
@@ -1094,7 +1168,7 @@ async function pullAllFromCloud() {
       direccion:        cfg.data.direccion || "Laureles",
       pin:              cfg.data.pin       || "",
     };
-    applyCloudColors(cfg.data.colores || []);
+    applyCloudColors(cfg.data.colores || [], cfg.data.colores_picos || [], cfg.data.colores_tambor || []);
   }
   persistLocal();
   if (state.step === "admin") renderAdmin();
@@ -1144,7 +1218,7 @@ function subscribeToCloudChanges() {
           direccion:        p.new.direccion || "Laureles",
           pin:              p.new.pin       || "",
         };
-        applyCloudColors(p.new.colores || []);
+        applyCloudColors(p.new.colores || [], p.new.colores_picos || [], p.new.colores_tambor || []);
         persistLocal();
         if (state.step === "admin") renderAdmin();
       }
@@ -1263,8 +1337,12 @@ function buildOrderPayload() {
     creadaDate: now.getTime(),
   };
   if (state.tipo === "estrella") {
+    syncLegacyColores();
     base.estrella = {
-      colores: state.estrella.colores.map(c => ({ ...c })),
+      picos:  { modo: state.estrella.picos.modo, colores: state.estrella.picos.colores.map(c=>({...c})) },
+      tambor: { colores: state.estrella.tambor.colores.map(c=>({...c})) },
+      imagen: { tiene: state.estrella.imagen.tiene, descripcion: state.estrella.imagen.descripcion },
+      colores: state.estrella.colores.map(c=>({...c})), // legado
       tematica: state.estrella.tematica,
       emoji: state.estrella.emoji,
       notas: state.estrella.notas,

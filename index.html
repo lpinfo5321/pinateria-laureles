@@ -207,24 +207,45 @@
         <span class="star-preview__label" id="starLabel">Tu piñata</span>
       </div>
 
-      <!-- Selector de colores -->
+      <!-- ⭐ PICOS -->
       <div class="field">
         <div class="field__row">
-          <label class="field__label">Colores</label>
-          <span class="counter" id="colorsCounter">0 de 8</span>
+          <label class="field__label">⭐ Colores de los picos</label>
         </div>
-        <p class="field__hint">Toca para elegir. Puedes usar de 1 a 8 colores. La vista previa va mostrando cómo se verá.</p>
-        <div class="colors-grid" id="colorsGrid">
-          <!-- Inyectado por JS -->
+        <p class="field__hint">¿Cómo quieres los 6 picos?</p>
+        <div class="pico-mode-group" id="picoModeGroup">
+          <button type="button" class="pico-mode-btn is-active" data-mode="uno">Todos iguales</button>
+          <button type="button" class="pico-mode-btn" data-mode="dos">2 colores alternados</button>
+          <button type="button" class="pico-mode-btn" data-mode="personalizado">Personalizado (hasta 6)</button>
         </div>
-        <button type="button" class="add-color-btn" id="addColorBtn">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-          Agregar otro color
-        </button>
-        <input type="color" id="colorPicker" hidden aria-hidden="true" />
+        <div class="colors-grid" id="colorsGridPicos"><!-- JS --></div>
+        <div id="picoModeHint" class="field__hint" style="margin-top:6px"></div>
       </div>
 
-      <!-- Temática / Personaje -->
+      <!-- 🥁 TAMBOR -->
+      <div class="field">
+        <div class="field__row">
+          <label class="field__label">🥁 Colores del tambor</label>
+          <span class="counter" id="tamborCounter">0 de 2</span>
+        </div>
+        <p class="field__hint">El cuerpo central. Elige hasta 2 colores.</p>
+        <div class="colors-grid" id="colorsGridTambor"><!-- JS --></div>
+      </div>
+
+      <!-- 🖼️ IMAGEN -->
+      <div class="field">
+        <label class="field__label">🖼️ ¿Tendrá imagen o figura?</label>
+        <p class="field__hint">Por ejemplo: un personaje, logo, foto impresa, etc.</p>
+        <div class="imagen-toggle-group" id="imagenToggleGroup">
+          <button type="button" class="imagen-toggle-btn" data-val="si">Sí, tendrá imagen</button>
+          <button type="button" class="imagen-toggle-btn is-active" data-val="no">No</button>
+        </div>
+        <div id="imagenDescWrap" style="display:none;margin-top:10px">
+          <input type="text" id="imagenDesc" class="input" placeholder="¿Qué imagen? Ej: Spiderman, logo de equipo, foto de cumpleañero..." />
+        </div>
+      </div>
+
+      <!-- TEMÁTICA -->
       <div class="field">
         <label class="field__label" for="tematica">Personaje o temática</label>
         <p class="field__hint">Elige una temática o escribe la tuya</p>
