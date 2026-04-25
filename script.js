@@ -218,18 +218,45 @@ $$(".type-card").forEach(card => {
 let COLORES_PICOS  = [];
 let COLORES_TAMBOR = [];
 
+// Colores base idénticos a los del taller (BASE_PICOS / BASE_TAMBOR en taller.html)
+const BASE_PICOS_PC = [
+  {id:"rojo",    nombre:"Rojo",     hex:"#e63946"},
+  {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f"},
+  {id:"fucsia",  nombre:"Fucsia",   hex:"#f72585"},
+  {id:"naranja", nombre:"Naranja",  hex:"#ff6b35"},
+  {id:"amarillo",nombre:"Amarillo", hex:"#ffd60a"},
+  {id:"dorado",  nombre:"Dorado",   hex:"#ffba08"},
+  {id:"verde",   nombre:"Verde",    hex:"#52c41a"},
+  {id:"turquesa",nombre:"Turquesa", hex:"#2ec4b6"},
+  {id:"azul",    nombre:"Azul",     hex:"#3a86ff"},
+  {id:"morado",  nombre:"Morado",   hex:"#8338ec"},
+  {id:"blanco",  nombre:"Blanco",   hex:"#ffffff"},
+  {id:"negro",   nombre:"Negro",    hex:"#1a1a1a"},
+];
+const BASE_TAMBOR_PC = [
+  {id:"rojo",    nombre:"Rojo",     hex:"#e63946"},
+  {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f"},
+  {id:"naranja", nombre:"Naranja",  hex:"#ff6b35"},
+  {id:"amarillo",nombre:"Amarillo", hex:"#ffd60a"},
+  {id:"verde",   nombre:"Verde",    hex:"#52c41a"},
+  {id:"azul",    nombre:"Azul",     hex:"#3a86ff"},
+  {id:"morado",  nombre:"Morado",   hex:"#8338ec"},
+  {id:"blanco",  nombre:"Blanco",   hex:"#ffffff"},
+  {id:"negro",   nombre:"Negro",    hex:"#1a1a1a"},
+];
+
 function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
   // Picos
   const activosPicos = (cloudPicos || []).filter(c => c.activo !== false && c.hex);
   COLORES_PICOS = activosPicos.length > 0
     ? activosPicos.map(c => ({ id: c.id || ("cp_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
-    : COLORES_BASE.slice(0, 14);
+    : BASE_PICOS_PC;
 
   // Tambor
   const activosTambor = (cloudTambor || []).filter(c => c.activo !== false && c.hex);
   COLORES_TAMBOR = activosTambor.length > 0
     ? activosTambor.map(c => ({ id: c.id || ("ct_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
-    : COLORES_BASE.slice(0, 10);
+    : BASE_TAMBOR_PC;
 
   // Legado: COLORES genérico (para edición de órdenes viejas)
   COLORES = COLORES_PICOS;
@@ -427,23 +454,30 @@ function stopColorCycle() {
   }
 }
 
-/* Temática / personaje */
+/* Temática / personaje — chips llenan #imagenDesc y el estado */
 $$(".chip-sugg[data-theme]").forEach(btn => {
   btn.addEventListener("click", () => {
     $$(".chip-sugg[data-theme]").forEach(b => b.classList.remove("is-active"));
     btn.classList.add("is-active");
     state.estrella.tematica = btn.dataset.theme;
+    state.estrella.imagen.descripcion = btn.dataset.theme;
     state.estrella.emoji = btn.dataset.emoji;
-    $("#tematica").value = btn.dataset.theme;
+    const descEl = $("#imagenDesc");
+    if (descEl) descEl.value = btn.dataset.theme;
+    const hidEl = $("#tematica");
+    if (hidEl) hidEl.value = btn.dataset.theme;
     $("#starEmoji").textContent = btn.dataset.emoji;
     $("#starLabel").textContent = btn.dataset.theme;
   });
 });
 
-$("#tematica").addEventListener("input", (e) => {
-  state.estrella.tematica = e.target.value.trim();
+// El campo #imagenDesc actualiza la descripción y la temática
+$("#imagenDesc")?.addEventListener("input", (e) => {
+  const v = e.target.value.trim();
+  state.estrella.imagen.descripcion = v;
+  state.estrella.tematica = v;
   $$(".chip-sugg[data-theme]").forEach(b => b.classList.remove("is-active"));
-  $("#starLabel").textContent = state.estrella.tematica || "Tu piñata estrella";
+  $("#starLabel").textContent = v || "Tu piñata estrella";
 });
 
 $("#estrellaNotas").addEventListener("input", (e) => {
@@ -843,6 +877,9 @@ function resetState() {
     tematica: "",
     emoji: "🪅",
     notas: "",
+    picos: { modo: "uno", colores: [] },
+    tambor: { colores: [] },
+    imagen: { tiene: false, descripcion: "" },
   };
   state.personalizada = { imagen: null, imagenNombre: "", descripcion: "" };
   state.fecha = null;
@@ -851,7 +888,10 @@ function resetState() {
   $("#atendidoPor").value = "";
   $("#payNo").classList.add("is-active");
   $("#payYes").classList.remove("is-active");
-  $("#tematica").value = "";
+  const tdEl = $("#tematica"); if (tdEl) tdEl.value = "";
+  const idEl = $("#imagenDesc"); if (idEl) idEl.value = "";
+  $("#imagenDescWrap").style.display = "none";
+  $$(".imagen-toggle-btn").forEach(b => b.classList.toggle("is-active", b.dataset.val === "no"));
   $("#estrellaNotas").value = "";
   $("#descripcion").value = "";
   $("#nombre").value = "";

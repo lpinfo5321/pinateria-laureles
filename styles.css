@@ -2204,6 +2204,50 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 
 /* Selector modo picos */
+/* ── Tarjetas de sección estrella ── */
+.estrella-card {
+  background: #fff;
+  border: 2px solid rgba(236,72,153,0.15);
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 14px !important;
+  box-shadow: 0 2px 10px rgba(236,72,153,0.06);
+}
+.estrella-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.estrella-card__icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.estrella-card__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.estrella-card__sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.estrella-card__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.estrella-tematica-wrap {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1.5px solid var(--glass-border);
+}
+
+/* Botones de modo picos */
 .pico-mode-group {
   display: flex;
   gap: 8px;
@@ -2211,22 +2255,46 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   margin-bottom: 14px;
 }
 .pico-mode-btn {
-  border: 1.5px solid var(--glass-border);
-  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--glass-border);
+  background: var(--bg);
   color: var(--text-muted);
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.18s;
+}
+.pico-mode-btn:hover {
+  border-color: var(--pink-500);
+  color: var(--pink-500);
+}
+.pico-mode-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(236,72,153,0.12);
+  color: var(--pink-500);
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
 }
 .pico-mode-btn.is-active {
   background: linear-gradient(135deg, var(--pink-500), var(--magenta));
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+  box-shadow: 0 4px 14px rgba(236,72,153,0.35);
+}
+.pico-mode-btn.is-active .pico-mode-icon {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
 }
 
 /* Toggle imagen */
@@ -2236,23 +2304,27 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .imagen-toggle-btn {
   flex: 1;
-  border: 1.5px solid var(--glass-border);
-  background: var(--surface);
+  border: 2px solid var(--glass-border);
+  background: var(--bg);
   color: var(--text-muted);
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  padding: 11px 16px;
+  padding: 12px 16px;
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.18s;
   text-align: center;
+}
+.imagen-toggle-btn:hover {
+  border-color: var(--pink-500);
+  color: var(--pink-500);
 }
 .imagen-toggle-btn.is-active {
   background: linear-gradient(135deg, var(--pink-500), var(--magenta));
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+  box-shadow: 0 4px 14px rgba(236,72,153,0.35);
 }
 
 /* Grid de colores en modal de edición */
@@ -2523,15 +2595,15 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   [data-screen="estrella"].is-active > .btn-primary {
     grid-column: 2;
   }
-  [data-screen="estrella"].is-active .field {
-    margin-bottom: 16px;
+  [data-screen="estrella"].is-active .estrella-card {
+    margin-bottom: 12px !important;
   }
   [data-screen="estrella"].is-active .colors-grid {
     grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
     gap: 8px;
   }
   [data-screen="estrella"].is-active .theme-suggestions {
-    max-height: 180px;
+    max-height: 160px;
     overflow-y: auto;
     padding-right: 4px;
   }

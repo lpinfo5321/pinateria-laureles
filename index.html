@@ -208,70 +208,91 @@
       </div>
 
       <!-- ⭐ PICOS -->
-      <div class="field">
-        <div class="field__row">
-          <label class="field__label">⭐ Colores de los picos</label>
+      <div class="field estrella-card" id="cardPicos">
+        <div class="estrella-card__head">
+          <span class="estrella-card__icon">⭐</span>
+          <div>
+            <div class="estrella-card__title">Colores de los picos</div>
+            <div class="estrella-card__sub">Los 6 picos de la estrella</div>
+          </div>
         </div>
-        <p class="field__hint">¿Cómo quieres los 6 picos?</p>
         <div class="pico-mode-group" id="picoModeGroup">
-          <button type="button" class="pico-mode-btn is-active" data-mode="uno">Todos iguales</button>
-          <button type="button" class="pico-mode-btn" data-mode="dos">2 colores alternados</button>
-          <button type="button" class="pico-mode-btn" data-mode="personalizado">Personalizado (hasta 6)</button>
+          <button type="button" class="pico-mode-btn is-active" data-mode="uno">
+            <span class="pico-mode-icon">1</span> Todos iguales
+          </button>
+          <button type="button" class="pico-mode-btn" data-mode="dos">
+            <span class="pico-mode-icon">2</span> Alternados
+          </button>
+          <button type="button" class="pico-mode-btn" data-mode="personalizado">
+            <span class="pico-mode-icon">6</span> Personalizado
+          </button>
         </div>
         <div class="colors-grid" id="colorsGridPicos"><!-- JS --></div>
-        <div id="picoModeHint" class="field__hint" style="margin-top:6px"></div>
+        <div id="picoModeHint" class="estrella-card__hint" style="margin-top:8px"></div>
       </div>
 
       <!-- 🥁 TAMBOR -->
-      <div class="field">
-        <div class="field__row">
-          <label class="field__label">🥁 Colores del tambor</label>
-          <span class="counter" id="tamborCounter">0 de 2</span>
+      <div class="field estrella-card" id="cardTambor">
+        <div class="estrella-card__head">
+          <span class="estrella-card__icon">🥁</span>
+          <div>
+            <div class="estrella-card__title">Colores del tambor</div>
+            <div class="estrella-card__sub">Cuerpo central · hasta <span id="tamborCounter">0 de 2</span></div>
+          </div>
         </div>
-        <p class="field__hint">El cuerpo central. Elige hasta 2 colores.</p>
         <div class="colors-grid" id="colorsGridTambor"><!-- JS --></div>
       </div>
 
       <!-- 🖼️ IMAGEN -->
-      <div class="field">
-        <label class="field__label">🖼️ ¿Tendrá imagen o figura?</label>
-        <p class="field__hint">Por ejemplo: un personaje, logo, foto impresa, etc.</p>
+      <div class="field estrella-card" id="cardImagen">
+        <div class="estrella-card__head">
+          <span class="estrella-card__icon">🖼️</span>
+          <div>
+            <div class="estrella-card__title">¿Tendrá imagen o figura?</div>
+            <div class="estrella-card__sub">Personaje, logo, foto impresa, etc.</div>
+          </div>
+        </div>
         <div class="imagen-toggle-group" id="imagenToggleGroup">
           <button type="button" class="imagen-toggle-btn" data-val="si">Sí, tendrá imagen</button>
           <button type="button" class="imagen-toggle-btn is-active" data-val="no">No</button>
         </div>
-        <div id="imagenDescWrap" style="display:none;margin-top:10px">
-          <input type="text" id="imagenDesc" class="input" placeholder="¿Qué imagen? Ej: Spiderman, logo de equipo, foto de cumpleañero..." />
+        <div id="imagenDescWrap" style="display:none;margin-top:14px">
+          <div class="estrella-tematica-wrap">
+            <p style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">Sugerencias rápidas:</p>
+            <div class="theme-suggestions" id="themeSuggestions">
+              <button class="chip-sugg" data-theme="Spiderman" data-emoji="🕸️"><span class="chip-emoji">🕸️</span>Spiderman</button>
+              <button class="chip-sugg" data-theme="Superhéroe" data-emoji="🦸"><span class="chip-emoji">🦸</span>Superhéroe</button>
+              <button class="chip-sugg" data-theme="Batman" data-emoji="🦇"><span class="chip-emoji">🦇</span>Batman</button>
+              <button class="chip-sugg" data-theme="Unicornio" data-emoji="🦄"><span class="chip-emoji">🦄</span>Unicornio</button>
+              <button class="chip-sugg" data-theme="Princesa" data-emoji="👑"><span class="chip-emoji">👑</span>Princesa</button>
+              <button class="chip-sugg" data-theme="Sirenita" data-emoji="🧜‍♀️"><span class="chip-emoji">🧜‍♀️</span>Sirenita</button>
+              <button class="chip-sugg" data-theme="Bluey" data-emoji="🐾"><span class="chip-emoji">🐾</span>Bluey</button>
+              <button class="chip-sugg" data-theme="Dinosaurio" data-emoji="🦖"><span class="chip-emoji">🦖</span>Dinosaurio</button>
+              <button class="chip-sugg" data-theme="Fútbol" data-emoji="⚽"><span class="chip-emoji">⚽</span>Fútbol</button>
+              <button class="chip-sugg" data-theme="Carros" data-emoji="🏎️"><span class="chip-emoji">🏎️</span>Carros</button>
+              <button class="chip-sugg" data-theme="Mario Bros" data-emoji="🍄"><span class="chip-emoji">🍄</span>Mario Bros</button>
+              <button class="chip-sugg" data-theme="Mariposa" data-emoji="🦋"><span class="chip-emoji">🦋</span>Mariposa</button>
+              <button class="chip-sugg" data-theme="Espacio" data-emoji="🚀"><span class="chip-emoji">🚀</span>Espacio</button>
+              <button class="chip-sugg" data-theme="Arcoíris" data-emoji="🌈"><span class="chip-emoji">🌈</span>Arcoíris</button>
+              <button class="chip-sugg" data-theme="Flores" data-emoji="🌸"><span class="chip-emoji">🌸</span>Flores</button>
+              <button class="chip-sugg" data-theme="Corazones" data-emoji="💖"><span class="chip-emoji">💖</span>Corazones</button>
+            </div>
+            <input type="text" id="imagenDesc" class="input" placeholder="¿Qué imagen? Ej: Spiderman, logo de cumpleañero..." style="margin-top:10px" />
+            <!-- alias oculto para compatibilidad con el estado -->
+            <input type="hidden" id="tematica" />
+          </div>
         </div>
       </div>
 
-      <!-- TEMÁTICA -->
-      <div class="field">
-        <label class="field__label" for="tematica">Personaje o temática</label>
-        <p class="field__hint">Elige una temática o escribe la tuya</p>
-        <div class="theme-suggestions" id="themeSuggestions">
-          <button class="chip-sugg" data-theme="Spiderman" data-emoji="🕸️"><span class="chip-emoji">🕸️</span>Spiderman</button>
-          <button class="chip-sugg" data-theme="Superhéroe" data-emoji="🦸"><span class="chip-emoji">🦸</span>Superhéroe</button>
-          <button class="chip-sugg" data-theme="Batman" data-emoji="🦇"><span class="chip-emoji">🦇</span>Batman</button>
-          <button class="chip-sugg" data-theme="Unicornio" data-emoji="🦄"><span class="chip-emoji">🦄</span>Unicornio</button>
-          <button class="chip-sugg" data-theme="Princesa" data-emoji="👑"><span class="chip-emoji">👑</span>Princesa</button>
-          <button class="chip-sugg" data-theme="Sirenita" data-emoji="🧜‍♀️"><span class="chip-emoji">🧜‍♀️</span>Sirenita</button>
-          <button class="chip-sugg" data-theme="Bluey" data-emoji="🐾"><span class="chip-emoji">🐾</span>Bluey</button>
-          <button class="chip-sugg" data-theme="Dinosaurio" data-emoji="🦖"><span class="chip-emoji">🦖</span>Dinosaurio</button>
-          <button class="chip-sugg" data-theme="Fútbol" data-emoji="⚽"><span class="chip-emoji">⚽</span>Fútbol</button>
-          <button class="chip-sugg" data-theme="Carros" data-emoji="🏎️"><span class="chip-emoji">🏎️</span>Carros</button>
-          <button class="chip-sugg" data-theme="Mario Bros" data-emoji="🍄"><span class="chip-emoji">🍄</span>Mario Bros</button>
-          <button class="chip-sugg" data-theme="Mariposa" data-emoji="🦋"><span class="chip-emoji">🦋</span>Mariposa</button>
-          <button class="chip-sugg" data-theme="Espacio" data-emoji="🚀"><span class="chip-emoji">🚀</span>Espacio</button>
-          <button class="chip-sugg" data-theme="Arcoíris" data-emoji="🌈"><span class="chip-emoji">🌈</span>Arcoíris</button>
-          <button class="chip-sugg" data-theme="Flores" data-emoji="🌸"><span class="chip-emoji">🌸</span>Flores</button>
-          <button class="chip-sugg" data-theme="Corazones" data-emoji="💖"><span class="chip-emoji">💖</span>Corazones</button>
+      <!-- NOTAS -->
+      <div class="field estrella-card" id="cardNotas">
+        <div class="estrella-card__head">
+          <span class="estrella-card__icon">📝</span>
+          <div>
+            <div class="estrella-card__title">Notas adicionales</div>
+            <div class="estrella-card__sub">Opcional</div>
+          </div>
         </div>
-        <input type="text" id="tematica" class="input" placeholder="O escribe otra temática..." />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="estrellaNotas">Notas adicionales (opcional)</label>
         <textarea id="estrellaNotas" class="textarea" rows="3" placeholder="¿Algún detalle especial que debamos saber?"></textarea>
       </div>
 
