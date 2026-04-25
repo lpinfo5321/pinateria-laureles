@@ -1534,112 +1534,106 @@ function renderOrderCard(o, cfg) {
     "entregada": "Entregada",
   };
 
-  const emoji = o.tipo === "estrella" ? (o.estrella?.emoji || "🪅") : "🎨";
-  const pagoBadge = o.pagado
-    ? `<span class="status-badge status-badge--lista">✅ Pagado</span>`
-    : `<span class="status-badge status-badge--pago">💰 Sin pagar</span>`;
-  let tipoInfo = "";
-  if (o.tipo === "estrella") {
-    const numCol = o.estrella?.colores?.length || 0;
-    const dots = (o.estrella?.colores || [])
-      .map(c => `<span style="background:${c.hex}"></span>`).join("");
-    tipoInfo = `
-      <div>Estrella 6 picos · <strong>${numCol} color${numCol === 1 ? "" : "es"}</strong>
-        <span class="order-card__colors">${dots}</span>
-      </div>
-      <div>Temática: <strong>${o.estrella?.emoji || ""} ${o.estrella?.tematica || "—"}</strong></div>
-      ${o.estrella?.notas ? `<div>Nota: ${escapeHTML(o.estrella.notas)}</div>` : ""}
-    `;
-  } else {
-    tipoInfo = `
-      <div><strong>Piñata personalizada</strong></div>
-      ${o.personalizada?.imagen ? `<img class="order-card__ref" src="${o.personalizada.imagen}" alt="Referencia"/>` : ""}
-      <div>${escapeHTML(o.personalizada?.descripcion || "")}</div>
-    `;
-  }
-
+  const emoji   = o.tipo === "estrella" ? (o.estrella?.emoji || "🪅") : "🎨";
+  const pagado  = o.pagado;
+  const _cfgWA  = (getConfig().whatsappPinatera || "").replace(/\D/g, "");
   const waPhone = (o.cliente?.telefono || "").replace(/\D/g, "");
   const canCall = waPhone.length >= 7;
-
-  // Para "Preguntar a Laureles" usamos el WhatsApp del negocio configurado en ⚙️
-  const _cfgWA = (getConfig().whatsappPinatera || "").replace(/\D/g, "");
   const canAskLaureles = _cfgWA.length >= 7;
 
-  card.innerHTML = `
-    <div class="order-card__top">
-      <div class="order-card__id">
-        <span class="order-card__emoji">${emoji}</span>#${String(o.numero).padStart(3, "0")}
-      </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
-        <span class="status-badge status-badge--${o.estado}">${statusLabels[o.estado]}</span>
-        ${pagoBadge}
-      </div>
-    </div>
-    <div class="order-card__client">${escapeHTML(o.cliente?.nombre || "Sin nombre")}</div>
-    ${o.cliente?.atendidoPor ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Atendido por: <strong style="color:var(--text-soft)">${escapeHTML(o.cliente.atendidoPor)}</strong></div>` : ""}
-    <div class="order-card__phone">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
-      ${escapeHTML(o.cliente?.telefono || "Sin teléfono")}
-    </div>
-    <div class="order-card__info">
-      ${tipoInfo}
-      <div>Recogida: <strong>${formatDateLong(o.recogida)}</strong></div>
-    </div>
-    <div class="order-card__actions">
+  // ── Piñata info ──
+  let piñataBlock = "";
+  if (o.tipo === "estrella") {
+    const picosCols  = o.estrella?.picos?.colores || o.estrella?.colores || [];
+    const tamborCols = o.estrella?.tambor?.colores || [];
+    const modoLabel  = {uno:"Todos iguales",dos:"2 alternados",personalizado:"Personalizado"}[o.estrella?.picos?.modo] || "";
 
+    const makeDots = (arr) => arr.map(c =>
+      `<span class="oc-dot" style="background:${c.hex}" title="${escapeHTML(c.nombre)}"></span>`
+    ).join("");
+    const makeChips = (arr) => arr.map(c =>
+      `<span class="oc-chip"><span class="oc-chip-dot" style="background:${c.hex}"></span>${escapeHTML(c.nombre)}</span>`
+    ).join("");
+
+    const picosRow  = picosCols.length  ? `<div class="oc-cat"><span class="oc-cat-lbl">⭐ Picos${modoLabel ? " · "+modoLabel : ""}</span><div class="oc-chips">${makeChips(picosCols)}</div></div>` : "";
+    const tamborRow = tamborCols.length ? `<div class="oc-cat"><span class="oc-cat-lbl">🥁 Tambor</span><div class="oc-chips">${makeChips(tamborCols)}</div></div>` : "";
+    const imagenRow = o.estrella?.imagen?.tiene ? `<div class="oc-imagen"><span>🖼️</span> ${escapeHTML(o.estrella.imagen.descripcion || "Con imagen")}</div>` : "";
+    const temaRow   = o.estrella?.tematica ? `<div class="oc-tema">${escapeHTML(o.estrella.emoji||"")} ${escapeHTML(o.estrella.tematica)}</div>` : "";
+    const notaRow   = o.estrella?.notas ? `<div class="oc-nota">"${escapeHTML(o.estrella.notas)}"</div>` : "";
+
+    piñataBlock = `<div class="oc-pinata oc-pinata--estrella">${picosRow}${tamborRow}${imagenRow}${temaRow}${notaRow}</div>`;
+  } else {
+    const imgTag  = o.personalizada?.imagen ? `<img class="order-card__ref" src="${o.personalizada.imagen}" alt="Ref"/>` : "";
+    const descTag = o.personalizada?.descripcion ? `<p class="oc-nota">${escapeHTML(o.personalizada.descripcion)}</p>` : "";
+    piñataBlock = `<div class="oc-pinata oc-pinata--personalizada"><span class="oc-cat-lbl">🎨 Piñata personalizada</span>${imgTag}${descTag}</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="oc-header">
+      <div class="oc-num"><span class="oc-emoji">${emoji}</span>#${String(o.numero).padStart(3,"0")}</div>
+      <div class="oc-badges">
+        <span class="status-badge status-badge--${o.estado}">${statusLabels[o.estado]}</span>
+        <span class="status-badge ${pagado ? "status-badge--lista" : "status-badge--pago"}">${pagado ? "✓ Pagado" : "$ Sin pagar"}</span>
+      </div>
+    </div>
+
+    <div class="oc-client">
+      <div class="oc-client-name">${escapeHTML(o.cliente?.nombre || "Sin nombre")}</div>
+      <div class="oc-client-meta">
+        ${o.cliente?.atendidoPor ? `<span class="oc-meta-chip">👤 ${escapeHTML(o.cliente.atendidoPor)}</span>` : ""}
+        <span class="oc-meta-chip">📞 ${escapeHTML(o.cliente?.telefono || "—")}</span>
+      </div>
+    </div>
+
+    ${piñataBlock}
+
+    <div class="oc-fecha">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Lista para: <strong>${formatDateLong(o.recogida)}</strong>
+    </div>
+
+    <div class="order-card__actions">
       ${o.estado !== "lista" && o.estado !== "entregada" ? `
         <button class="action-btn action-btn--primary action-btn--full" data-act="marcar-lista" data-id="${o.id}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           Marcar como lista
         </button>
-      ` : ""}
-
-      ${o.estado === "lista" ? `
-        <button class="action-btn action-btn--whatsapp action-btn--full desktop-only" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          Avisar al cliente que está lista
-        </button>
-        <button class="action-btn action-btn--neutral action-btn--full desktop-only" data-act="entregada" data-id="${o.id}">
-          Marcar entregada
-        </button>
-        <button class="action-btn action-btn--neutral desktop-only" data-act="revertir" data-id="${o.id}" title="Regresar a pendiente si se equivocaron">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
-          Revertir a pendiente
-        </button>
-      ` : ""}
-
-      ${o.estado !== "lista" && o.estado !== "entregada" ? `
-        <button class="action-btn action-btn--whatsapp" data-act="preguntar" data-id="${o.id}" ${!canAskLaureles ? "disabled" : ""} title="${canAskLaureles ? "Enviar duda a Laureles para que ellos contacten al cliente" : "Configura el WhatsApp de Laureles en ⚙️"}">
+        <button class="action-btn action-btn--whatsapp" data-act="preguntar" data-id="${o.id}" ${!canAskLaureles ? "disabled" : ""}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Preguntar a Laureles
         </button>
       ` : ""}
-
+      ${o.estado === "lista" ? `
+        <button class="action-btn action-btn--whatsapp action-btn--full desktop-only" data-act="notificar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Avisar al cliente
+        </button>
+        <button class="action-btn action-btn--neutral action-btn--full desktop-only" data-act="entregada" data-id="${o.id}">✓ Marcar entregada</button>
+        <button class="action-btn action-btn--neutral desktop-only" data-act="revertir" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          Revertir
+        </button>
+      ` : ""}
       <button class="action-btn action-btn--neutral" data-act="ver" data-id="${o.id}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          Ver detalle
-        </button>
-
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Ver detalle
+      </button>
       <button class="action-btn action-btn--print desktop-only" data-act="imprimir" data-id="${o.id}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Imprimir
-        </button>
-
-      <button class="action-btn ${o.pagado ? "action-btn--neutral" : "action-btn--whatsapp"} desktop-only" data-act="toggle-pago" data-id="${o.id}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          ${o.pagado ? "Quitar pago" : "Marcar pagado"}
-        </button>
-
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir
+      </button>
+      <button class="action-btn ${pagado ? "action-btn--neutral" : "action-btn--edit"} desktop-only" data-act="toggle-pago" data-id="${o.id}">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        ${pagado ? "Quitar pago" : "Marcar pagado"}
+      </button>
       <button class="action-btn action-btn--edit desktop-only" data-act="editar" data-id="${o.id}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Editar
-        </button>
-
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
       <button class="action-btn action-btn--danger desktop-only" data-act="eliminar" data-id="${o.id}">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          Eliminar
-        </button>
-
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Eliminar
+      </button>
     </div>
     <div class="order-card__date">Creada: ${formatDateTime(o.creada)}</div>
   `;

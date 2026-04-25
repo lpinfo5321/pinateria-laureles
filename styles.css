@@ -2001,6 +2001,131 @@ textarea {
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.30);
 }
 
+/* ── Nuevos elementos tarjeta admin ── */
+.oc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.oc-num {
+  font-family: "Fraunces", serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oc-emoji { font-size: 20px; }
+.oc-badges { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+
+.oc-client { margin-bottom: 12px; }
+.oc-client-name {
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.oc-client-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.oc-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.oc-pinata {
+  background: #fff;
+  border: 1.5px solid rgba(236,72,153,0.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.oc-pinata--personalizada {
+  border-color: rgba(99,102,241,0.18);
+}
+.oc-cat { margin-bottom: 8px; }
+.oc-cat:last-of-type { margin-bottom: 0; }
+.oc-cat-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.oc-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.oc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 99px;
+  padding: 4px 12px 4px 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.oc-chip-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+.oc-imagen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99,102,241,0.08);
+  color: #4f46e5;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.oc-tema {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--glass-border);
+}
+.oc-nota {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.oc-fecha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 12px;
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+.oc-fecha strong { color: var(--text); font-weight: 800; }
+
 .order-card__date {
   font-size: 11px;
   font-weight: 600;
