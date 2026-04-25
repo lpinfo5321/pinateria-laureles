@@ -158,8 +158,15 @@
     .color-row.inactive{opacity:0.5}
     .color-swatch-btn{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,0.8);cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2);transition:transform 0.15s;outline:none;background:none}
     .color-swatch-btn:hover{transform:scale(1.12)}
-    .color-name-edit{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;font-family:inherit;font-size:14px;font-weight:700;color:var(--text);outline:none;background:#fff;min-width:0}
+    .color-inputs{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+    .color-name-edit{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:7px 11px;font-family:inherit;font-size:14px;font-weight:700;color:var(--text);outline:none;background:#fff}
     .color-name-edit:focus{border-color:var(--pink)}
+    .color-hex-row{display:flex;align-items:center;gap:6px}
+    .color-hex-edit{width:100px;border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;font-family:monospace;font-size:12px;font-weight:700;color:var(--muted);outline:none;background:#fafafa;letter-spacing:0.04em}
+    .color-hex-edit:focus{border-color:var(--pink);color:var(--text)}
+    .color-hex-edit.invalid{border-color:#ef4444;color:#ef4444}
+    .color-hex-label{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+    .color-detected{font-size:11px;font-weight:700;color:var(--green);white-space:nowrap}
 
     /* Popup rueda de colores */
     .cp-popup{position:fixed;z-index:500;background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.25),0 4px 16px rgba(0,0,0,0.1);padding:18px;display:none;flex-direction:column;align-items:center;gap:12px;width:260px}
@@ -1136,7 +1143,9 @@ function collectNamesFromDOM(sec){
     const i=parseInt(row.dataset.i);
     if(!arr[i]) return;
     const n=row.querySelector(".color-name-edit");
+    const h=row.querySelector(".color-hex-edit");
     if(n) arr[i].nombre=n.value.trim()||"Color";
+    if(h && h.value.length===6) arr[i].hex="#"+h.value;
   });
 }
 
@@ -1147,10 +1156,19 @@ function renderColorSection(sec){
   if(!list) return;
   list.innerHTML=arr.map((c,i)=>`
     <div class="color-row ${c.activo===false?'inactive':''}" data-sec="${sec}" data-i="${i}">
-      <button class="color-swatch-btn" data-open="${i}" data-sec="${sec}" style="background:${esc(c.hex||'#ec4899')}" title="Cambiar color"></button>
-      <input type="text" class="color-name-edit" value="${esc(c.nombre||'')}" placeholder="Nombre">
-      <button class="color-toggle-btn ${c.activo===false?'off':'on'}" data-toggle="${i}" data-sec="${sec}">${c.activo===false?'Inactivo':'Activo'}</button>
-      <button class="color-delete-btn" data-del="${i}" data-sec="${sec}" title="Eliminar">✕</button>
+      <button class="color-swatch-btn" data-open="${i}" data-sec="${sec}" style="background:${esc(c.hex||'#ec4899')}" title="Abrir rueda de colores"></button>
+      <div class="color-inputs">
+        <input type="text" class="color-name-edit" value="${esc(c.nombre||'')}" placeholder="Nombre del color">
+        <div class="color-hex-row">
+          <span class="color-hex-label">#</span>
+          <input type="text" class="color-hex-edit" value="${esc((c.hex||'#ec4899').replace('#',''))}" placeholder="FF5733" maxlength="6" data-hexinput="${i}" data-sec="${sec}">
+          <span class="color-detected" id="hexDetected_${sec}_${i}"></span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="color-toggle-btn ${c.activo===false?'off':'on'}" data-toggle="${i}" data-sec="${sec}">${c.activo===false?'Inactivo':'Activo'}</button>
+        <button class="color-delete-btn" data-del="${i}" data-sec="${sec}" title="Eliminar" style="width:auto;border-radius:8px;padding:0 10px">✕</button>
+      </div>
     </div>
   `).join("");
 
@@ -1176,6 +1194,51 @@ function renderColorSection(sec){
       collectNamesFromDOM(s);
       arr.splice(parseInt(btn.dataset.del),1);
       renderColorSection(s);
+    });
+  });
+
+  // Eventos campo de código hex
+  list.querySelectorAll("[data-hexinput]").forEach(inp=>{
+    const s=inp.dataset.sec, i=parseInt(inp.dataset.hexinput);
+    const arr=getArr(s);
+    const detectedEl=document.getElementById(`hexDetected_${s}_${i}`);
+    const swatchBtn=inp.closest(".color-row")?.querySelector(".color-swatch-btn");
+
+    inp.addEventListener("input",()=>{
+      const raw=inp.value.replace(/[^0-9a-fA-F]/g,"").slice(0,6);
+      inp.value=raw;
+      if(raw.length===6){
+        const hex="#"+raw;
+        inp.classList.remove("invalid");
+        // Actualizar swatch
+        if(swatchBtn) swatchBtn.style.background=hex;
+        // Actualizar array
+        if(arr[i]){
+          arr[i].hex=hex;
+          // Auto-nombre si es genérico
+          const cur=arr[i].nombre||"";
+          const autoName=hexToColorName(hex);
+          if(!cur||cur==="Nuevo color"||cur==="Color"){
+            arr[i].nombre=autoName;
+            const nameInp=inp.closest(".color-row")?.querySelector(".color-name-edit");
+            if(nameInp) nameInp.value=autoName;
+          }
+          if(detectedEl) detectedEl.textContent="✓ "+hexToColorName(hex);
+        }
+      } else {
+        inp.classList.toggle("invalid", raw.length>0 && raw.length<6);
+        if(detectedEl) detectedEl.textContent="";
+      }
+    });
+
+    inp.addEventListener("blur",()=>{
+      if(inp.value.length>0 && inp.value.length<6){
+        inp.classList.add("invalid");
+      }
+    });
+
+    inp.addEventListener("focus",()=>{
+      inp.select();
     });
   });
 }
