@@ -1491,40 +1491,66 @@ function preguntarCliente(id) {
   }
 
   const num = String(o.numero || 0).padStart(3, "0");
-  const fechaStr = formatDateLong(o.recogida);
 
-  // Resumen de la piñata según el tipo
-  let detallePinata;
-  if (o.tipo === "estrella") {
-    const colores = (o.estrella?.colores || []).join(", ");
-    const tema = o.estrella?.tematica ? ` · ${o.estrella.tematica}` : "";
-    detallePinata = `Estrella 6 picos · ${(o.estrella?.colores || []).length} color(es)${colores ? ` (${colores})` : ""}${tema}`;
-  } else {
-    const desc = (o.personalizada?.descripcion || "").trim();
-    detallePinata = `Personalizada${desc ? ` · ${desc.slice(0, 80)}${desc.length > 80 ? "..." : ""}` : ""}`;
+  // Mostrar info de la orden en el modal
+  const infoEl = document.getElementById("dudaOrdenInfo");
+  if (infoEl) {
+    infoEl.textContent = `Orden #${num} · ${o.cliente?.nombre || "—"} · ${formatDateLong(o.recogida)}`;
   }
 
-  const lines = [
-    `🪅 *Duda con orden #${num}*`,
-    "",
-    `*Cliente:* ${o.cliente?.nombre || "—"}`,
-    o.cliente?.telefono ? `*Tel cliente:* ${o.cliente.telefono}` : null,
-    `*Piñata:* ${detallePinata}`,
-    `*Recogida:* ${fechaStr}`,
-    o.atendido ? `*Atendido por:* ${o.atendido}` : null,
-    "",
-    "Mi duda es:",
-    "_[escribe aquí tu duda]_",
-    "",
-    "¿Pueden contactar al cliente para resolverlo? 🙏",
-  ].filter(Boolean);
+  // Limpiar textarea
+  const textarea = document.getElementById("dudaTexto");
+  if (textarea) textarea.value = "";
 
-  const url = `https://wa.me/${laureles}?text=${encodeURIComponent(lines.join("\n"))}`;
-  window.open(url, "_blank");
+  // Conectar botón de envío
+  const btnEnviar = document.getElementById("btnEnviarDuda");
+  if (btnEnviar) {
+    // Clonar para quitar listeners anteriores
+    const nuevo = btnEnviar.cloneNode(true);
+    btnEnviar.parentNode.replaceChild(nuevo, btnEnviar);
 
-  updateOrder(id, { estado: "con-duda" });
-  addHistory(id, "Consulta enviada a Laureles");
-  renderAdmin();
+    nuevo.addEventListener("click", () => {
+      const duda = (document.getElementById("dudaTexto")?.value || "").trim();
+      if (!duda) {
+        document.getElementById("dudaTexto")?.focus();
+        showToast("Escribe tu duda antes de enviar");
+        return;
+      }
+
+      const fechaStr = formatDateLong(o.recogida);
+      let detallePinata;
+      if (o.tipo === "estrella") {
+        const colores = (o.estrella?.colores || []).join(", ");
+        const tema = o.estrella?.tematica ? ` · ${o.estrella.tematica}` : "";
+        detallePinata = `Estrella 6 picos · ${(o.estrella?.colores || []).length} color(es)${colores ? ` (${colores})` : ""}${tema}`;
+      } else {
+        const desc = (o.personalizada?.descripcion || "").trim();
+        detallePinata = `Personalizada${desc ? ` · ${desc.slice(0, 80)}${desc.length > 80 ? "..." : ""}` : ""}`;
+      }
+
+      const lines = [
+        `🪅 *Duda con orden #${num}*`,
+        "",
+        `*Cliente:* ${o.cliente?.nombre || "—"}`,
+        o.cliente?.telefono ? `*Tel cliente:* ${o.cliente.telefono}` : null,
+        `*Piñata:* ${detallePinata}`,
+        `*Recogida:* ${fechaStr}`,
+        o.atendido ? `*Atendido por:* ${o.atendido}` : null,
+        "",
+        `*Duda:* ${duda}`,
+      ].filter(Boolean);
+
+      const url = `https://wa.me/${laureles}?text=${encodeURIComponent(lines.join("\n"))}`;
+      window.open(url, "_blank");
+
+      closeAllModals();
+      updateOrder(id, { estado: "con-duda" });
+      addHistory(id, `Duda enviada a Laureles: ${duda.slice(0, 60)}`);
+      renderAdmin();
+    });
+  }
+
+  openModal("#dudaModal");
 }
 
 function notificarCliente(id) {
