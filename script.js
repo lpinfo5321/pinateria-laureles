@@ -2201,67 +2201,28 @@ function detectPlatform() {
   return { isIOS, isAndroid, isMobile, isStandalone };
 }
 
-/* ─── Banner + Modal de Instalar app ─── */
+/* ─── Botón Instalar en topbar ─── */
 function initInstallPrompt() {
-  const banner    = $("#installBanner");
-  const btnYes    = $("#btnInstallPWA");
-  const btnNope   = $("#btnInstallDismiss");
-  const btnCTA    = $("#btnOpenInstall");
-  const btnTopbar = $("#btnInstallTopbar");
-
+  const btnTopbar = document.getElementById("btnInstallTopbar");
   const { isStandalone } = detectPlatform();
 
-  // Capturar el evento nativo de instalación (Chrome/Edge/Android)
+  // Capturar el evento nativo (Chrome/Edge/Android)
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     _deferredInstallPrompt = e;
-    if (banner && !isStandalone) banner.hidden = false;
   });
 
   window.addEventListener("appinstalled", () => {
-    if (banner)    banner.hidden = true;
-    if (btnCTA)    btnCTA.hidden = true;
     if (btnTopbar) btnTopbar.hidden = true;
     closeAllModals();
     _deferredInstallPrompt = null;
-    showToast("¡App instalada en tu dispositivo!");
+    showToast("¡App instalada!");
   });
 
-  // ─── Si la app NO está instalada → siempre mostrar accesos a instalación ───
-  if (!isStandalone) {
-    if (btnTopbar) {
-      btnTopbar.hidden = false;
-      btnTopbar.addEventListener("click", openInstallModal);
-    }
-    if (btnCTA) {
-      btnCTA.hidden = false;
-      btnCTA.addEventListener("click", openInstallModal);
-    }
-  }
-
-  // ─── Banner inferior ───
-  if (banner && btnYes && btnNope) {
-    btnYes.addEventListener("click", () => {
-      banner.hidden = true;
-      openInstallModal();
-    });
-    btnNope.addEventListener("click", () => {
-      banner.hidden = true;
-    });
-  }
-
-  // ─── Mostrar el modal automáticamente al primer ingreso de cada sesión ───
-  if (!isStandalone) {
-    // Usamos sessionStorage (se borra al cerrar pestaña) en lugar de localStorage
-    const shownThisSession = sessionStorage.getItem("pinata-install-shown") === "1";
-    if (!shownThisSession) {
-      setTimeout(() => {
-        if (!detectPlatform().isStandalone) {
-          openInstallModal();
-          sessionStorage.setItem("pinata-install-shown", "1");
-        }
-      }, 1500);
-    }
+  // Mostrar botón en topbar solo si no está instalada
+  if (!isStandalone && btnTopbar) {
+    btnTopbar.hidden = false;
+    btnTopbar.addEventListener("click", openInstallModal);
   }
 }
 

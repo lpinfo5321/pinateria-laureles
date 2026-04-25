@@ -43,23 +43,6 @@
   <!-- Canvas para confetti -->
   <canvas id="confetti" aria-hidden="true"></canvas>
 
-  <!-- Banner "Instalar app" (PWA) -->
-  <div class="install-banner" id="installBanner" hidden>
-    <div class="install-banner__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>
-      </svg>
-    </div>
-    <div class="install-banner__text">
-      <strong>Instalar Piñatas</strong>
-      <span>Acceso rápido y notificaciones en tu celular</span>
-    </div>
-    <button class="install-banner__btn" id="btnInstallPWA" type="button">Instalar</button>
-    <button class="install-banner__close" id="btnInstallDismiss" type="button" aria-label="Cerrar">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  </div>
-
   <!-- Toast de nueva orden (realtime) -->
   <div class="order-toast" id="orderToast" hidden role="alert" aria-live="polite">
     <div class="order-toast__icon" aria-hidden="true">🪅</div>
@@ -137,11 +120,6 @@
           <button class="btn-primary btn-lg" id="btnStart">
             <span>Crear mi orden</span>
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-
-          <button class="btn-install-cta" id="btnOpenInstall" type="button" hidden>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-            <span>Instalar la app en este dispositivo</span>
           </button>
 
           <div class="welcome__meta">
