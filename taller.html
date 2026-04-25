@@ -1141,7 +1141,8 @@ function renderColoresList(){
 
 function addNewColor(){
   collectNamesFromDOM();
-  _colores.push({id:"c_"+Date.now(),nombre:"Nuevo color",hex:"#ec4899",activo:true});
+  const hex="#ec4899";
+  _colores.push({id:"c_"+Date.now(),nombre:hexToColorName(hex),hex,activo:true});
   renderColoresList();
   setTimeout(()=>{
     const rows=document.querySelectorAll(".color-row[data-i]");
