@@ -334,7 +334,21 @@ function subscribeRealtime(){
         notifyNuevaOrden(o);
       }
     })
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"orders"}, ()=>pullOrders())
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"orders"}, async (p)=>{
+      await pullOrders();
+      // Notificar cambio solo si no es un cambio de estado trivial
+      if(p.new && p.old){
+        const o = {...p.new.data, id:p.new.id, numero:p.new.numero, estado:p.new.estado};
+        const num = o.numero ? String(o.numero).padStart(3,"0") : "?";
+        // Avisar si el estado cambió o se editaron datos
+        const estadoCambio = p.new.estado !== p.old.estado;
+        const msg = estadoCambio
+          ? `Orden #${num} → ${p.new.estado}`
+          : `Orden #${num} fue editada`;
+        showToast(msg);
+        if(navigator.vibrate) try{ navigator.vibrate([100,60,100]); }catch(_){}
+      }
+    })
     .on("postgres_changes",{event:"DELETE",schema:"public",table:"orders"}, ()=>pullOrders())
     .subscribe();
 }

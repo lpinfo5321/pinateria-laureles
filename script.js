@@ -1454,6 +1454,11 @@ function renderOrderCard(o, cfg) {
           ${o.pagado ? "Quitar pago" : "Marcar pagado"}
         </button>
 
+      <button class="action-btn action-btn--edit desktop-only" data-act="editar" data-id="${o.id}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+
       <button class="action-btn action-btn--danger desktop-only" data-act="eliminar" data-id="${o.id}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
           Eliminar
@@ -1512,6 +1517,8 @@ function handleOrderAction(act, id) {
     printTicket(id);
   } else if (act === "ver") {
     openOrderDetail(id);
+  } else if (act === "editar") {
+    openEditModal(id);
   } else if (act === "eliminar") {
     if (confirm(`¿Eliminar la orden #${String(orden.numero).padStart(3, "0")} de ${orden.cliente?.nombre || ""}?`)) {
       deleteOrder(id);
@@ -1519,6 +1526,153 @@ function handleOrderAction(act, id) {
       renderAdmin();
     }
   }
+}
+
+/* ============================================================
+   EDITAR ORDEN
+   ============================================================ */
+function openEditModal(id) {
+  const o = getOrders().find(x => x.id === id);
+  if (!o) return;
+
+  const modal = $("#editModal");
+  const body  = $("#editModalBody");
+  const title = $("#editModalTitle");
+  title.textContent = `Editar orden #${String(o.numero).padStart(3, "0")}`;
+
+  // Fecha actual como valor por defecto
+  const fechaVal = o.recogida ? new Date(o.recogida).toISOString().split("T")[0] : "";
+
+  // Colores estrella
+  const coloresHex = (o.estrella?.colores || []).map(c => c.hex || "#ec4899");
+
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:18px">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="form-label">Nombre del cliente</label>
+          <input class="form-input" id="editNombre" value="${escapeHTML(o.cliente?.nombre || "")}" placeholder="Nombre">
+        </div>
+        <div>
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="editTelefono" value="${escapeHTML(o.cliente?.telefono || "")}" placeholder="Teléfono" type="tel">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="form-label">Atendido por</label>
+          <input class="form-input" id="editAtendido" value="${escapeHTML(o.cliente?.atendidoPor || "")}" placeholder="Nombre del vendedor">
+        </div>
+        <div>
+          <label class="form-label">Fecha de recogida</label>
+          <input class="form-input" id="editFecha" type="date" value="${fechaVal}">
+        </div>
+      </div>
+
+      ${o.tipo === "estrella" ? `
+      <div>
+        <label class="form-label">Temática</label>
+        <input class="form-input" id="editTematica" value="${escapeHTML(o.estrella?.tematica || "")}" placeholder="Ej: Minecraft, unicornios...">
+      </div>
+      <div>
+        <label class="form-label">Colores (${coloresHex.length})</label>
+        <div id="editColoresWrap" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;border:1.5px solid var(--border-color);border-radius:12px">
+          ${coloresHex.map((hex, i) => `
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;cursor:pointer">
+              <input type="color" value="${hex}" data-ci="${i}" style="width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:none;padding:2px" title="Color ${i+1}">
+              ${i+1}
+            </label>
+          `).join("")}
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Notas</label>
+        <textarea class="form-input" id="editNotas" rows="2" placeholder="Notas adicionales...">${escapeHTML(o.estrella?.notas || "")}</textarea>
+      </div>
+      ` : `
+      <div>
+        <label class="form-label">Descripción / instrucciones</label>
+        <textarea class="form-input" id="editDesc" rows="3" placeholder="Descripción de la piñata...">${escapeHTML(o.personalizada?.descripcion || "")}</textarea>
+      </div>
+      `}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="editEstado">
+            <option value="pendiente" ${o.estado==="pendiente"?"selected":""}>Pendiente</option>
+            <option value="con-duda" ${o.estado==="con-duda"?"selected":""}>Con duda</option>
+            <option value="lista" ${o.estado==="lista"?"selected":""}>Lista</option>
+            <option value="entregada" ${o.estado==="entregada"?"selected":""}>Entregada</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Pago</label>
+          <select class="form-input" id="editPago">
+            <option value="no" ${!o.pagado?"selected":""}>Sin pagar</option>
+            <option value="si" ${o.pagado?"selected":""}>Pagado</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px">
+        <button class="btn btn-ghost" id="editCancelBtn">Cancelar</button>
+        <button class="btn btn-primary" id="editSaveBtn">Guardar cambios</button>
+      </div>
+    </div>
+  `;
+
+  modal.hidden = false;
+
+  // Cancelar
+  $("#editCancelBtn").addEventListener("click", () => { modal.hidden = true; });
+  modal.querySelector("[data-close-modal]")?.addEventListener("click", () => { modal.hidden = true; });
+
+  // Guardar
+  $("#editSaveBtn").addEventListener("click", () => {
+    const nombre   = $("#editNombre").value.trim();
+    const telefono = $("#editTelefono").value.trim();
+    const atendido = $("#editAtendido").value.trim();
+    const fechaRaw = $("#editFecha").value;
+    const estado   = $("#editEstado").value;
+    const pagado   = $("#editPago").value === "si";
+    const recogida = fechaRaw ? new Date(fechaRaw + "T12:00:00").getTime() : o.recogida;
+
+    const patch = {
+      cliente: { ...o.cliente, nombre, telefono, atendidoPor: atendido },
+      estado,
+      pagado,
+      recogida,
+    };
+
+    if (o.tipo === "estrella") {
+      // Recoger colores editados
+      const colInputs = $("#editColoresWrap").querySelectorAll("input[type=color]");
+      const newColores = Array.from(colInputs).map((inp, i) => ({
+        ...((o.estrella?.colores || [])[i] || {}),
+        hex: inp.value,
+      }));
+      patch.estrella = {
+        ...o.estrella,
+        tematica: $("#editTematica").value.trim(),
+        notas:    $("#editNotas").value.trim(),
+        colores:  newColores,
+      };
+    } else {
+      patch.personalizada = {
+        ...o.personalizada,
+        descripcion: $("#editDesc").value.trim(),
+      };
+    }
+
+    updateOrder(id, patch);
+    addHistory(id, "Orden editada");
+    modal.hidden = true;
+    showToast("✏️ Orden actualizada");
+    renderAdmin();
+  });
 }
 
 function preguntarCliente(id) {

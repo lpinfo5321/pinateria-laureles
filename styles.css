@@ -1976,6 +1976,18 @@ textarea {
   color: var(--text-soft);
 }
 
+.action-btn--edit {
+  background: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.28);
+  color: #2563eb;
+}
+.action-btn--edit:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.30);
+}
+
 .action-btn--danger {
   background: #fef2f2;
   border-color: rgba(239, 68, 68, 0.28);
