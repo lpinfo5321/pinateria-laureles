@@ -1359,6 +1359,10 @@ function renderOrderCard(o, cfg) {
   const waPhone = (o.cliente?.telefono || "").replace(/\D/g, "");
   const canCall = waPhone.length >= 7;
 
+  // Para "Preguntar a Laureles" usamos el WhatsApp del negocio configurado en ⚙️
+  const _cfgWA = (getConfig().whatsappPinatera || "").replace(/\D/g, "");
+  const canAskLaureles = _cfgWA.length >= 7;
+
   card.innerHTML = `
     <div class="order-card__top">
       <div class="order-card__id">
@@ -1399,9 +1403,9 @@ function renderOrderCard(o, cfg) {
       ` : ""}
 
       ${o.estado !== "lista" && o.estado !== "entregada" ? `
-        <button class="action-btn action-btn--whatsapp" data-act="preguntar" data-id="${o.id}" ${!canCall ? "disabled" : ""}>
+        <button class="action-btn action-btn--whatsapp" data-act="preguntar" data-id="${o.id}" ${!canAskLaureles ? "disabled" : ""} title="${canAskLaureles ? "Enviar duda a Laureles para que ellos contacten al cliente" : "Configura el WhatsApp de Laureles en ⚙️"}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          Preguntar al cliente
+          Preguntar a Laureles
         </button>
       ` : ""}
 
@@ -1490,26 +1494,47 @@ function handleOrderAction(act, id) {
 function preguntarCliente(id) {
   const o = getOrders().find(x => x.id === id);
   if (!o) return;
-  const telefono = (o.cliente?.telefono || "").replace(/\D/g, "");
-  if (!telefono) { showToast("Sin teléfono del cliente"); return; }
   const cfg = getConfig();
-  const negocio = cfg.nombreNegocio || "la piñatería";
+  const laureles = (cfg.whatsappPinatera || "").replace(/\D/g, "");
+  if (!laureles) {
+    showToast("Configura el WhatsApp de Laureles en ⚙️");
+    return;
+  }
+
+  const num = String(o.numero || 0).padStart(3, "0");
+  const fechaStr = formatDateLong(o.recogida);
+
+  // Resumen de la piñata según el tipo
+  let detallePinata;
+  if (o.tipo === "estrella") {
+    const colores = (o.estrella?.colores || []).join(", ");
+    const tema = o.estrella?.tematica ? ` · ${o.estrella.tematica}` : "";
+    detallePinata = `Estrella 6 picos · ${(o.estrella?.colores || []).length} color(es)${colores ? ` (${colores})` : ""}${tema}`;
+  } else {
+    const desc = (o.personalizada?.descripcion || "").trim();
+    detallePinata = `Personalizada${desc ? ` · ${desc.slice(0, 80)}${desc.length > 80 ? "..." : ""}` : ""}`;
+  }
 
   const lines = [
-    `¡Hola ${o.cliente.nombre}! 👋`,
-    `Te escribo de *${negocio}* sobre tu orden *#${String(o.numero).padStart(3, "0")}*.`,
+    `🪅 *Duda con orden #${num}*`,
     "",
-    `Tengo una pequeña duda sobre tu piñata para que quede perfecta:`,
+    `*Cliente:* ${o.cliente?.nombre || "—"}`,
+    o.cliente?.telefono ? `*Tel cliente:* ${o.cliente.telefono}` : null,
+    `*Piñata:* ${detallePinata}`,
+    `*Recogida:* ${fechaStr}`,
+    o.atendido ? `*Atendido por:* ${o.atendido}` : null,
     "",
-    "_[escribe aquí tu pregunta]_",
+    "Mi duda es:",
+    "_[escribe aquí tu duda]_",
     "",
-    "¡Gracias! 💖",
-  ];
-  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(lines.join("\n"))}`;
+    "¿Pueden contactar al cliente para resolverlo? 🙏",
+  ].filter(Boolean);
+
+  const url = `https://wa.me/${laureles}?text=${encodeURIComponent(lines.join("\n"))}`;
   window.open(url, "_blank");
 
   updateOrder(id, { estado: "con-duda" });
-  addHistory(id, "Contactado por duda");
+  addHistory(id, "Consulta enviada a Laureles");
   renderAdmin();
 }
 
@@ -2081,10 +2106,36 @@ async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
     _swReg = reg;
+    // Esperar a que esté activo (importante en móvil para mostrar notificaciones)
+    if (!reg.active) {
+      await new Promise((resolve) => {
+        const sw = reg.installing || reg.waiting;
+        if (!sw) return resolve();
+        sw.addEventListener("statechange", () => {
+          if (sw.state === "activated") resolve();
+        });
+        // timeout de seguridad
+        setTimeout(resolve, 5000);
+      });
+    }
     return reg;
   } catch (e) {
     console.warn("SW register error:", e);
     return null;
+  }
+}
+
+async function getReadySW() {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    // navigator.serviceWorker.ready se resuelve cuando el SW está activo
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, rej) => setTimeout(() => rej(new Error("SW timeout")), 3000)),
+    ]);
+    return reg;
+  } catch (e) {
+    return _swReg || null;
   }
 }
 
@@ -2223,40 +2274,78 @@ function notifPermissionState() {
   return Notification.permission;
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent || "") && !window.MSStream;
+}
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+         window.navigator.standalone === true;
+}
+
 async function requestNotificationPermission() {
   if (!("Notification" in window)) {
-    showToast("Tu navegador no soporta notificaciones");
-    return "unsupported";
+    return { ok: false, reason: "unsupported", message: "Este navegador no soporta notificaciones." };
   }
-  if (Notification.permission === "granted") return "granted";
+  // En iOS las notificaciones SOLO funcionan si la app está instalada (standalone)
+  if (isIOS() && !isStandalone()) {
+    return {
+      ok: false,
+      reason: "ios-needs-install",
+      message: "En iPhone primero debes INSTALAR la app (botón Compartir → 'Añadir a pantalla de inicio') para poder activar notificaciones."
+    };
+  }
+  if (Notification.permission === "granted") return { ok: true, reason: "already-granted" };
   if (Notification.permission === "denied") {
-    alert("Las notificaciones están bloqueadas. Actívalas desde la configuración de tu navegador (candado al lado de la URL → Notificaciones → Permitir).");
-    return "denied";
+    return {
+      ok: false,
+      reason: "denied",
+      message: "Las notificaciones están BLOQUEADAS por el navegador.\n\nPara desbloquearlas:\n• Toca el candado/ícono al lado de la URL\n• Busca 'Notificaciones'\n• Cámbialo a 'Permitir'\n• Recarga la página"
+    };
   }
-  const result = await Notification.requestPermission();
-  return result;
+  // Asegurar que el SW esté listo antes de pedir permiso
+  await getReadySW();
+
+  let result;
+  try {
+    // Algunos browsers viejos usan callback API
+    result = await new Promise((resolve) => {
+      const r = Notification.requestPermission(resolve);
+      if (r && typeof r.then === "function") r.then(resolve);
+    });
+  } catch (e) {
+    return { ok: false, reason: "error", message: "Error al pedir permiso: " + e.message };
+  }
+
+  if (result === "granted") return { ok: true, reason: "granted" };
+  if (result === "denied")  return { ok: false, reason: "denied", message: "Permiso rechazado. Puedes intentarlo de nuevo desde el candado al lado de la URL." };
+  return { ok: false, reason: "default", message: "No se concedió el permiso." };
 }
 
 function updateNotifStatusUI() {
-  const el = $("#notifStatus");
+  const el  = $("#notifStatus");
   const btn = $("#btnEnableNotif");
   if (!el || !btn) return;
 
-  const state = notifPermissionState();
-  if (state === "granted") {
+  const perm = notifPermissionState();
+  if (perm === "granted") {
     el.textContent = "Estado: ACTIVADAS ✓";
     el.className = "notif-status is-on";
-    btn.textContent = "Ya están activadas";
+    btn.textContent = "Activadas";
     btn.disabled = true;
-  } else if (state === "denied") {
+  } else if (perm === "denied") {
     el.textContent = "Estado: bloqueadas por el navegador";
     el.className = "notif-status is-off";
     btn.textContent = "Cómo desbloquearlas";
     btn.disabled = false;
-  } else if (state === "unsupported") {
-    el.textContent = "Estado: no soportadas en este dispositivo";
+  } else if (perm === "unsupported") {
+    el.textContent = "Estado: no soportadas aquí";
     el.className = "notif-status is-off";
     btn.disabled = true;
+  } else if (isIOS() && !isStandalone()) {
+    el.textContent = "Estado: instala la app primero";
+    el.className = "notif-status is-off";
+    btn.textContent = "¿Cómo instalar?";
+    btn.disabled = false;
   } else {
     el.textContent = "Estado: desactivadas";
     el.className = "notif-status is-off";
@@ -2265,50 +2354,61 @@ function updateNotifStatusUI() {
   }
 }
 
+async function showSystemNotification(title, body, tag) {
+  if (notifPermissionState() !== "granted") return false;
+
+  const opts = {
+    body,
+    icon:  "/icon-192.png",
+    badge: "/icon-192.png",
+    tag:   tag || "pinata-notif",
+    vibrate: [200, 100, 200, 100, 200],
+    requireInteraction: false,
+    renotify: true,
+    data: { url: "/?source=pwa&action=admin" },
+  };
+
+  // Siempre preferir el Service Worker (requerido en Android/iOS)
+  const reg = await getReadySW();
+  if (reg) {
+    try {
+      await reg.showNotification(title, opts);
+      return true;
+    } catch (e) {
+      console.warn("SW.showNotification falló, intento fallback:", e);
+    }
+  }
+  // Fallback: API directa (sólo desktop)
+  try {
+    const n = new Notification(title, opts);
+    n.onclick = () => {
+      window.focus();
+      if (state.step !== "admin") requestAdminAccess();
+    };
+    return true;
+  } catch (e) {
+    console.warn("Notification fallback falló:", e);
+    return false;
+  }
+}
+
 async function notifyNewOrder(orden) {
-  // Toast siempre (en pantalla)
   showOrderToast(orden);
-
-  // Beep
   playOrderChime();
-
-  // Vibración móvil
   if (navigator.vibrate) {
     try { navigator.vibrate([200, 100, 200, 100, 200]); } catch (_) {}
   }
-
-  // Notificación del sistema (si tiene permiso)
   if (notifPermissionState() !== "granted") return;
 
-  const num   = orden.numero ? String(orden.numero).padStart(3, "0") : "?";
-  const tipo  = orden.tipo === "estrella" ? "Estrella" : "Personalizada";
+  const num     = orden.numero ? String(orden.numero).padStart(3, "0") : "?";
+  const tipo    = orden.tipo === "estrella" ? "Estrella" : "Personalizada";
   const cliente = (orden.cliente && orden.cliente.nombre) ? ` · ${orden.cliente.nombre}` : "";
-  const title = `Nueva orden #${num}`;
-  const body  = `${tipo}${cliente}`;
 
-  // Si está la PWA instalada → mejor por el SW (vibración + persistente)
-  if (_swReg && _swReg.active) {
-    _swReg.active.postMessage({
-      type: "show-notification",
-      title, body,
-      tag: `orden-${orden.id}`,
-    });
-  } else {
-    try {
-      const n = new Notification(title, {
-        body,
-        icon: "/icon-192.png",
-        badge: "/icon-192.png",
-        tag: `orden-${orden.id}`,
-      });
-      n.onclick = () => {
-        window.focus();
-        if (state.step !== "admin") requestAdminAccess();
-      };
-    } catch (e) {
-      console.warn("Notification error:", e);
-    }
-  }
+  await showSystemNotification(
+    `Nueva orden #${num}`,
+    `${tipo}${cliente}`,
+    `orden-${orden.id}`
+  );
 }
 
 /* ─── Toast in-app de nueva orden ─── */
@@ -2373,28 +2473,95 @@ function playOrderChime() {
 
 /* ─── Botones del modal de configuración (notif) ─── */
 function initNotifControls() {
-  const btn = $("#btnEnableNotif");
+  const btn  = $("#btnEnableNotif");
   const test = $("#btnTestNotif");
+
   if (btn) {
     btn.addEventListener("click", async () => {
-      const state = notifPermissionState();
-      if (state === "denied") {
-        alert("Las notificaciones están bloqueadas. Actívalas desde el navegador:\n\n• Toca el candado/ícono al lado de la URL\n• Busca 'Notificaciones'\n• Cámbialo a 'Permitir'");
+      // Caso especial: iOS sin instalar
+      if (isIOS() && !isStandalone()) {
+        alert(
+          "📱 Para recibir notificaciones en iPhone:\n\n" +
+          "1. Cierra este aviso\n" +
+          "2. En Safari, toca el botón Compartir (cuadrado con flecha ↑)\n" +
+          "3. Selecciona 'Añadir a pantalla de inicio'\n" +
+          "4. Abre la app desde el ícono nuevo en tu pantalla\n" +
+          "5. Vuelve a Ajustes → 'Activar notificaciones'\n\n" +
+          "Esto es una restricción de Apple, no de la app."
+        );
         return;
       }
+      // Caso especial: ya bloqueadas
+      if (notifPermissionState() === "denied") {
+        const browserHint = navigator.userAgent.includes("Chrome")
+          ? "Chrome/Edge: candado a la izquierda de la URL → Notificaciones → Permitir"
+          : "Toca el candado o ícono al lado de la URL → Notificaciones → Permitir";
+        alert(
+          "🔒 Las notificaciones están bloqueadas.\n\n" +
+          "Para desbloquearlas:\n" +
+          browserHint + "\n\n" +
+          "Después recarga la página y vuelve a intentar."
+        );
+        return;
+      }
+
       const r = await requestNotificationPermission();
       updateNotifStatusUI();
-      if (r === "granted") showToast("✅ Notificaciones activadas");
+
+      if (r.ok) {
+        showToast("✅ Notificaciones activadas");
+        // Notificación de prueba inmediata para confirmar que funciona
+        setTimeout(async () => {
+          const ok = await showSystemNotification(
+            "🪅 ¡Listo!",
+            "Aquí verás las nuevas órdenes",
+            "test-welcome"
+          );
+          if (!ok) {
+            alert("Las notificaciones se activaron pero hubo un problema mostrándolas. Prueba con el botón 'Probar notificación'.");
+          }
+        }, 400);
+      } else if (r.message) {
+        alert(r.message);
+      }
     });
   }
+
   if (test) {
-    test.addEventListener("click", () => {
-      notifyNewOrder({
-        id: "test_" + Date.now(),
-        numero: 999,
-        tipo: "estrella",
-        cliente: { nombre: "Prueba" },
-      });
+    test.addEventListener("click", async () => {
+      // Si aún no hay permiso, pedirlo primero
+      if (notifPermissionState() !== "granted") {
+        if (isIOS() && !isStandalone()) {
+          alert("Primero instala la app en tu iPhone para que las notificaciones funcionen (botón 'Compartir' → 'Añadir a pantalla de inicio').");
+          return;
+        }
+        const r = await requestNotificationPermission();
+        updateNotifStatusUI();
+        if (!r.ok) {
+          if (r.message) alert(r.message);
+          return;
+        }
+      }
+
+      // Disparar notificación con un dato realista
+      const ok = await showSystemNotification(
+        "Nueva orden #999",
+        "Estrella · Prueba",
+        "test-" + Date.now()
+      );
+      if (!ok) {
+        alert(
+          "No se pudo mostrar la notificación.\n\n" +
+          "Posibles causas:\n" +
+          "• El navegador no soporta notificaciones del sistema\n" +
+          "• El sistema operativo bloquea notificaciones de este navegador\n" +
+          "• En Windows, revisa: Configuración → Sistema → Notificaciones → habilitar para tu navegador\n" +
+          "• En Android/iPhone, instala la app primero"
+        );
+      } else {
+        // Toast in-app igual, por si la notif del sistema sale fuera de pantalla
+        showToast("Notificación enviada");
+      }
     });
   }
 }
