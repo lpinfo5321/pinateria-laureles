@@ -7,6 +7,17 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, textarea, select, [role="button"] {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(236, 72, 153, 0.2);
+  color: inherit;
 }
 
 :root {
