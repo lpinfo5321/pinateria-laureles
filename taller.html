@@ -282,6 +282,18 @@ async function initCloud(){
     await Promise.all([pullOrders(), pullConfig()]);
     document.getElementById("dot").classList.add("online");
     subscribeRealtime();
+
+    // Reconexión automática al volver a la app (celular: pantalla off → on)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && _sb) {
+        pullOrders().catch(() => {});
+      }
+    });
+
+    // Reconexión si se pierde internet y vuelve
+    window.addEventListener("online", () => {
+      pullOrders().catch(() => {});
+    });
   } catch(e){ console.warn("Supabase error:",e); }
 }
 

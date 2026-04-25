@@ -1024,6 +1024,18 @@ async function initCloud() {
     _cloudReady = true;
     updateCloudBadge(true);
     console.info("☁️ Supabase conectado — realtime activo");
+
+    // Reconexión cuando la pestaña/app vuelve al frente (móvil, celular)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && _sb) {
+        pullAllFromCloud().catch(() => {});
+      }
+    });
+
+    // Reconexión al recuperar internet
+    window.addEventListener("online", () => {
+      if (_sb) pullAllFromCloud().catch(() => {});
+    });
   } catch (e) {
     console.warn("Supabase falló, sigo con localStorage:", e);
     updateCloudBadge(false);
