@@ -8,19 +8,18 @@
    - Permite mensajería desde la app (showOrderNotification).
    ============================================================ */
 
-const CACHE_VERSION = "pinata-v1.4.0";
+const CACHE_VERSION = "pinata-v1.5.0";
+// Solo cacheamos assets estáticos (iconos y manifest)
+// JS y CSS siempre se sirven frescos desde la red
 const APP_SHELL = [
-  "/",
-  "/index.html",
-  "/styles.css",
-  "/script.js",
-  "/supabase-config.js",
-  "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
   "/favicon-32.png",
+  "/manifest.webmanifest",
 ];
+// Archivos que NUNCA se sirven desde caché (siempre red primero)
+const NEVER_CACHE = ["/script.js", "/styles.css", "/supabase-config.js", "/index.html", "/"];
 
 /* ─────────── Install ─────────── */
 self.addEventListener("install", (event) => {
@@ -54,26 +53,35 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
 
-  // Nunca cachear llamadas a Supabase ni APIs externas
+  // Nunca interceptar APIs externas ni extensiones
   if (url.origin !== self.location.origin) return;
-
-  // Evitar cachear extensiones del navegador
   if (url.protocol === "chrome-extension:" || url.protocol === "moz-extension:") return;
 
-  // Stale-while-revalidate
+  const pathname = url.pathname;
+
+  // JS, CSS e HTML: SIEMPRE red (network-first, sin caché)
+  const alwaysNetwork =
+    pathname === "/" ||
+    pathname === "/index.html" ||
+    pathname.includes("script.js") ||
+    pathname.includes("styles.css") ||
+    pathname.includes("supabase-config.js");
+
+  if (alwaysNetwork) {
+    event.respondWith(
+      fetch(req).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Iconos y manifest: cache-first
   event.respondWith(
     caches.open(CACHE_VERSION).then(async (cache) => {
       const cached = await cache.match(req);
-      const fetchPromise = fetch(req)
-        .then((res) => {
-          if (res && res.ok && (res.type === "basic" || res.type === "default")) {
-            cache.put(req, res.clone()).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
+      if (cached) return cached;
+      const res = await fetch(req);
+      if (res && res.ok) cache.put(req, res.clone()).catch(() => {});
+      return res;
     })
   );
 });

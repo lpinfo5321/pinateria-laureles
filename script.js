@@ -2012,7 +2012,27 @@ function initModals() {
   // Config modal
   $("#btnAdminConfig").addEventListener("click", openConfigModal);
   const btnInstallFromConfig = $("#btnInstallFromConfig");
-  if (btnInstallFromConfig) btnInstallFromConfig.addEventListener("click", openInstallModal);
+  if (btnInstallFromConfig) {
+    btnInstallFromConfig.addEventListener("click", () => {
+      if (_deferredInstallPrompt) {
+        _deferredInstallPrompt.prompt();
+        _deferredInstallPrompt.userChoice.then(r => {
+          if (r.outcome === "accepted") showToast("¡App instalada!");
+          _deferredInstallPrompt = null;
+        });
+      } else {
+        const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+        if (standalone) {
+          alert("¡La app ya está instalada! Búscala en tu pantalla de inicio.");
+        } else if (ios) {
+          alert("En iPhone:\n1. Toca el botón Compartir ↑ (barra inferior de Safari)\n2. Selecciona 'Añadir a pantalla de inicio'\n3. Toca 'Añadir'");
+        } else {
+          alert("En Chrome/Edge:\n• Busca el ícono ⊕ al final de la barra de direcciones\n• O menú ⋮ → 'Instalar Piñatas...'\n\nSi no aparece, recarga la página con Ctrl+F5 y espera unos segundos.");
+        }
+      }
+    });
+  }
   $("#btnSaveConfig").addEventListener("click", saveConfigFromModal);
   $("#btnClearOrders").addEventListener("click", async () => {
     if (!confirm("¿Borrar TODAS las órdenes? Esta acción no se puede deshacer.")) return;
@@ -2498,8 +2518,8 @@ function playOrderChime() {
 
 /* ─── Botones del modal de configuración (notif) ─── */
 function initNotifControls() {
-  const btn  = $("#btnEnableNotif");
-  const test = $("#btnTestNotif");
+  const btn  = document.getElementById("btnEnableNotif");
+  const test = document.getElementById("btnTestNotif");
 
   if (btn) {
     btn.addEventListener("click", async () => {
