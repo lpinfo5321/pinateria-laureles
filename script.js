@@ -246,14 +246,25 @@ const BASE_TAMBOR_PC = [
 ];
 
 function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
+  // La columna "colores" puede tener estructura {picos:[],tambor:[]} (nuevo formato del taller)
+  // o un array plano (legado). cloudPicos/cloudTambor son columnas alternativas (si existen).
+  let picosRaw  = cloudPicos  || [];
+  let tamborRaw = cloudTambor || [];
+
+  if (cloudColores && !Array.isArray(cloudColores) && (cloudColores.picos || cloudColores.tambor)) {
+    // Nuevo formato guardado por el taller
+    picosRaw  = cloudColores.picos  || [];
+    tamborRaw = cloudColores.tambor || [];
+  }
+
   // Picos
-  const activosPicos = (cloudPicos || []).filter(c => c.activo !== false && c.hex);
+  const activosPicos = picosRaw.filter(c => c.activo !== false && c.hex);
   COLORES_PICOS = activosPicos.length > 0
     ? activosPicos.map(c => ({ id: c.id || ("cp_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
     : BASE_PICOS_PC;
 
   // Tambor
-  const activosTambor = (cloudTambor || []).filter(c => c.activo !== false && c.hex);
+  const activosTambor = tamborRaw.filter(c => c.activo !== false && c.hex);
   COLORES_TAMBOR = activosTambor.length > 0
     ? activosTambor.map(c => ({ id: c.id || ("ct_"+c.hex), nombre: c.nombre || "Color", hex: c.hex }))
     : BASE_TAMBOR_PC;

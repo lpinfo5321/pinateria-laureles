@@ -1104,17 +1104,23 @@ let _coloresTambor = [];
 
 async function pullColores(){
   if(!_sb) return;
-  const {data} = await _sb.from("app_config").select("colores,colores_picos,colores_tambor").eq("id","default").maybeSingle();
-  const seedNeeded = !data || (!data.colores_picos?.length && !data.colores_tambor?.length);
-  if(data?.colores_picos?.length)  _coloresPicos  = data.colores_picos;
-  else                             _coloresPicos  = BASE_PICOS.map(c=>({...c}));
-  if(data?.colores_tambor?.length) _coloresTambor = data.colores_tambor;
-  else                             _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
-  // Legado
-  if(data?.colores?.length)        _colores       = data.colores;
-  // Guardar seeds si era primera vez
-  if(seedNeeded && _sb){
-    _sb.from("app_config").upsert({id:"default", colores_picos:_coloresPicos, colores_tambor:_coloresTambor}).then(()=>{});
+  // Usamos la columna "colores" (que siempre existe) con estructura {picos:[],tambor:[]}
+  const {data} = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
+  const stored = data?.colores;
+  const hasCategorias = stored && !Array.isArray(stored) && (stored.picos || stored.tambor);
+  if(hasCategorias){
+    _coloresPicos  = stored.picos?.length  ? stored.picos  : BASE_PICOS.map(c=>({...c}));
+    _coloresTambor = stored.tambor?.length ? stored.tambor : BASE_TAMBOR.map(c=>({...c}));
+  } else {
+    // Primera vez o formato legado: sembrar con colores base
+    _coloresPicos  = BASE_PICOS.map(c=>({...c}));
+    _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
+    if(_sb){
+      _sb.from("app_config").upsert({
+        id:"default",
+        colores:{picos:_coloresPicos, tambor:_coloresTambor}
+      }).then(()=>{});
+    }
   }
 }
 
@@ -1124,9 +1130,12 @@ async function saveColores(){
   btn.disabled = true; btn.textContent = "Guardando...";
   collectNamesFromDOM("picos");
   collectNamesFromDOM("tambor");
-  const {error} = await _sb.from("app_config").upsert({id:"default", colores_picos:_coloresPicos, colores_tambor:_coloresTambor});
+  const {error} = await _sb.from("app_config").upsert({
+    id:"default",
+    colores:{picos:_coloresPicos, tambor:_coloresTambor}
+  });
   btn.disabled = false; btn.textContent = "Guardar colores";
-  if(error){ showToast("Error al guardar"); return; }
+  if(error){ showToast("Error al guardar: "+error.message); return; }
   showToast("✅ Colores guardados");
 }
 
