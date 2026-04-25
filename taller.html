@@ -855,6 +855,54 @@ function hslToRgb(h,s,l){
   return [Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)];
 }
 
+/* Nombres automáticos de color según HSL */
+function hexToColorName(hex){
+  try{
+    const {h,s,l} = hexToHsl(hex);
+    // Sin saturación → grises/blanco/negro
+    if(s < 12){
+      if(l < 12) return "Negro";
+      if(l < 30) return "Gris oscuro";
+      if(l < 55) return "Gris";
+      if(l < 80) return "Gris claro";
+      return "Blanco";
+    }
+    if(l < 10) return "Negro";
+    if(l > 88) return "Blanco";
+
+    // Prefijo por luminosidad
+    const prefix = l < 25 ? "Oscuro " : l > 72 ? "Pastel " : "";
+
+    // Nombre base por tono (hue)
+    let name;
+    if     (h < 8  || h >= 350) name = "Rojo";
+    else if(h < 20)              name = "Rojo naranja";
+    else if(h < 38)              name = "Naranja";
+    else if(h < 52)              name = "Amarillo naranja";
+    else if(h < 70)              name = "Amarillo";
+    else if(h < 90)              name = "Verde amarillo";
+    else if(h < 135)             name = "Verde";
+    else if(h < 160)             name = "Verde agua";
+    else if(h < 195)             name = "Turquesa";
+    else if(h < 215)             name = "Azul claro";
+    else if(h < 245)             name = "Azul";
+    else if(h < 265)             name = "Azul morado";
+    else if(h < 290)             name = "Morado";
+    else if(h < 320)             name = "Violeta";
+    else if(h < 340)             name = "Fucsia";
+    else                         name = "Rosa";
+
+    // Casos especiales
+    if(h>=25 && h<38 && s>80 && l>40 && l<65) name = "Naranja";
+    if(h>=340 && h<360 && s>70 && l<50) name = "Fucsia";
+    if(h>=20 && h<40 && s>50 && l>55) name = "Durazno";
+    if(h>=40 && h<55 && s>60 && l>55) name = "Dorado";
+    if(h>=180 && h<210 && s>50 && l>55) name = "Celeste";
+
+    return prefix + name;
+  }catch(e){ return "Color"; }
+}
+
 function drawColorWheel(l){
   const canvas=document.getElementById("cpCanvas");
   if(!canvas) return;
@@ -893,6 +941,15 @@ function updateCpPreview(){
   if(prev) prev.style.background=hex;
   const inp=document.getElementById("cpHexInput");
   if(inp && document.activeElement!==inp) inp.value=hex;
+  // Mostrar nombre sugerido debajo de la rueda
+  let nameHint=document.getElementById("cpNameHint");
+  if(!nameHint){
+    nameHint=document.createElement("div");
+    nameHint.id="cpNameHint";
+    nameHint.style.cssText="font-size:13px;font-weight:800;color:var(--text);text-align:center;letter-spacing:0.01em";
+    prev?.parentElement?.before(nameHint);
+  }
+  nameHint.textContent=hexToColorName(hex);
   // Actualizar gradiente del slider
   const sl=document.getElementById("cpBrightness");
   if(sl) sl.style.background=`linear-gradient(to right, #000, hsl(${_cpH},${_cpS}%,50%), #fff)`;
@@ -973,6 +1030,11 @@ function closeColorPicker(){
     const hex=hslToHex(_cpH,_cpS,_cpL);
     if(_cpTargetIdx>=0 && _colores[_cpTargetIdx]){
       _colores[_cpTargetIdx].hex=hex;
+      // Auto-nombre si sigue siendo genérico o vacío
+      const cur=_colores[_cpTargetIdx].nombre||"";
+      if(!cur || cur==="Nuevo color" || cur==="Color"){
+        _colores[_cpTargetIdx].nombre=hexToColorName(hex);
+      }
       renderColoresList();
     }
     closeColorPicker();
