@@ -87,24 +87,18 @@ const COLORES_BASE = [
   { id: "negro",      nombre: "Negro",       hex: "#1a1a1a" },
 ];
 
-// Lista mutable: empieza con los base, se reemplaza con la del cloud si existe
-let COLORES = [...COLORES_BASE];
+// Lista mutable: empieza vacía, se llena desde el taller (Supabase)
+let COLORES = [];
 const MAX_COLORES = 8;
 
-/**
- * Aplica los colores configurados desde Supabase (taller).
- * Solo reemplaza si hay al menos un color activo definido.
- */
 function applyCloudColors(cloudColores) {
-  if (!Array.isArray(cloudColores) || cloudColores.length === 0) return;
+  if (!Array.isArray(cloudColores)) return;
   const activos = cloudColores.filter(c => c.activo !== false && c.hex);
-  if (activos.length === 0) return;
-  COLORES = activos.map(c => ({
-    id:     c.id     || ("c_" + c.hex),
-    nombre: c.nombre || "Color",
-    hex:    c.hex,
-  }));
-  // Si ya estamos en la pantalla de estrella, re-renderizar
+  // Si hay colores del taller, usarlos; si no, usar los base como respaldo
+  COLORES = activos.length > 0
+    ? activos.map(c => ({ id: c.id || ("c_" + c.hex), nombre: c.nombre || "Color", hex: c.hex }))
+    : [...COLORES_BASE];
+  // Re-renderizar si estamos en pantalla de estrella
   if (typeof renderColorSwatches === "function" && state && state.step === "estrella") {
     renderColorSwatches();
   }
@@ -214,6 +208,7 @@ $$(".type-card").forEach(card => {
     state.tipo = card.dataset.type;
     if (state.tipo === "estrella") {
       goTo("estrella");
+      renderColorSwatches(); // usa COLORES actual (del taller o base si no cargó aún)
     } else {
       goTo("personalizada");
     }
@@ -226,6 +221,16 @@ $$(".type-card").forEach(card => {
 function renderColorSwatches() {
   const grid = $("#colorsGrid");
   grid.innerHTML = "";
+
+  if (COLORES.length === 0) {
+    // Aún cargando desde Supabase
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-muted);font-size:13px;font-weight:600">
+      <div style="font-size:28px;margin-bottom:8px">🎨</div>
+      Cargando colores del taller…
+    </div>`;
+    return;
+  }
+
   COLORES.forEach(c => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -2998,7 +3003,8 @@ function escapeHTML(s) {
    Init
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-  renderColorSwatches();
+  // No renderizar swatches hasta que lleguen los colores del taller
+  // renderColorSwatches() se llama desde applyCloudColors() cuando llega la data
   applyColorsToSvg();
   updateProgress();
   initColorPicker();
