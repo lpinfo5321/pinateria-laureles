@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ec4899" />
+  <title>Taller · Órdenes pendientes</title>
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Taller" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/supabase-config.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #ec4899;
+      --magenta: #db2777;
+      --green:   #22c55e;
+      --bg:      #fbf7f2;
+      --card:    #ffffff;
+      --text:    #1a1414;
+      --muted:   rgba(26,20,20,0.5);
+      --border:  rgba(0,0,0,0.08);
+    }
+
+    html, body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(251,247,242,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .topbar__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar__dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #d1d5db;
+      transition: background 0.4s;
+    }
+    .topbar__dot.online { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+    .topbar__title {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .topbar__sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .topbar__count {
+      background: linear-gradient(135deg, var(--pink), var(--magenta));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Filtros ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .fchip {
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .fchip.active {
+      background: linear-gradient(135deg, var(--pink), var(--magenta));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px -2px rgba(219,39,119,0.4);
+    }
+
+    /* ── Grid de tarjetas ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 600px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1000px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ── Tarjeta de orden ── */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 2px 16px -6px rgba(0,0,0,0.10), 0 1px 4px -2px rgba(0,0,0,0.06);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .card__bar {
+      height: 4px;
+      width: 100%;
+    }
+    .card__bar--pendiente { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .card__bar--con-duda  { background: linear-gradient(90deg, var(--pink), var(--magenta)); }
+    .card__bar--lista     { background: linear-gradient(90deg, var(--green), #16a34a); }
+
+    .card__body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+    /* número y badge */
+    .card__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .card__num {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .card__badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge--pendiente { background: rgba(245,158,11,0.12); color: #b45309; border: 1.5px solid rgba(245,158,11,0.3); }
+    .badge--con-duda  { background: rgba(236,72,153,0.10); color: var(--magenta); border: 1.5px solid rgba(236,72,153,0.25); }
+    .badge--lista     { background: rgba(34,197,94,0.12); color: #15803d; border: 1.5px solid rgba(34,197,94,0.3); }
+
+    /* cliente y fecha */
+    .card__client {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .card__date {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--magenta);
+      background: rgba(236,72,153,0.08);
+      padding: 7px 12px;
+      border-radius: 10px;
+    }
+
+    /* sección piñata */
+    .card__pinata {
+      background: rgba(0,0,0,0.025);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+    }
+    .card__pinata-type {
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .card__colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .card__color-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .card__color-dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .card__tematica {
+      font-weight: 700;
+      font-size: 13.5px;
+      margin-top: 4px;
+      color: var(--text);
+    }
+    .card__photo {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .card__desc {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    /* botón marcar lista */
+    .card__footer {
+      padding: 12px 18px 18px;
+    }
+    .btn-lista {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 16px -4px rgba(34,197,94,0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      letter-spacing: -0.01em;
+    }
+    .btn-lista:hover  { transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(34,197,94,0.5); }
+    .btn-lista:active { transform: translateY(0); }
+    .btn-lista--done {
+      background: rgba(34,197,94,0.10);
+      color: #15803d;
+      box-shadow: none;
+      border: 1.5px solid rgba(34,197,94,0.3);
+      cursor: default;
+    }
+
+    /* ── Empty ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty__icon { font-size: 56px; margin-bottom: 16px; }
+    .empty h3 { font-family: 'Fraunces', serif; font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .empty p  { font-size: 14px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.25s cubic-bezier(.22,1,.36,1);
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <div class="topbar__dot" id="dot"></div>
+      <div>
+        <div class="topbar__title">Taller · Laureles</div>
+        <div class="topbar__sub">Vista de producción</div>
+      </div>
+    </div>
+    <div class="topbar__count" id="countBadge">0</div>
+  </header>
+
+  <div class="container">
+    <div class="filters" id="filters">
+      <button class="fchip active" data-f="activas">Activas</button>
+      <button class="fchip" data-f="listas">Listas</button>
+      <button class="fchip" data-f="todas">Todas</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty__icon">🪅</div>
+      <h3>Sin órdenes aquí</h3>
+      <p>Las nuevas órdenes aparecerán en tiempo real.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ── Utilidades ── */
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function fmtDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return d.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+}
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+/* ── Estado ── */
+let _sb = null;
+let _orders = [];
+let _filter = "activas";
+
+/* ── Supabase ── */
+async function initCloud() {
+  const cfg = window.SUPABASE_CONFIG;
+  if (!cfg || !cfg.url || !cfg.anonKey) return;
+  try {
+    _sb = supabase.createClient(cfg.url, cfg.anonKey, {
+      realtime: { params: { eventsPerSecond: 10 } },
+    });
+    await pullOrders();
+    document.getElementById("dot").classList.add("online");
+    subscribeRealtime();
+  } catch (e) {
+    console.warn("Supabase error:", e);
+  }
+}
+
+async function pullOrders() {
+  if (!_sb) return;
+  const { data, error } = await _sb
+    .from("orders")
+    .select("id, numero, estado, data, created_at")
+    .order("numero", { ascending: false });
+  if (error) { console.error(error); return; }
+  _orders = (data || []).map(r => ({
+    ...r.data,
+    id:     r.id,
+    numero: r.numero,
+    estado: r.estado,
+    creada: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
+  }));
+  render();
+}
+
+function subscribeRealtime() {
+  if (!_sb) return;
+  _sb.channel("taller-rt")
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+      pullOrders();
+    })
+    .subscribe();
+}
+
+async function marcarLista(id) {
+  if (!_sb) { toast("Sin conexión a la nube"); return; }
+  const { error } = await _sb
+    .from("orders")
+    .update({ estado: "lista", data: { ...(_orders.find(o => o.id === id) || {}), estado: "lista" } })
+    .eq("id", id);
+  if (error) { toast("Error al actualizar"); return; }
+  toast("¡Marcada como lista!");
+}
+
+/* ── Render ── */
+function render() {
+  const grid  = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  const badge = document.getElementById("countBadge");
+
+  let list;
+  if (_filter === "activas") {
+    list = _orders.filter(o => o.estado !== "lista" && o.estado !== "entregada");
+  } else if (_filter === "listas") {
+    list = _orders.filter(o => o.estado === "lista");
+  } else {
+    list = _orders.filter(o => o.estado !== "entregada");
+  }
+
+  badge.textContent = list.length;
+
+  if (!list.length) {
+    grid.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  grid.innerHTML = list.map(o => cardHTML(o)).join("");
+
+  // Botones marcar lista
+  grid.querySelectorAll("[data-lista]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.lista;
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+      marcarLista(id);
+    });
+  });
+}
+
+function cardHTML(o) {
+  const num    = String(o.numero || 0).padStart(3, "0");
+  const estado = o.estado || "pendiente";
+  const barCls = { pendiente: "pendiente", "con-duda": "con-duda", lista: "lista" }[estado] || "pendiente";
+  const bdgCls = barCls;
+  const bdgLbl = { pendiente: "Pendiente", "con-duda": "Con duda", lista: "Lista" }[estado] || estado;
+  const isLista = estado === "lista";
+
+  // Piñata
+  let pinataHTML = "";
+  if (o.tipo === "estrella") {
+    const colores = o.estrella?.colores || [];
+    const dots = colores.map(c =>
+      `<div class="card__color-chip">
+        <span class="card__color-dot" style="background:${esc(c.hex)}"></span>
+        <span>${esc(c.nombre)}</span>
+      </div>`
+    ).join("");
+    const tema = o.estrella?.tematica
+      ? `<div class="card__tematica">${esc(o.estrella.emoji || "")} ${esc(o.estrella.tematica)}</div>`
+      : "";
+    pinataHTML = `
+      <div class="card__pinata">
+        <div class="card__pinata-type">Estrella 6 picos · ${colores.length} color${colores.length !== 1 ? "es" : ""}</div>
+        <div class="card__colors">${dots}</div>
+        ${tema}
+      </div>`;
+  } else {
+    const img = o.personalizada?.imagen
+      ? `<img class="card__photo" src="${o.personalizada.imagen}" alt="Referencia" loading="lazy" />`
+      : "";
+    const desc = o.personalizada?.descripcion
+      ? `<div class="card__desc">${esc(o.personalizada.descripcion)}</div>`
+      : "";
+    pinataHTML = `
+      <div class="card__pinata">
+        <div class="card__pinata-type">Piñata personalizada</div>
+        ${img}${desc}
+      </div>`;
+  }
+
+  const btn = isLista
+    ? `<button class="btn-lista btn-lista--done" disabled>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Ya está lista
+       </button>`
+    : `<button class="btn-lista" data-lista="${o.id}">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar como lista
+       </button>`;
+
+  return `
+    <div class="card">
+      <div class="card__bar card__bar--${barCls}"></div>
+      <div class="card__body">
+        <div class="card__head">
+          <div class="card__num">#${num}</div>
+          <span class="card__badge badge--${bdgCls}">${bdgLbl}</span>
+        </div>
+        <div class="card__client">${esc(o.cliente?.nombre || "—")}</div>
+        <div class="card__date">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Recogida: ${fmtDate(o.recogida)}
+        </div>
+        ${pinataHTML}
+      </div>
+      <div class="card__footer">${btn}</div>
+    </div>`;
+}
+
+/* ── Filtros ── */
+document.getElementById("filters").addEventListener("click", e => {
+  const chip = e.target.closest("[data-f]");
+  if (!chip) return;
+  document.querySelectorAll(".fchip").forEach(c => c.classList.remove("active"));
+  chip.classList.add("active");
+  _filter = chip.dataset.f;
+  render();
+});
+
+/* ── Init ── */
+initCloud();
+</script>
+</body>
+</html>
