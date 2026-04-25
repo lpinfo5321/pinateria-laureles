@@ -992,10 +992,33 @@ function closeColorPicker(){
 ══════════════════════════════════════════════ */
 let _colores = [];
 
+const COLORES_BASE_TALLER = [
+  {id:"rojo",    nombre:"Rojo",        hex:"#e63946",activo:true},
+  {id:"rosa",    nombre:"Rosa",        hex:"#ff3d8f",activo:true},
+  {id:"fucsia",  nombre:"Fucsia",      hex:"#f72585",activo:true},
+  {id:"naranja", nombre:"Naranja",     hex:"#ff6b35",activo:true},
+  {id:"amarillo",nombre:"Amarillo",    hex:"#ffd60a",activo:true},
+  {id:"dorado",  nombre:"Dorado",      hex:"#ffba08",activo:true},
+  {id:"verde",   nombre:"Verde",       hex:"#52c41a",activo:true},
+  {id:"turquesa",nombre:"Turquesa",    hex:"#2ec4b6",activo:true},
+  {id:"azul",    nombre:"Azul",        hex:"#3a86ff",activo:true},
+  {id:"morado",  nombre:"Morado",      hex:"#8338ec",activo:true},
+  {id:"violeta", nombre:"Violeta",     hex:"#c77dff",activo:true},
+  {id:"blanco",  nombre:"Blanco",      hex:"#ffffff",activo:true},
+  {id:"negro",   nombre:"Negro",       hex:"#1a1a1a",activo:true},
+  {id:"plata",   nombre:"Plateado",    hex:"#c0c0c0",activo:true},
+];
+
 async function pullColores(){
   if(!_sb) return;
   const {data} = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
-  if(data && Array.isArray(data.colores) && data.colores.length > 0) _colores = data.colores;
+  if(data && Array.isArray(data.colores) && data.colores.length > 0){
+    _colores = data.colores;
+  } else {
+    // Primera vez: cargar colores básicos y guardarlos
+    _colores = COLORES_BASE_TALLER.map(c=>({...c}));
+    if(_sb) _sb.from("app_config").upsert({id:"default", colores:_colores}).then(()=>{});
+  }
 }
 
 async function saveColores(){

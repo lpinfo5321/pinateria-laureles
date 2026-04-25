@@ -1611,14 +1611,13 @@ function openEditModal(id) {
         <input class="form-input" id="editTematica" value="${escapeHTML(o.estrella?.tematica || "")}" placeholder="Ej: Minecraft, unicornios, princesas...">
       </div>
       <div class="form-section">
-        <label class="form-label">Colores (${coloresHex.length})</label>
-        <div class="form-color-grid" id="editColoresWrap">
-          ${coloresHex.map((hex, i) => `
-            <div class="form-color-swatch">
-              <input type="color" value="${hex}" data-ci="${i}" title="Color ${i+1}">
-              <span>Color ${i+1}</span>
-            </div>
-          `).join("")}
+        <label class="form-label">Colores — <span id="editColorCount">${coloresHex.length}</span> seleccionados (máx ${MAX_COLORES})</label>
+        <div class="edit-colors-grid" id="editColoresWrap">
+          ${COLORES.map(c => {
+            const selIdx = (o.estrella?.colores || []).findIndex(x => x.id === c.id || x.hex?.toLowerCase() === c.hex?.toLowerCase());
+            const isSel = selIdx >= 0;
+            return `<button type="button" class="edit-color-swatch${isSel?" is-sel":""}" data-cid="${c.id}" style="--cc:${c.hex}" title="${escapeHTML(c.nombre)}">${isSel?`<span class="edit-color-badge">${selIdx+1}</span>`:""}</button>`;
+          }).join("")}
         </div>
       </div>
       <div class="form-section">
@@ -1661,6 +1660,74 @@ function openEditModal(id) {
   `;
 
   modal.hidden = false;
+
+  // Selección de colores interactiva
+  if (o.tipo === "estrella") {
+    // Estado mutable de colores seleccionados
+    let _editColores = [...(o.estrella?.colores || [])];
+
+    function refreshEditColors() {
+      const wrap = $("#editColoresWrap");
+      const counter = $("#editColorCount");
+      if (counter) counter.textContent = _editColores.length;
+      wrap.querySelectorAll(".edit-color-swatch").forEach(btn => {
+        const cid = btn.dataset.cid;
+        const idx = _editColores.findIndex(x => x.id === cid);
+        btn.classList.toggle("is-sel", idx >= 0);
+        const old = btn.querySelector(".edit-color-badge");
+        if (old) old.remove();
+        if (idx >= 0) {
+          const badge = document.createElement("span");
+          badge.className = "edit-color-badge";
+          badge.textContent = idx + 1;
+          btn.appendChild(badge);
+        }
+      });
+    }
+
+    $("#editColoresWrap").addEventListener("click", e => {
+      const btn = e.target.closest(".edit-color-swatch");
+      if (!btn) return;
+      const cid = btn.dataset.cid;
+      const color = COLORES.find(c => c.id === cid);
+      if (!color) return;
+      const idx = _editColores.findIndex(x => x.id === cid);
+      if (idx >= 0) {
+        _editColores.splice(idx, 1);
+      } else {
+        if (_editColores.length >= MAX_COLORES) { showToast(`Máximo ${MAX_COLORES} colores`); return; }
+        _editColores.push(color);
+      }
+      refreshEditColors();
+    });
+
+    // Al guardar, usar _editColores
+    $("#editSaveBtn").addEventListener("click", () => {
+      const nombre   = $("#editNombre").value.trim();
+      const telefono = $("#editTelefono").value.trim();
+      const atendido = $("#editAtendido").value.trim();
+      const fechaRaw = $("#editFecha").value;
+      const estado   = $("#editEstado").value;
+      const pagado   = $("#editPago").value === "si";
+      const recogida = fechaRaw ? new Date(fechaRaw + "T12:00:00").getTime() : o.recogida;
+      const patch = {
+        cliente: { ...o.cliente, nombre, telefono, atendidoPor: atendido },
+        estado, pagado, recogida,
+        estrella: {
+          ...o.estrella,
+          tematica: $("#editTematica").value.trim(),
+          notas:    $("#editNotas").value.trim(),
+          colores:  _editColores,
+        },
+      };
+      updateOrder(id, patch);
+      addHistory(id, "Orden editada");
+      modal.hidden = true;
+      showToast("✏️ Orden actualizada");
+      renderAdmin();
+    });
+    return; // salir antes del handler genérico de guardar
+  }
 
   // Cancelar
   $("#editCancelBtn").addEventListener("click", () => { modal.hidden = true; });
