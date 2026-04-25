@@ -61,7 +61,13 @@
     .card__colors{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
     .card__color-chip{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--border);border-radius:999px;padding:6px 16px;font-size:15px;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
     .card__color-dot{width:38px;height:38px;border-radius:50%;border:2.5px solid rgba(0,0,0,0.12);flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+    .card__cat-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin:8px 0 5px}
+    .card__cat-label:first-of-type{margin-top:0}
+    .card__imagen-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.1);color:#4f46e5;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;margin-top:4px}
     .card__tematica{font-weight:700;font-size:13.5px;margin-top:4px;color:var(--text)}
+    .det-cat{margin-bottom:10px}
+    .det-cat-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1.5px solid var(--border)}
+    .det-imagen-desc{font-size:15px;font-weight:700;color:#4f46e5;background:rgba(99,102,241,0.08);border-radius:12px;padding:10px 14px;margin-top:4px}
     .card__thumb{width:100%;object-fit:contain;border-radius:10px;display:block;margin-bottom:8px;cursor:pointer;background:#f5f5f5}
     .card__thumb:hover{opacity:0.9}
     .card__desc{font-size:13.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -646,17 +652,24 @@ function cardHTML(o){
 
   let preview="";
   if(o.tipo==="estrella"){
-    const colores = o.estrella?.colores||[];
-    const dots = colores.map(c=>
+    const picosCols  = o.estrella?.picos?.colores  || o.estrella?.colores || [];
+    const tamborCols = o.estrella?.tambor?.colores || [];
+    const modoLabel  = {uno:"todos iguales",dos:"alternados",personalizado:"personalizado"}[o.estrella?.picos?.modo]||"";
+
+    const makeDots = (arr) => arr.map(c=>
       `<div class="card__color-chip">
         <span class="card__color-dot" style="background:${esc(c.hex)}"></span>
         <span>${esc(c.nombre)}</span>
       </div>`).join("");
-    const tema = o.estrella?.tematica?`<div class="card__tematica">${esc(o.estrella.emoji||"")} ${esc(o.estrella.tematica)}</div>`:"";
+
+    const picosSec  = picosCols.length  ? `<div class="card__cat-label">⭐ Picos${modoLabel?" · "+modoLabel:""}</div><div class="card__colors">${makeDots(picosCols)}</div>` : "";
+    const tamborSec = tamborCols.length ? `<div class="card__cat-label">🥁 Tambor</div><div class="card__colors">${makeDots(tamborCols)}</div>` : "";
+    const imagenSec = o.estrella?.imagen?.tiene ? `<div class="card__imagen-badge">🖼️ ${esc(o.estrella.imagen.descripcion||"Con imagen")}</div>` : "";
+    const tema      = o.estrella?.tematica?`<div class="card__tematica">${esc(o.estrella.emoji||"")} ${esc(o.estrella.tematica)}</div>`:"";
+
     preview=`<div class="card__pinata">
-      <div class="card__pinata-type">Estrella · ${colores.length} color${colores.length!==1?"es":""}</div>
-      <div class="card__colors">${dots}</div>
-      ${tema}
+      <div class="card__pinata-type">Piñata Estrella</div>
+      ${picosSec}${tamborSec}${imagenSec}${tema}
     </div>`;
   } else {
     const img = o.personalizada?.imagen
@@ -748,17 +761,39 @@ function openDetalle(id){
 
   // Tipo de piñata
   if(o.tipo==="estrella"){
-    const colores = o.estrella?.colores||[];
-    const chips = colores.map(c=>
+    const picosCols  = o.estrella?.picos?.colores  || o.estrella?.colores || [];
+    const tamborCols = o.estrella?.tambor?.colores || [];
+    const modoLabel  = {uno:"Todos iguales",dos:"2 alternados",personalizado:"Personalizado"}[o.estrella?.picos?.modo]||"";
+
+    const makeChips = (arr) => arr.map(c=>
       `<div class="det-chip">
         <span class="det-dot" style="background:${esc(c.hex)}"></span>
         ${esc(c.nombre)}
       </div>`).join("");
+
+    const picosSec = picosCols.length ? `
+      <div class="det-cat">
+        <div class="det-cat-title">⭐ Picos — ${modoLabel}</div>
+        <div class="det-colors">${makeChips(picosCols)}</div>
+      </div>` : "";
+
+    const tamborSec = tamborCols.length ? `
+      <div class="det-cat">
+        <div class="det-cat-title">🥁 Tambor</div>
+        <div class="det-colors">${makeChips(tamborCols)}</div>
+      </div>` : "";
+
+    const imagenSec = o.estrella?.imagen?.tiene ? `
+      <div class="det-cat">
+        <div class="det-cat-title">🖼️ Imagen / figura</div>
+        <div class="det-imagen-desc">${esc(o.estrella.imagen.descripcion||"Sí tendrá imagen")}</div>
+      </div>` : "";
+
     html += `<div class="det-section">
-      <div class="det-label">Estrella 6 picos — ${colores.length} color${colores.length!==1?"es":""}</div>
-      <div class="det-colors">${chips}</div>
+      <div class="det-label">Piñata Estrella</div>
+      ${picosSec}${tamborSec}${imagenSec}
       ${o.estrella?.tematica?`<div class="det-tema">${esc(o.estrella.emoji||"")} ${esc(o.estrella.tematica)}</div>`:""}
-      ${o.estrella?.notas?`<p style="font-size:13px;color:var(--muted);margin-top:8px">${esc(o.estrella.notas)}</p>`:""}
+      ${o.estrella?.notas?`<p style="font-size:13px;color:var(--muted);margin-top:10px;font-style:italic">${esc(o.estrella.notas)}</p>`:""}
     </div>`;
   } else {
     if(o.personalizada?.descripcion){

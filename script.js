@@ -424,25 +424,42 @@ let colorCycleTimer = null;
 let colorCycleOffset = 0;
 
 function applyColorsToSvg(offset = 0) {
-  const colores = state.estrella.colores;
-  if (colores.length === 0) {
+  const picos  = state.estrella?.picos?.colores  || state.estrella?.colores || [];
+  const tambor = state.estrella?.tambor?.colores || [];
+
+  // Sin colores → semi-transparente
+  if (picos.length === 0 && tambor.length === 0) {
     for (let i = 0; i < 6; i++) {
-      const pico = $(`#p${i}`);
-      if (pico) pico.setAttribute("fill", "rgba(255,255,255,0.15)");
+      const p = $(`#p${i}`);
+      if (p) p.setAttribute("fill", "rgba(255,255,255,0.15)");
     }
-    $("#starBody").setAttribute("fill", "rgba(255,255,255,0.15)");
-    $("#starCenter").setAttribute("fill", "rgba(255,255,255,0.1)");
+    const sb = $("#starBody");   if (sb) sb.setAttribute("fill", "rgba(255,255,255,0.15)");
+    const sc = $("#starCenter"); if (sc) sc.setAttribute("fill", "rgba(255,255,255,0.1)");
     return;
   }
-  // Distribuir rotando con el offset actual
-  for (let i = 0; i < 6; i++) {
-    const c = colores[(i + offset) % colores.length];
-    const pico = $(`#p${i}`);
-    if (pico) pico.setAttribute("fill", c.hex);
+
+  // Picos: rotar los colores de picos entre los 6 puntos
+  if (picos.length > 0) {
+    for (let i = 0; i < 6; i++) {
+      const c = picos[(i + offset) % picos.length];
+      const p = $(`#p${i}`);
+      if (p) p.setAttribute("fill", c.hex);
+    }
+  } else {
+    // Si no hay colores de picos, usar tambor
+    for (let i = 0; i < 6; i++) {
+      const c = tambor[(i + offset) % tambor.length];
+      const p = $(`#p${i}`);
+      if (p) p.setAttribute("fill", c.hex);
+    }
   }
-  // Cuerpo y centro también ciclan
-  $("#starBody").setAttribute("fill", colores[offset % colores.length].hex);
-  $("#starCenter").setAttribute("fill", colores[(offset + 1) % colores.length].hex);
+
+  // Tambor: cuerpo y centro usan colores del tambor (o picos como fallback)
+  const bodyColors = tambor.length > 0 ? tambor : picos;
+  const sb = $("#starBody");
+  const sc = $("#starCenter");
+  if (sb) sb.setAttribute("fill", bodyColors[offset % bodyColors.length].hex);
+  if (sc) sc.setAttribute("fill", bodyColors[(offset + 1) % bodyColors.length]?.hex || bodyColors[0].hex);
 }
 
 function startColorCycle() {
