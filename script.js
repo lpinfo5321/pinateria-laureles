@@ -2088,77 +2088,133 @@ async function registerServiceWorker() {
   }
 }
 
-/* ─── Banner Instalar app (Android/Chrome/Edge) ─── */
+/* ─── Detección de plataforma ─── */
+function detectPlatform() {
+  const ua = navigator.userAgent || "";
+  const isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isAndroid = /Android/.test(ua);
+  const isMobile  = isIOS || isAndroid;
+  const isStandalone =
+    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true;
+  return { isIOS, isAndroid, isMobile, isStandalone };
+}
+
+/* ─── Banner + Modal de Instalar app ─── */
 function initInstallPrompt() {
   const banner   = $("#installBanner");
   const btnYes   = $("#btnInstallPWA");
   const btnNope  = $("#btnInstallDismiss");
-  if (!banner || !btnYes) return;
+  const btnCTA   = $("#btnOpenInstall");
 
-  const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
-  const isStandalone =
-    window.matchMedia && window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true;
+  const { isIOS, isAndroid, isMobile, isStandalone } = detectPlatform();
 
-  // No mostrar si ya está instalada
-  if (isStandalone) return;
-
+  // Capturar el evento nativo de instalación (Chrome/Edge/Android)
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     _deferredInstallPrompt = e;
-    if (!dismissed) banner.hidden = false;
-  });
-
-  btnYes.addEventListener("click", async () => {
-    if (!_deferredInstallPrompt) {
-      banner.hidden = true;
-      // En iOS y otros sin beforeinstallprompt, mostrar instrucciones
-      showIOSInstallTip();
-      return;
+    // Cuando ya tenemos prompt nativo, mostrar banner
+    if (banner && !isStandalone) {
+      const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
+      if (!dismissed) banner.hidden = false;
     }
-    _deferredInstallPrompt.prompt();
-    const { outcome } = await _deferredInstallPrompt.userChoice;
-    _deferredInstallPrompt = null;
-    banner.hidden = true;
-    if (outcome === "accepted") {
-      showToast("¡App instalada!");
-    }
-  });
-
-  btnNope.addEventListener("click", () => {
-    banner.hidden = true;
-    localStorage.setItem("pinata-install-dismissed", "1");
   });
 
   window.addEventListener("appinstalled", () => {
-    banner.hidden = true;
+    if (banner) banner.hidden = true;
+    if (btnCTA) btnCTA.hidden = true;
+    closeAllModals();
+    _deferredInstallPrompt = null;
     showToast("¡App instalada en tu dispositivo!");
   });
 
-  // iOS: si parece iPhone/iPad y no está en standalone, mostramos botón al primer intento
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS && !isStandalone && !dismissed) {
-    setTimeout(() => { banner.hidden = false; }, 1500);
+  // ─── Botón CTA de la pantalla de bienvenida ───
+  if (btnCTA) {
+    if (!isStandalone) {
+      btnCTA.hidden = false;
+      btnCTA.addEventListener("click", openInstallModal);
+    }
+  }
+
+  // ─── Banner ───
+  if (banner && btnYes && btnNope) {
+    btnYes.addEventListener("click", () => {
+      banner.hidden = true;
+      openInstallModal();
+    });
+    btnNope.addEventListener("click", () => {
+      banner.hidden = true;
+      localStorage.setItem("pinata-install-dismissed", "1");
+    });
+  }
+
+  // ─── Mostrar el modal automáticamente la primera vez ───
+  if (!isStandalone) {
+    const seenIntro = localStorage.getItem("pinata-install-seen") === "1";
+    if (!seenIntro) {
+      // Esperar un poco para no abrumar al cargar
+      setTimeout(() => {
+        if (!detectPlatform().isStandalone) {
+          openInstallModal();
+          localStorage.setItem("pinata-install-seen", "1");
+        }
+      }, 1800);
+    } else if (isMobile && banner) {
+      // En móvil, mostrar banner persistente si no fue rechazado
+      const dismissed = localStorage.getItem("pinata-install-dismissed") === "1";
+      if (!dismissed) {
+        setTimeout(() => { banner.hidden = false; }, 2500);
+      }
+    }
   }
 }
 
-function showIOSInstallTip() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) {
-    alert(
-      "Para instalar en iPhone:\n\n" +
-      "1. Toca el botón Compartir (cuadrado con flecha hacia arriba)\n" +
-      "2. Selecciona 'Añadir a pantalla de inicio'\n" +
-      "3. Toca 'Añadir'\n\n" +
-      "¡Listo! La app aparecerá como un ícono normal."
-    );
+/* ─── Abrir modal de instalación con el caso correcto ─── */
+function openInstallModal() {
+  const { isIOS, isAndroid, isMobile, isStandalone } = detectPlatform();
+
+  // Ocultar todos los casos
+  ["installCaseNative", "installCaseIOS", "installCaseAndroid", "installCaseDesktop", "installCaseInstalled"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
+
+  let activeId;
+  if (isStandalone) {
+    activeId = "installCaseInstalled";
+  } else if (_deferredInstallPrompt) {
+    activeId = "installCaseNative";
+  } else if (isIOS) {
+    activeId = "installCaseIOS";
+  } else if (isAndroid) {
+    activeId = "installCaseAndroid";
   } else {
-    alert(
-      "Para instalar:\n\n" +
-      "Chrome/Edge: menú (⋮) → 'Instalar app' o 'Agregar a pantalla de inicio'\n\n" +
-      "Si no ves la opción, asegúrate de estar en https://"
-    );
+    activeId = "installCaseDesktop";
   }
+  const active = document.getElementById(activeId);
+  if (active) active.hidden = false;
+
+  // Botón "Instalar ahora" del caso nativo
+  const btnNow = $("#btnInstallNow");
+  if (btnNow) {
+    btnNow.onclick = async () => {
+      if (!_deferredInstallPrompt) {
+        showToast("Tu navegador aún no permite instalar. Sigue las instrucciones.");
+        return;
+      }
+      try {
+        _deferredInstallPrompt.prompt();
+        const { outcome } = await _deferredInstallPrompt.userChoice;
+        _deferredInstallPrompt = null;
+        if (outcome === "accepted") {
+          closeAllModals();
+          showToast("✅ ¡App instalada!");
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+  }
+
+  openModal("#installModal");
 }
 
 /* ─── Notificaciones del sistema ─── */
