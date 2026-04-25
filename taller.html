@@ -365,7 +365,7 @@ function cardHTML(o){
         <div class="card__client">${esc(o.cliente?.nombre||"—")}</div>
         <div class="card__date">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Recogida: ${fmtShort(o.recogida)}
+          Lista antes del ${fmtShort(o.recogida)}
         </div>
         ${preview}
       </div>
@@ -416,7 +416,7 @@ function openDetalle(id){
   // Info de la orden
   html += `<div class="det-section">
     <div class="det-label">Información de la orden</div>
-    <div class="det-row"><span class="det-lbl">Recogida</span><strong>${fmtDate(o.recogida)}</strong></div>
+    <div class="det-row"><span class="det-lbl">Lista antes del</span><strong>${fmtDate(o.recogida)}</strong></div>
     <div class="det-row"><span class="det-lbl">Cliente</span><span>${esc(o.cliente?.nombre||"—")}</span></div>
     ${o.atendido?`<div class="det-row"><span class="det-lbl">Tomado por</span><span>${esc(o.atendido)}</span></div>`:""}
   </div>`;
@@ -432,7 +432,7 @@ function openDuda(id){
   if(!o) return;
   const num = String(o.numero||0).padStart(3,"0");
   document.getElementById("dudaInfo").textContent =
-    `Orden #${num} · ${o.cliente?.nombre||"—"} · Recogida: ${fmtShort(o.recogida)}`;
+    `Orden #${num} · ${o.cliente?.nombre||"—"} · Lista antes del ${fmtShort(o.recogida)}`;
   document.getElementById("dudaTexto").value = "";
   document.getElementById("dudaModal").classList.add("open");
   setTimeout(()=>document.getElementById("dudaTexto").focus(), 300);
@@ -457,7 +457,7 @@ document.getElementById("dudaSendBtn").addEventListener("click",()=>{
     "",
     `*Cliente:* ${o.cliente?.nombre||"—"}`,
     `*Piñata:* ${detalle}`,
-    `*Recogida:* ${fmtDate(o.recogida)}`,
+    `*Lista antes del:* ${fmtDate(o.recogida)}`,
     "",
     `*Duda:* ${texto}`,
   ].join("\n");
