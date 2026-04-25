@@ -2113,6 +2113,96 @@ textarea {
   padding: 12px 24px 28px;
 }
 
+/* ── Formulario genérico (usado en el modal de edición) ── */
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-input:focus {
+  border-color: var(--pink-500);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+}
+
+.form-input::placeholder { color: var(--text-muted); font-weight: 500; }
+
+select.form-input { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 14px;
+}
+
+.form-color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.form-color-swatch input[type=color] {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.form-color-swatch span {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.form-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 4px 0;
+}
+
 .modal__actions {
   display: flex;
   gap: 10px;

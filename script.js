@@ -1558,59 +1558,63 @@ function openEditModal(id) {
   const coloresHex = (o.estrella?.colores || []).map(c => c.hex || "#ec4899");
 
   body.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:20px">
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
+      <div class="form-grid-2">
+        <div class="form-section">
           <label class="form-label">Nombre del cliente</label>
-          <input class="form-input" id="editNombre" value="${escapeHTML(o.cliente?.nombre || "")}" placeholder="Nombre">
+          <input class="form-input" id="editNombre" value="${escapeHTML(o.cliente?.nombre || "")}" placeholder="Nombre completo">
         </div>
-        <div>
+        <div class="form-section">
           <label class="form-label">Teléfono</label>
-          <input class="form-input" id="editTelefono" value="${escapeHTML(o.cliente?.telefono || "")}" placeholder="Teléfono" type="tel">
+          <input class="form-input" id="editTelefono" value="${escapeHTML(o.cliente?.telefono || "")}" placeholder="10 dígitos" type="tel">
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
+      <div class="form-grid-2">
+        <div class="form-section">
           <label class="form-label">Atendido por</label>
           <input class="form-input" id="editAtendido" value="${escapeHTML(o.cliente?.atendidoPor || "")}" placeholder="Nombre del vendedor">
         </div>
-        <div>
+        <div class="form-section">
           <label class="form-label">Fecha de recogida</label>
           <input class="form-input" id="editFecha" type="date" value="${fechaVal}">
         </div>
       </div>
 
+      <div class="form-divider"></div>
+
       ${o.tipo === "estrella" ? `
-      <div>
+      <div class="form-section">
         <label class="form-label">Temática</label>
-        <input class="form-input" id="editTematica" value="${escapeHTML(o.estrella?.tematica || "")}" placeholder="Ej: Minecraft, unicornios...">
+        <input class="form-input" id="editTematica" value="${escapeHTML(o.estrella?.tematica || "")}" placeholder="Ej: Minecraft, unicornios, princesas...">
       </div>
-      <div>
+      <div class="form-section">
         <label class="form-label">Colores (${coloresHex.length})</label>
-        <div id="editColoresWrap" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;border:1.5px solid var(--border-color);border-radius:12px">
+        <div class="form-color-grid" id="editColoresWrap">
           ${coloresHex.map((hex, i) => `
-            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;cursor:pointer">
-              <input type="color" value="${hex}" data-ci="${i}" style="width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:none;padding:2px" title="Color ${i+1}">
-              ${i+1}
-            </label>
+            <div class="form-color-swatch">
+              <input type="color" value="${hex}" data-ci="${i}" title="Color ${i+1}">
+              <span>Color ${i+1}</span>
+            </div>
           `).join("")}
         </div>
       </div>
-      <div>
-        <label class="form-label">Notas</label>
-        <textarea class="form-input" id="editNotas" rows="2" placeholder="Notas adicionales...">${escapeHTML(o.estrella?.notas || "")}</textarea>
+      <div class="form-section">
+        <label class="form-label">Notas adicionales</label>
+        <textarea class="form-input" id="editNotas" rows="2" placeholder="Notas para el taller...">${escapeHTML(o.estrella?.notas || "")}</textarea>
       </div>
       ` : `
-      <div>
+      <div class="form-section">
         <label class="form-label">Descripción / instrucciones</label>
-        <textarea class="form-input" id="editDesc" rows="3" placeholder="Descripción de la piñata...">${escapeHTML(o.personalizada?.descripcion || "")}</textarea>
+        <textarea class="form-input" id="editDesc" rows="3" placeholder="Describe la piñata, colores, estilo...">${escapeHTML(o.personalizada?.descripcion || "")}</textarea>
       </div>
       `}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
+      <div class="form-divider"></div>
+
+      <div class="form-grid-2">
+        <div class="form-section">
           <label class="form-label">Estado</label>
           <select class="form-input" id="editEstado">
             <option value="pendiente" ${o.estado==="pendiente"?"selected":""}>Pendiente</option>
@@ -1619,7 +1623,7 @@ function openEditModal(id) {
             <option value="entregada" ${o.estado==="entregada"?"selected":""}>Entregada</option>
           </select>
         </div>
-        <div>
+        <div class="form-section">
           <label class="form-label">Pago</label>
           <select class="form-input" id="editPago">
             <option value="no" ${!o.pagado?"selected":""}>Sin pagar</option>
@@ -1628,9 +1632,9 @@ function openEditModal(id) {
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px">
-        <button class="btn btn-ghost" id="editCancelBtn">Cancelar</button>
-        <button class="btn btn-primary" id="editSaveBtn">Guardar cambios</button>
+      <div class="modal__actions">
+        <button class="btn btn-ghost" id="editCancelBtn" style="flex:1;padding:14px">Cancelar</button>
+        <button class="btn btn-primary" id="editSaveBtn" style="flex:2;padding:14px">Guardar cambios</button>
       </div>
     </div>
   `;
