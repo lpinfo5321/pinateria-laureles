@@ -2304,9 +2304,9 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .imagen-toggle-btn {
   flex: 1;
-  border: 2px solid var(--glass-border);
-  background: var(--bg);
-  color: var(--text-muted);
+  border: 2px solid #d1d5db;
+  background: #fff;
+  color: #374151;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -2317,14 +2317,14 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   text-align: center;
 }
 .imagen-toggle-btn:hover {
-  border-color: var(--pink-500);
-  color: var(--pink-500);
+  border-color: #ec4899;
+  color: #ec4899;
 }
 .imagen-toggle-btn.is-active {
-  background: linear-gradient(135deg, var(--pink-500), var(--magenta));
-  color: #fff;
+  background: linear-gradient(135deg, #ec4899, #d946ef);
+  color: #fff !important;
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(236,72,153,0.35);
+  box-shadow: 0 4px 14px rgba(236,72,153,0.4);
 }
 
 /* Grid de colores en modal de edición */
