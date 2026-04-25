@@ -403,17 +403,56 @@ async function initCloud(){
     document.getElementById("dot").classList.add("online");
     subscribeRealtime();
 
-    // Reconexión automática al volver a la app (celular: pantalla off → on)
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && _sb) {
-        pullOrders().catch(() => {});
+    // Reconexión automática al volver a la app (iPhone/Android: pantalla off → on)
+    let _lastPull = Date.now();
+    async function resyncarApp() {
+      if (!_sb) return;
+      const ahorita = Date.now();
+      // Si pasaron más de 30 seg desde el último pull, refrescar y re-suscribir
+      if (ahorita - _lastPull > 30_000) {
+        _lastPull = ahorita;
+        const antesIds = new Set(_orders.map(o => o.id));
+        await pullOrders().catch(() => {});
+        // Detectar órdenes que llegaron mientras estaba en background
+        const nuevas = _orders.filter(o => !antesIds.has(o.id) && o.estado !== "lista" && o.estado !== "entregada");
+        if (nuevas.length > 1) {
+          // Varias órdenes nuevas → banner especial
+          showToast(`🪅 ${nuevas.length} órdenes nuevas mientras estabas fuera`);
+          if(navigator.vibrate) try{ navigator.vibrate([300,100,300,100,300]); }catch(_){}
+          playChime();
+        } else {
+          nuevas.forEach(o => notifyNuevaOrden(o));
+        }
+        // Re-suscribir al canal realtime (puede haberse caído en iOS)
+        try {
+          _sb.removeAllChannels();
+          subscribeRealtime();
+        } catch(_) {}
       }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") resyncarApp();
+    });
+
+    // pageshow cubre el caso de iOS cuando la página vuelve del bfcache
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) resyncarApp();
     });
 
     // Reconexión si se pierde internet y vuelve
     window.addEventListener("online", () => {
-      pullOrders().catch(() => {});
+      _lastPull = 0; // Forzar resync
+      resyncarApp();
     });
+
+    // Polling cada 60 seg como red de seguridad (iPhone cierra WebSockets)
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        _lastPull = 0;
+        resyncarApp();
+      }
+    }, 60_000);
   } catch(e){ console.warn("Supabase error:",e); }
 }
 
