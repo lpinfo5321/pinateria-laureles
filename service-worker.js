@@ -8,7 +8,7 @@
    - Permite mensajería desde la app (showOrderNotification).
    ============================================================ */
 
-const CACHE_VERSION = "pinata-v1.3.0";
+const CACHE_VERSION = "pinata-v1.4.0";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -29,6 +29,7 @@ self.addEventListener("install", (event) => {
       cache.addAll(APP_SHELL).catch(() => {})
     )
   );
+  // Tomar control inmediatamente sin esperar a que se cierren pestañas
   self.skipWaiting();
 });
 

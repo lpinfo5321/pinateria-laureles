@@ -2011,6 +2011,8 @@ function initModals() {
 
   // Config modal
   $("#btnAdminConfig").addEventListener("click", openConfigModal);
+  const btnInstallFromConfig = $("#btnInstallFromConfig");
+  if (btnInstallFromConfig) btnInstallFromConfig.addEventListener("click", openInstallModal);
   $("#btnSaveConfig").addEventListener("click", saveConfigFromModal);
   $("#btnClearOrders").addEventListener("click", async () => {
     if (!confirm("¿Borrar TODAS las órdenes? Esta acción no se puede deshacer.")) return;
