@@ -682,22 +682,11 @@ $("#btnSubmit").addEventListener("click", () => {
 });
 
 function sendOrder() {
-  // Guardar en localStorage primero
   const payload = buildOrderPayload();
   const saved = saveOrder(payload);
 
   // Mostrar ID en pantalla de éxito
   $("#successOrderId").textContent = `Orden #${String(saved.numero).padStart(3, "0")}`;
-
-  // Abrir WhatsApp si hay número configurado
-  const cfg = getConfig();
-  if (cfg.whatsappPinatera) {
-    const msg = buildOrderMessage(saved);
-    const url = `https://wa.me/${cfg.whatsappPinatera}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
-  } else {
-    showToast("Orden guardada. Pide al negocio configurar su WhatsApp.");
-  }
 
   goTo("exito");
   launchConfetti();
