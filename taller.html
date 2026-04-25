@@ -71,6 +71,9 @@
     .det-cat{margin-bottom:10px}
     .det-cat-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1.5px solid var(--border)}
     .det-imagen-desc{font-size:15px;font-weight:700;color:#4f46e5;background:rgba(99,102,241,0.08);border-radius:12px;padding:10px 14px;margin-top:4px}
+    .det-imagen-desc-big{font-size:18px;font-weight:800;color:#1a1a2e;background:rgba(99,102,241,0.07);border:2px solid rgba(99,102,241,0.18);border-radius:14px;padding:14px 16px;margin-top:4px;line-height:1.4}
+    .det-star-wrap{display:flex;justify-content:center;padding:10px 0 16px;background:linear-gradient(135deg,#fdf2f8,#fef3c7);border-radius:18px;margin-bottom:14px}
+    .det-star-svg{width:180px;height:180px;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.18))}
     .card__thumb{width:100%;object-fit:contain;border-radius:10px;display:block;margin-bottom:8px;cursor:pointer;background:#f5f5f5}
     .card__thumb:hover{opacity:0.9}
     .card__desc{font-size:13.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -768,13 +771,37 @@ function openDetalle(id){
     const tamborCols = o.estrella?.tambor?.colores || [];
     const modoLabel  = {uno:"Todos iguales",dos:"2 alternados",personalizado:"Personalizado"}[o.estrella?.picos?.modo]||"";
 
+    // SVG preview de la estrella con colores reales
+    const bodyColor  = tamborCols[0]?.hex || picosCols[0]?.hex || "#ffba08";
+    const centerColor= tamborCols[1]?.hex || tamborCols[0]?.hex || picosCols[1]?.hex || bodyColor;
+    const picoFills  = [0,1,2,3,4,5].map(i => picosCols.length ? picosCols[i%picosCols.length].hex : bodyColor);
+    const svgPreview = `
+      <div class="det-star-wrap">
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" class="det-star-svg">
+          <g transform="translate(150 150)">
+            <g>
+              <polygon points="0,-120 -23,-50 23,-50"   fill="${picoFills[0]}"/>
+              <polygon points="104,-60 55,-5 32,-45"    fill="${picoFills[1]}"/>
+              <polygon points="104,60 32,45 55,5"       fill="${picoFills[2]}"/>
+              <polygon points="0,120 23,50 -23,50"      fill="${picoFills[3]}"/>
+              <polygon points="-104,60 -55,5 -32,45"   fill="${picoFills[4]}"/>
+              <polygon points="-104,-60 -32,-45 -55,-5" fill="${picoFills[5]}"/>
+            </g>
+            <circle r="55" fill="${bodyColor}"/>
+            <circle r="55" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-dasharray="4 5"/>
+            <circle r="36" fill="${centerColor}" opacity="0.85"/>
+            <text y="16" text-anchor="middle" font-size="44">${esc(o.estrella?.emoji||"🪅")}</text>
+          </g>
+        </svg>
+      </div>`;
+
     const makeChips = (arr) => arr.map(c=>
       `<div class="det-chip">
         <span class="det-dot" style="background:${esc(c.hex)}"></span>
         ${esc(c.nombre)}
       </div>`).join("");
 
-    const picosSec = picosCols.length ? `
+    const picosSec  = picosCols.length ? `
       <div class="det-cat">
         <div class="det-cat-title">⭐ Picos — ${modoLabel}</div>
         <div class="det-colors">${makeChips(picosCols)}</div>
@@ -789,14 +816,19 @@ function openDetalle(id){
     const imagenSec = o.estrella?.imagen?.tiene ? `
       <div class="det-cat">
         <div class="det-cat-title">🖼️ Imagen / figura</div>
-        <div class="det-imagen-desc">${esc(o.estrella.imagen.descripcion||"Sí tendrá imagen")}</div>
+        <div class="det-imagen-desc-big">${esc(o.estrella.imagen.descripcion||"Sí tendrá imagen")}</div>
+      </div>` : "";
+
+    const notasSec  = o.estrella?.notas ? `
+      <div class="det-cat">
+        <div class="det-cat-title">📝 Notas</div>
+        <div class="det-imagen-desc-big">${esc(o.estrella.notas)}</div>
       </div>` : "";
 
     html += `<div class="det-section">
-      <div class="det-label">Piñata Estrella</div>
-      ${picosSec}${tamborSec}${imagenSec}
+      ${svgPreview}
+      ${picosSec}${tamborSec}${imagenSec}${notasSec}
       ${o.estrella?.tematica?`<div class="det-tema">${esc(o.estrella.emoji||"")} ${esc(o.estrella.tematica)}</div>`:""}
-      ${o.estrella?.notas?`<p style="font-size:13px;color:var(--muted);margin-top:10px;font-style:italic">${esc(o.estrella.notas)}</p>`:""}
     </div>`;
   } else {
     if(o.personalizada?.descripcion){
