@@ -1158,9 +1158,20 @@ function closeColorPicker(){
     const hex=hslToHex(_cpH,_cpS,_cpL);
     const arr=getArr(_cpSection);
     if(_cpTargetIdx>=0 && arr[_cpTargetIdx]){
-      arr[_cpTargetIdx].hex=hex;
-      const cur=arr[_cpTargetIdx].nombre||"";
-      if(!cur||cur==="Nuevo color"||cur==="Color") arr[_cpTargetIdx].nombre=hexToColorName(hex);
+      const oldHex = arr[_cpTargetIdx].hex || "#ec4899";
+      arr[_cpTargetIdx].hex = hex;
+      // Leer el nombre que el usuario tiene en el campo de texto en este momento
+      const row = document.querySelector(`.color-row[data-sec="${_cpSection}"][data-i="${_cpTargetIdx}"]`);
+      const nameInput = row?.querySelector(".color-name-edit");
+      const nameEnDOM = nameInput?.value?.trim() || "";
+      // Si el nombre en el campo es igual al auto-nombre del color anterior (nunca fue editado),
+      // o está vacío → actualizamos automáticamente al nuevo color
+      const autoNombreViejo = hexToColorName(oldHex);
+      if(!nameEnDOM || nameEnDOM === autoNombreViejo || nameEnDOM === "Nuevo color" || nameEnDOM === "Color") {
+        const nuevoNombre = hexToColorName(hex);
+        arr[_cpTargetIdx].nombre = nuevoNombre;
+        if(nameInput) nameInput.value = nuevoNombre;
+      }
       renderColorSection(_cpSection);
     }
     closeColorPicker();
