@@ -1285,8 +1285,11 @@ function renderAdmin() {
   }
 
   // Filtrar
-  let filtered = ordenes;
-  if (adminFilter !== "todas") {
+  let filtered;
+  if (adminFilter === "todas") {
+    // "Todas" muestra solo pendientes y con-duda (las listas/entregadas van a su filtro)
+    filtered = ordenes.filter(o => o.estado !== "lista" && o.estado !== "entregada");
+  } else {
     filtered = ordenes.filter(o => o.estado === adminFilter);
   }
 
