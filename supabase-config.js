@@ -14,6 +14,6 @@
    6. Ve a SQL Editor y corre el archivo supabase-schema.sql
    ============================================================ */
 window.SUPABASE_CONFIG = {
-  url:     "",  // ej: "https://xxxxxxxxxxxxx.supabase.co"
-  anonKey: "",  // ej: "eyJhbGciOi..."
+  url:     "https://cmovllgbckjupficttal.supabase.co",
+  anonKey: "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS",
 };
