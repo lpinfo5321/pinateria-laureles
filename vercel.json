@@ -52,10 +52,6 @@
       "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }]
     },
     {
-      "source": "/upload.html",
-      "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }]
-    },
-    {
       "source": "/(.*)\\.png",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }]
     }
