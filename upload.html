@@ -5,113 +5,225 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Enviar foto · Piñatería Laureles</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #fff0f6 0%, #fdf4ff 100%);
-      min-height: 100vh;
+      background: #fdf0f8;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 28px;
+      padding: 36px 24px 32px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 2px 24px rgba(200,80,150,0.10), 0 1px 4px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    .brand {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      gap: 8px;
+      margin-bottom: 24px;
     }
-    .card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 36px 28px;
-      max-width: 380px;
-      width: 100%;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
-      text-align: center;
+    .brand__emoji { font-size: 28px; }
+    .brand__name  { font-size: 15px; font-weight: 800; color: #c026d3; letter-spacing: -0.01em; }
+
+    .icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fce7f3, #ede9fe);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 36px;
     }
-    .logo { font-size: 48px; margin-bottom: 12px; }
-    h1 { font-size: 22px; font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
-    p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      color: #1a1a1a;
+      line-height: 1.25;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.55;
+      margin-bottom: 28px;
+    }
+    .subtitle strong { color: #c026d3; font-weight: 700; }
+
+    /* ── Upload zone ── */
     .upload-zone {
-      border: 3px dashed #d8b4fe;
-      border-radius: 16px;
-      padding: 32px 20px;
+      display: block;
+      border: 2.5px dashed #e9b4f0;
+      border-radius: 18px;
+      padding: 28px 16px;
       cursor: pointer;
       transition: all 0.2s;
       background: #fdf4ff;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-    .upload-zone:hover, .upload-zone.drag { border-color: #a855f7; background: #f3e8ff; }
-    .upload-zone input { display: none; }
-    .upload-zone__icon { font-size: 40px; margin-bottom: 10px; }
-    .upload-zone__text { font-size: 15px; font-weight: 700; color: #9333ea; }
-    .upload-zone__sub { font-size: 12px; color: #999; margin-top: 4px; }
-    .preview-wrap { display: none; margin-bottom: 16px; }
-    .preview-wrap img { width: 100%; max-height: 280px; object-fit: contain; border-radius: 12px; border: 2px solid #e5e5e5; }
-    .btn {
+    .upload-zone:active { background: #f3e8ff; border-color: #c026d3; transform: scale(0.99); }
+    .upload-zone input  { display: none; }
+
+    .upload-zone__img { font-size: 38px; margin-bottom: 8px; }
+    .upload-zone__text {
+      font-size: 15px;
+      font-weight: 800;
+      color: #a21caf;
+      margin-bottom: 4px;
+    }
+    .upload-zone__sub { font-size: 12px; color: #bbb; }
+
+    /* ── Preview ── */
+    .preview-wrap { display: none; margin-bottom: 16px; position: relative; }
+    .preview-wrap img {
       width: 100%;
-      padding: 16px;
-      border-radius: 14px;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 16px;
+      border: 2px solid #f0d0f8;
+      background: #fdf4ff;
+    }
+    .change-wrap {
+      display: none;
+      margin-bottom: 14px;
+    }
+    .btn-change {
+      background: none;
+      border: 2px solid #e9d5ff;
+      border-radius: 12px;
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #9333ea;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-change:active { background: #f3e8ff; }
+
+    /* ── Send button ── */
+    .btn-send {
+      display: block;
+      width: 100%;
+      padding: 17px;
+      border-radius: 16px;
       border: none;
       font-size: 16px;
       font-weight: 900;
+      letter-spacing: -0.01em;
+      color: #fff;
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+      box-shadow: 0 4px 20px rgba(168,85,247,0.35);
       cursor: pointer;
       transition: all 0.2s;
     }
-    .btn-primary {
-      background: linear-gradient(135deg, #ec4899, #a855f7);
-      color: #fff;
+    .btn-send:active    { transform: scale(0.98); box-shadow: 0 2px 10px rgba(168,85,247,0.25); }
+    .btn-send:disabled  {
+      background: #e5e5e5;
+      color: #aaa;
+      box-shadow: none;
+      cursor: not-allowed;
     }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .status { margin-top: 18px; font-size: 15px; font-weight: 700; min-height: 24px; }
-    .status--ok { color: #15803d; }
-    .status--err { color: #dc2626; }
-    .status--loading { color: #9333ea; }
-    .change-btn {
-      display: none;
-      margin-top: 10px;
-      background: none;
-      border: 2px solid #e5e5e5;
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-size: 13px;
+
+    /* ── Status ── */
+    .status {
+      margin-top: 16px;
+      font-size: 14px;
       font-weight: 700;
-      color: #666;
-      cursor: pointer;
-      width: 100%;
+      min-height: 22px;
+      line-height: 1.4;
     }
+    .status--ok      { color: #16a34a; }
+    .status--err     { color: #dc2626; }
+    .status--loading { color: #9333ea; }
+
+    /* ── Success state ── */
+    .success-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .success-check {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #bbf7d0, #86efac);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+    }
+    .success-title { font-size: 20px; font-weight: 900; color: #1a1a1a; }
+    .success-sub   { font-size: 14px; color: #888; line-height: 1.5; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">🪅</div>
-    <h1>Envía tu foto de referencia</h1>
-    <p>Elige una foto de tu <strong>galería</strong> y la recibiremos automáticamente en la computadora</p>
-
-    <label class="upload-zone" id="uploadZone">
-      <input type="file" id="fileInput" accept="image/*" />
-      <div class="upload-zone__icon">🖼️</div>
-      <div class="upload-zone__text">Toca para elegir foto</div>
-      <div class="upload-zone__sub">JPG, PNG, HEIC · Máx 10 MB</div>
-    </label>
-
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" alt="Vista previa" />
+  <div class="card" id="mainCard">
+    <div class="brand">
+      <span class="brand__emoji">🪅</span>
+      <span class="brand__name">Piñatería Laureles</span>
     </div>
 
-    <button class="change-btn" id="changeBtn">Cambiar foto</button>
+    <div id="uploadView">
+      <div class="icon-wrap">🖼️</div>
+      <h1>Envía tu imagen de referencia</h1>
+      <p class="subtitle">Elige una foto de tu <strong>galería</strong> y aparecerá automáticamente en la computadora</p>
 
-    <button class="btn btn-primary" id="sendBtn" disabled>Enviar foto</button>
-    <div class="status" id="statusMsg"></div>
+      <label class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" />
+        <div class="upload-zone__img">📁</div>
+        <div class="upload-zone__text">Toca para elegir foto</div>
+        <div class="upload-zone__sub">JPG · PNG · HEIC &nbsp;·&nbsp; Máx 10 MB</div>
+      </label>
+
+      <div class="preview-wrap" id="previewWrap">
+        <img id="previewImg" alt="Vista previa" />
+      </div>
+
+      <div class="change-wrap" id="changeWrap">
+        <button class="btn-change" id="changeBtn">Cambiar foto</button>
+      </div>
+
+      <button class="btn-send" id="sendBtn" disabled>
+        Enviar foto →
+      </button>
+
+      <div class="status" id="statusMsg"></div>
+    </div>
+
+    <!-- Vista de éxito -->
+    <div class="success-wrap" id="successView">
+      <div class="success-check">✅</div>
+      <div class="success-title">¡Foto enviada!</div>
+      <p class="success-sub">Ya puedes ver la imagen en la<br>computadora. Puedes cerrar esta página.</p>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const SUPABASE_URL    = "https://cmovllgbckjupficttal.supabase.co";
-    const SUPABASE_ANONKEY= "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS";
+    const SUPABASE_URL     = "https://cmovllgbckjupficttal.supabase.co";
+    const SUPABASE_ANONKEY = "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS";
     const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANONKEY);
 
-    // Leer session ID de URL
     const params  = new URLSearchParams(location.search);
     const session = params.get("s");
+
     if (!session) {
-      document.querySelector(".card").innerHTML = "<div style='font-size:48px'>❌</div><h1>Enlace inválido</h1><p>Escanea el QR desde la computadora de nuevo.</p>";
+      document.getElementById("uploadView").innerHTML =
+        `<div class="icon-wrap">❌</div>
+         <h1>Enlace inválido</h1>
+         <p class="subtitle">Escanea el código QR desde la computadora de la tienda para obtener un enlace válido.</p>`;
     }
 
     const fileInput  = document.getElementById("fileInput");
@@ -119,6 +231,7 @@
     const previewWrap= document.getElementById("previewWrap");
     const previewImg = document.getElementById("previewImg");
     const sendBtn    = document.getElementById("sendBtn");
+    const changeWrap = document.getElementById("changeWrap");
     const changeBtn  = document.getElementById("changeBtn");
     const statusMsg  = document.getElementById("statusMsg");
 
@@ -126,38 +239,36 @@
 
     fileInput.addEventListener("change", () => {
       const file = fileInput.files[0];
-      if (!file) return;
-      resizeAndRead(file);
+      if (file) processFile(file);
     });
 
-    changeBtn.addEventListener("click", () => {
-      fileInput.click();
-    });
+    changeBtn.addEventListener("click", () => fileInput.click());
 
-    function resizeAndRead(file) {
-      statusMsg.textContent = "Procesando imagen...";
-      statusMsg.className = "status status--loading";
+    function processFile(file) {
+      statusMsg.textContent = "Procesando...";
+      statusMsg.className   = "status status--loading";
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxSide = 1400;
+          const MAX = 1400;
           let w = img.width, h = img.height;
-          if (w > maxSide || h > maxSide) {
-            if (w > h) { h = Math.round(h * maxSide / w); w = maxSide; }
-            else        { w = Math.round(w * maxSide / h); h = maxSide; }
+          if (w > MAX || h > MAX) {
+            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+            else        { w = Math.round(w * MAX / h); h = MAX; }
           }
-          const canvas = document.createElement("canvas");
-          canvas.width = w; canvas.height = h;
-          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-          _imgBase64 = canvas.toDataURL("image/jpeg", 0.85);
+          const cv = document.createElement("canvas");
+          cv.width = w; cv.height = h;
+          cv.getContext("2d").drawImage(img, 0, 0, w, h);
+          _imgBase64 = cv.toDataURL("image/jpeg", 0.85);
+
           previewImg.src = _imgBase64;
           uploadZone.style.display = "none";
           previewWrap.style.display = "block";
-          changeBtn.style.display = "block";
+          changeWrap.style.display  = "block";
           sendBtn.disabled = false;
           statusMsg.textContent = "";
-          statusMsg.className = "status";
+          statusMsg.className   = "status";
         };
         img.src = e.target.result;
       };
@@ -167,31 +278,29 @@
     sendBtn.addEventListener("click", async () => {
       if (!_imgBase64 || !session) return;
       sendBtn.disabled = true;
-      statusMsg.textContent = "Enviando...";
-      statusMsg.className = "status status--loading";
+      sendBtn.textContent = "Enviando...";
+      statusMsg.textContent = "";
 
       try {
-        // Leer colores actuales para no borrar datos
         const { data: cfg } = await _sb.from("app_config")
           .select("colores").eq("id","default").maybeSingle();
-        const currentColores = (cfg?.colores && typeof cfg.colores === "object" && !Array.isArray(cfg.colores))
+        const cur = (cfg?.colores && typeof cfg.colores === "object" && !Array.isArray(cfg.colores))
           ? cfg.colores : {};
 
         const { error } = await _sb.from("app_config").upsert({
           id: "default",
-          colores: { ...currentColores, [`upload_${session}`]: _imgBase64 }
+          colores: { ...cur, [`upload_${session}`]: _imgBase64 }
         });
-
         if (error) throw error;
 
-        statusMsg.textContent = "✅ ¡Foto enviada! Ya puedes ver la imagen en la computadora.";
-        statusMsg.className = "status status--ok";
-        sendBtn.textContent = "¡Enviada!";
-        changeBtn.style.display = "none";
+        // Mostrar vista de éxito
+        document.getElementById("uploadView").style.display  = "none";
+        document.getElementById("successView").style.display = "flex";
       } catch (err) {
         statusMsg.textContent = "❌ Error al enviar. Intenta de nuevo.";
-        statusMsg.className = "status status--err";
-        sendBtn.disabled = false;
+        statusMsg.className   = "status status--err";
+        sendBtn.disabled      = false;
+        sendBtn.textContent   = "Enviar foto →";
         console.error(err);
       }
     });
