@@ -2,7 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/taller", "destination": "/taller.html" }
+    { "source": "/taller", "destination": "/taller.html" },
+    { "source": "/upload", "destination": "/upload.html" }
   ],
   "headers": [
     {
@@ -44,6 +45,14 @@
     },
     {
       "source": "/taller.html",
+      "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/upload",
+      "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/upload.html",
       "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }]
     },
     {

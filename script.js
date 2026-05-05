@@ -41,8 +41,14 @@ const state = {
     telefono: "",
     atendidoPor: "",
     pagado: false,
+    pagoEstado: "no", // "no" | "deposito" | "pagado"
   },
 };
+
+/* Helper: obtiene el estado de pago de 3 valores posibles */
+function getPagoEstado(o) {
+  return o.pagoEstado || (o.pagado ? "pagado" : "no");
+}
 
 /* ============================================================
    Colores disponibles (el usuario elige la cantidad que quiera)
@@ -747,17 +753,18 @@ $("#atendidoPor").addEventListener("input", (e) => {
   state.contacto.atendidoPor = e.target.value.trim();
 });
 
-// Toggle pago
-$("#payNo").addEventListener("click", () => {
-  state.contacto.pagado = false;
-  $("#payNo").classList.add("is-active");
-  $("#payYes").classList.remove("is-active");
-});
-$("#payYes").addEventListener("click", () => {
-  state.contacto.pagado = true;
-  $("#payYes").classList.add("is-active");
-  $("#payNo").classList.remove("is-active");
-});
+// Toggle pago (3 estados)
+function setPayState(estado) {
+  state.contacto.pagoEstado = estado;
+  state.contacto.pagado     = estado === "pagado";
+  ["payNo","payDeposit","payYes"].forEach(id => $("#"+id)?.classList.remove("is-active"));
+  if (estado === "no")       $("#payNo")?.classList.add("is-active");
+  if (estado === "deposito") $("#payDeposit")?.classList.add("is-active");
+  if (estado === "pagado")   $("#payYes")?.classList.add("is-active");
+}
+$("#payNo").addEventListener("click",      () => setPayState("no"));
+$("#payDeposit").addEventListener("click", () => setPayState("deposito"));
+$("#payYes").addEventListener("click",     () => setPayState("pagado"));
 
 function renderSummary() {
   const list = $("#summaryList");
@@ -911,7 +918,8 @@ function resetState() {
   };
   state.personalizada = { imagen: null, imagenNombre: "", descripcion: "" };
   state.fecha = null;
-  state.contacto = { nombre: "", telefono: "", atendidoPor: "", pagado: false };
+  state.contacto = { nombre: "", telefono: "", atendidoPor: "", pagado: false, pagoEstado: "no" };
+  setPayState("no");
 
   $("#atendidoPor").value = "";
   $("#payNo").classList.add("is-active");
@@ -1119,7 +1127,7 @@ function persistLocal() {
 
 /* ─── API síncrona que usa el resto de la app ─── */
 function getConfig()  { return _mem.config; }
-function getOrders()  { return _mem.ordenes; }
+function getOrders()  { return _mem.ordenes.filter(o => !o.id?.startsWith("ups_")); }
 
 function saveConfig(cfg) {
   _mem.config = { ..._mem.config, ...cfg };
@@ -1400,6 +1408,7 @@ function buildOrderPayload() {
       atendidoPor: state.contacto.atendidoPor,
     },
     pagado: state.contacto.pagado,
+    pagoEstado: state.contacto.pagoEstado || "no",
     tipo: state.tipo,
     recogida: state.fecha ? state.fecha.getTime() : null,
     creadaDate: now.getTime(),
@@ -1536,6 +1545,7 @@ function renderOrderCard(o, cfg) {
 
   const emoji   = o.tipo === "estrella" ? (o.estrella?.emoji || "🪅") : "🎨";
   const pagado  = o.pagado;
+  const pe      = getPagoEstado(o);
   const _cfgWA  = (getConfig().whatsappPinatera || "").replace(/\D/g, "");
   const waPhone = (o.cliente?.telefono || "").replace(/\D/g, "");
   const canAskLaureles = _cfgWA.length >= 7;
@@ -1572,7 +1582,12 @@ function renderOrderCard(o, cfg) {
       <div class="oc-num"><span class="oc-emoji">${emoji}</span>#${String(o.numero).padStart(3,"0")}</div>
       <div class="oc-badges">
         <span class="status-badge status-badge--${o.estado}">${statusLabels[o.estado]}</span>
-        <span class="status-badge ${pagado ? "status-badge--lista" : "status-badge--pago"}">${pagado ? "✓ Pagado" : "$ Sin pagar"}</span>
+        ${pe === "pagado"
+          ? `<span class="status-badge status-badge--lista">✓ Pagado</span>`
+          : pe === "deposito"
+          ? `<span class="status-badge status-badge--deposito">⟳ Depósito</span>`
+          : `<span class="status-badge status-badge--pago">$ Sin pagar</span>`
+        }
       </div>
     </div>
 
@@ -1623,9 +1638,9 @@ function renderOrderCard(o, cfg) {
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         Imprimir
       </button>
-      <button class="action-btn ${pagado ? "action-btn--neutral" : "action-btn--edit"} desktop-only" data-act="toggle-pago" data-id="${o.id}">
+      <button class="action-btn ${pe === 'pagado' ? 'action-btn--neutral' : 'action-btn--edit'} desktop-only" data-act="toggle-pago" data-id="${o.id}">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        ${pagado ? "Quitar pago" : "Marcar pagado"}
+        ${pe === 'no' ? 'Registrar deposito' : pe === 'deposito' ? 'Marcar pagado' : 'Quitar pago'}
       </button>
       <button class="action-btn action-btn--edit desktop-only" data-act="editar" data-id="${o.id}">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1657,10 +1672,13 @@ function handleOrderAction(act, id) {
   if (!orden) return;
 
   if (act === "toggle-pago") {
-    const nuevo = !orden.pagado;
-    updateOrder(id, { pagado: nuevo });
-    addHistory(id, nuevo ? "Marcado como pagado" : "Pago revertido");
-    showToast(nuevo ? "💰 Marcado como pagado" : "Pago revertido");
+    const ciclo = { "no": "deposito", "deposito": "pagado", "pagado": "no" };
+    const actual = getPagoEstado(orden);
+    const siguiente = ciclo[actual];
+    updateOrder(id, { pagoEstado: siguiente, pagado: siguiente === "pagado" });
+    const msgs = { no:"Pago quitado", deposito:"💳 Depósito registrado", pagado:"💰 Marcado como pagado" };
+    addHistory(id, msgs[siguiente]);
+    showToast(msgs[siguiente]);
     renderAdmin();
     return;
   }
@@ -1799,8 +1817,9 @@ function openEditModal(id) {
         <div class="form-section">
           <label class="form-label">Pago</label>
           <select class="form-input" id="editPago">
-            <option value="no" ${!o.pagado?"selected":""}>Sin pagar</option>
-            <option value="si" ${o.pagado?"selected":""}>Pagado</option>
+            <option value="no" ${getPagoEstado(o)==="no"?"selected":""}>Sin pagar</option>
+            <option value="deposito" ${getPagoEstado(o)==="deposito"?"selected":""}>Depósito</option>
+            <option value="si" ${getPagoEstado(o)==="pagado"?"selected":""}>Pagado</option>
           </select>
         </div>
       </div>
@@ -1861,11 +1880,13 @@ function openEditModal(id) {
       const atendido = $("#editAtendido").value.trim();
       const fechaRaw = $("#editFecha").value;
       const estado   = $("#editEstado").value;
-      const pagado   = $("#editPago").value === "si";
+      const pagoVal  = $("#editPago").value;
+      const pagoEstado = pagoVal === "si" ? "pagado" : pagoVal === "deposito" ? "deposito" : "no";
+      const pagado   = pagoEstado === "pagado";
       const recogida = fechaRaw ? new Date(fechaRaw + "T12:00:00").getTime() : o.recogida;
       const patch = {
         cliente: { ...o.cliente, nombre, telefono, atendidoPor: atendido },
-        estado, pagado, recogida,
+        estado, pagado, pagoEstado, recogida,
         estrella: {
           ...o.estrella,
           tematica: $("#editTematica").value.trim(),
@@ -1893,13 +1914,16 @@ function openEditModal(id) {
     const atendido = $("#editAtendido").value.trim();
     const fechaRaw = $("#editFecha").value;
     const estado   = $("#editEstado").value;
-    const pagado   = $("#editPago").value === "si";
+    const pagoVal  = $("#editPago").value;
+    const pagoEstado = pagoVal === "si" ? "pagado" : pagoVal === "deposito" ? "deposito" : "no";
+    const pagado   = pagoEstado === "pagado";
     const recogida = fechaRaw ? new Date(fechaRaw + "T12:00:00").getTime() : o.recogida;
 
     const patch = {
       cliente: { ...o.cliente, nombre, telefono, atendidoPor: atendido },
       estado,
       pagado,
+      pagoEstado,
       recogida,
     };
 
@@ -2101,7 +2125,7 @@ function openOrderDetail(id) {
         <!-- Estado + pago -->
         <div class="detail-header-row">
           <span class="detail-estado" style="background:${estadoBadge.color}20;color:${estadoBadge.color};border:1.5px solid ${estadoBadge.color}40">${estadoBadge.label}</span>
-          <span class="detail-pago ${o.pagado ? "is-paid" : "is-unpaid"}">${o.pagado ? "Pagado" : "Sin pagar"}</span>
+          ${getPagoEstado(o) === 'pagado' ? '<span class="detail-pago is-paid">Pagado</span>' : getPagoEstado(o) === 'deposito' ? '<span class="detail-pago" style="background:#fef3c7;color:#92400e">Deposito</span>' : '<span class="detail-pago is-unpaid">Sin pagar</span>'}
         </div>
 
         <!-- Cliente -->
@@ -2133,7 +2157,7 @@ function openOrderDetail(id) {
             ${o.estado !== "lista" && o.estado !== "entregada" ? `
               <button class="detail-act-btn detail-act-btn--wa" data-act="preguntar" data-id="${o.id}" ${!canLaur ? "disabled" : ""}>Preguntar a Laureles</button>
             ` : ""}
-            <button class="detail-act-btn" data-act="toggle-pago" data-id="${o.id}">${o.pagado ? "Quitar pago" : "Marcar pagado"}</button>
+            <button class="detail-act-btn" data-act="toggle-pago" data-id="${o.id}">${getPagoEstado(o) === 'no' ? 'Registrar deposito' : getPagoEstado(o) === 'deposito' ? 'Marcar pagado' : 'Quitar pago'}</button>
             <button class="detail-act-btn" data-act="imprimir" data-id="${o.id}">Imprimir ticket</button>
             <button class="detail-act-btn detail-act-btn--danger" data-act="eliminar" data-id="${o.id}">Eliminar orden</button>
           </div>
@@ -3197,4 +3221,120 @@ document.addEventListener("DOMContentLoaded", () => {
   // Si la app abrió desde el shortcut "admin", entrar directo
   const params = new URLSearchParams(location.search);
   if (params.get("action") === "admin") requestAdminAccess();
+
+  // ── Lightbox ──
+  initLightbox();
+
+  // ── QR Upload ──
+  initQRUpload();
 });
+
+/* ============================================================
+   LIGHTBOX
+   ============================================================ */
+function initLightbox() {
+  const lb    = document.getElementById("lightbox");
+  const lbImg = document.getElementById("lightboxImg");
+  const lbClose = document.getElementById("lightboxClose");
+  if (!lb || !lbImg) return;
+
+  function openLightbox(src) {
+    lbImg.src = src;
+    lb.hidden  = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeLightbox() {
+    lb.hidden  = true;
+    lbImg.src  = "";
+    document.body.style.overflow = "";
+  }
+
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb || e.target === lbClose) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLightbox();
+  });
+
+  // Preview de captura (personalizada)
+  document.getElementById("previewImg")?.addEventListener("click", () => {
+    const src = document.getElementById("previewImg").src;
+    if (src && src.length > 10) openLightbox(src);
+  });
+
+  // Imágenes en tarjetas de admin (delegación)
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest(".order-card__ref");
+    if (img) openLightbox(img.src);
+  });
+}
+
+/* ============================================================
+   QR UPLOAD — foto desde el celular
+   ============================================================ */
+let _qrPollTimer = null;
+let _qrSessionId = null;
+
+function initQRUpload() {
+  const btn    = document.getElementById("btnQrUpload");
+  const modal  = document.getElementById("qrUploadModal");
+  const status = document.getElementById("qrStatus");
+  const cancel = document.getElementById("qrCancelBtn");
+  if (!btn || !modal) return;
+
+  btn.addEventListener("click", () => {
+    _qrSessionId = "ups_" + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+    const uploadURL = `${location.origin}/upload?sid=${_qrSessionId}`;
+
+    // Generar QR
+    const qrDiv = document.getElementById("qrCanvas");
+    qrDiv.innerHTML = "";
+    try {
+      new QRCode(qrDiv, { text: uploadURL, width: 200, height: 200, colorDark: "#1a1a1a", colorLight: "#ffffff" });
+    } catch(e) {
+      qrDiv.innerHTML = `<a href="${uploadURL}" style="word-break:break-all;font-size:11px">${uploadURL}</a>`;
+    }
+
+    status.textContent = "Esperando imagen...";
+    status.style.color = "#6b7280";
+    modal.hidden = false;
+
+    // Iniciar polling cada 3s
+    _qrPollTimer = setInterval(async () => {
+      if (!_cloudReady) return;
+      const { data } = await _sb.from("orders").select("data").eq("id", _qrSessionId).maybeSingle();
+      if (data?.data?.imagen) {
+        clearInterval(_qrPollTimer);
+        _qrPollTimer = null;
+        // Cargar imagen en el formulario
+        const src = data.data.imagen;
+        const previewImg = document.getElementById("previewImg");
+        const uploaderPlaceholder = document.getElementById("uploaderPlaceholder");
+        const uploaderPreview     = document.getElementById("uploaderPreview");
+        if (previewImg) {
+          previewImg.src = src;
+          state.personalizada.imagen      = src;
+          state.personalizada.imagenNombre = "foto-celular.jpg";
+          uploaderPlaceholder.hidden = true;
+          uploaderPreview.hidden     = false;
+        }
+        status.textContent = "✅ ¡Imagen recibida!";
+        status.style.color = "#10b981";
+        // Borrar registro temporal
+        _sb.from("orders").delete().eq("id", _qrSessionId).then(() => {});
+        setTimeout(() => { modal.hidden = true; }, 1800);
+      }
+    }, 3000);
+  });
+
+  cancel.addEventListener("click", () => {
+    clearInterval(_qrPollTimer);
+    _qrPollTimer = null;
+    modal.hidden = true;
+    // Borrar registro si existe
+    if (_qrSessionId && _cloudReady) {
+      _sb.from("orders").delete().eq("id", _qrSessionId).then(() => {});
+    }
+    _qrSessionId = null;
+  });
+}

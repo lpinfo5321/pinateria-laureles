@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Subir imagen · Piñatería Laureles</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#fdf6e3 0%,#fff0f6 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.12);text-align:center}
+    .logo{font-size:48px;margin-bottom:12px}
+    h1{font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:8px}
+    p{font-size:14px;color:#6b7280;margin-bottom:24px;line-height:1.5}
+    .uploader{border:2.5px dashed #ec4899;border-radius:16px;padding:28px 16px;cursor:pointer;transition:all .2s;background:#fdf2f8;display:block;position:relative}
+    .uploader:hover,.uploader:active{background:#fce7f3;border-color:#db2777}
+    .uploader input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .uploader__icon{font-size:36px;margin-bottom:8px}
+    .uploader__text{font-size:15px;font-weight:700;color:#be185d}
+    .uploader__sub{font-size:12px;color:#9d174d;margin-top:4px}
+    .preview{display:none;margin-top:20px;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+    .preview img{width:100%;display:block;max-height:320px;object-fit:contain;background:#f3f4f6}
+    .btn{display:block;width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:16px;transition:opacity .2s}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn:not(:disabled):active{opacity:.85}
+    .status{margin-top:16px;font-size:15px;font-weight:700;min-height:22px}
+    .status.ok{color:#10b981}
+    .status.err{color:#ef4444}
+    .status.wait{color:#6b7280}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🎉</div>
+  <h1>Comparte tu imagen</h1>
+  <p>Selecciona o toma la foto de referencia para tu piñata. Se enviará directo a la orden.</p>
+
+  <label class="uploader" id="uploader">
+    <input type="file" id="fileInput" accept="image/*" capture="environment"/>
+    <div class="uploader__icon">📷</div>
+    <div class="uploader__text">Toca para elegir foto</div>
+    <div class="uploader__sub">JPG, PNG, HEIC · Máx 10MB</div>
+  </label>
+
+  <div class="preview" id="preview">
+    <img id="previewImg" alt="Vista previa"/>
+  </div>
+
+  <button class="btn" id="btnSend" disabled>Enviar imagen</button>
+  <div class="status wait" id="status"></div>
+</div>
+
+<script src="/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  const sid    = params.get("sid");
+  if (!sid) {
+    document.getElementById("status").textContent = "Enlace no válido.";
+    document.getElementById("status").className = "status err";
+    return;
+  }
+
+  const conf = window.SUPABASE_CONFIG || {};
+  let _sb;
+  try {
+    _sb = supabase.createClient(conf.url, conf.anonKey);
+  } catch(e) {
+    document.getElementById("status").textContent = "Error de conexión.";
+    return;
+  }
+
+  let _imgData = null;
+
+  // Redimensionar imagen
+  function resizeImage(file, maxSize, quality) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+            else       { w = Math.round(w * maxSize / h); h = maxSize; }
+          }
+          const c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          c.getContext("2d").drawImage(img, 0, 0, w, h);
+          res(c.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = rej;
+        img.src = e.target.result;
+      };
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById("fileInput").addEventListener("change", async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const statusEl = document.getElementById("status");
+    statusEl.className = "status wait";
+    statusEl.textContent = "Procesando...";
+    try {
+      _imgData = await resizeImage(file, 1200, 0.85);
+      const prev = document.getElementById("preview");
+      document.getElementById("previewImg").src = _imgData;
+      prev.style.display = "block";
+      document.getElementById("btnSend").disabled = false;
+      statusEl.textContent = "";
+    } catch(err) {
+      statusEl.className = "status err";
+      statusEl.textContent = "No se pudo procesar la imagen.";
+    }
+  });
+
+  document.getElementById("btnSend").addEventListener("click", async () => {
+    const btn    = document.getElementById("btnSend");
+    const status = document.getElementById("status");
+    if (!_imgData) return;
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+    status.className = "status wait";
+    status.textContent = "Enviando imagen...";
+
+    try {
+      const { error } = await _sb.from("orders").upsert({
+        id:     sid,
+        estado: "upload_temp",
+        pagado: false,
+        data:   { tipo: "upload_temp", sessionId: sid, imagen: _imgData },
+      });
+      if (error) throw error;
+      status.className = "status ok";
+      status.textContent = "✅ ¡Imagen enviada! Ya puedes cerrar esta ventana.";
+      btn.textContent = "Enviado ✓";
+    } catch(err) {
+      status.className = "status err";
+      status.textContent = "Error al enviar: " + err.message;
+      btn.disabled = false;
+      btn.textContent = "Enviar imagen";
+    }
+  });
+})();
+</script>
+</body>
+</html>
