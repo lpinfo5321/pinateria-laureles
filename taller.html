@@ -269,7 +269,17 @@
         <div id="coloresList_tambor"></div>
         <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
 
-        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar colores</button>
+        <div style="height:1px;background:var(--border);margin:20px 0"></div>
+
+        <!-- FIGURAS -->
+        <div class="settings-section-title">
+          <span style="font-size:16px">🖼️</span> Figuras / Personajes disponibles
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Las figuras activas aparecerán como opciones al pedir una piñata estrella con imagen.</p>
+        <div id="temasList"></div>
+        <button class="btn-add-color" id="btnAddTema">+ Agregar figura</button>
+
+        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar todo</button>
       </div>
     </div>
   </div>
@@ -1221,6 +1231,26 @@ const BASE_TAMBOR = [
 let _colores = [];       // legado (colores genéricos)
 let _coloresPicos  = [];
 let _coloresTambor = [];
+let _temas = [];
+
+const BASE_TEMAS = [
+  {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
+  {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
+  {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
+  {id:"t-unicornio",  nombre:"Unicornio",  emoji:"🦄",  activo:true},
+  {id:"t-princesa",   nombre:"Princesa",   emoji:"👑",  activo:true},
+  {id:"t-sirenita",   nombre:"Sirenita",   emoji:"🧜‍♀️", activo:true},
+  {id:"t-bluey",      nombre:"Bluey",      emoji:"🐾",  activo:true},
+  {id:"t-dinosaurio", nombre:"Dinosaurio", emoji:"🦖",  activo:true},
+  {id:"t-futbol",     nombre:"Fútbol",     emoji:"⚽",  activo:true},
+  {id:"t-carros",     nombre:"Carros",     emoji:"🏎️", activo:true},
+  {id:"t-mario",      nombre:"Mario Bros", emoji:"🍄",  activo:true},
+  {id:"t-mariposa",   nombre:"Mariposa",   emoji:"🦋",  activo:true},
+  {id:"t-espacio",    nombre:"Espacio",    emoji:"🚀",  activo:true},
+  {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
+  {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
+  {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
+];
 
 async function pullColores(){
   if(!_sb) return;
@@ -1250,6 +1280,13 @@ async function pullColores(){
       _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
     }
 
+    // Temas
+    if(data?.colores && !Array.isArray(data.colores) && data.colores.temas?.length){
+      _temas = data.colores.temas;
+    } else {
+      _temas = BASE_TEMAS.map(t=>({...t}));
+    }
+
     // Si no había nada guardado, sembrar y guardar
     const eraVacio = !data?.colores_picos?.length && !(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length);
     if(eraVacio) _saveColoresInternal();
@@ -1258,16 +1295,16 @@ async function pullColores(){
     console.warn("pullColores sin datos, usando base:", e);
     _coloresPicos  = BASE_PICOS.map(c=>({...c}));
     _coloresTambor = BASE_TAMBOR.map(c=>({...c}));
+    _temas         = BASE_TEMAS.map(t=>({...t}));
   }
 }
 
 // Guarda internamente sin feedback visual (para semilla inicial)
 async function _saveColoresInternal(){
   if(!_sb) return;
-  const payload = {id:"default", colores:{picos:_coloresPicos, tambor:_coloresTambor}};
+  const payload = {id:"default", colores:{picos:_coloresPicos, tambor:_coloresTambor, temas:_temas}};
   let {error} = await _sb.from("app_config").upsert(payload);
   if(error){
-    // Intentar también con columnas separadas
     await _sb.from("app_config").upsert({
       ...payload,
       colores_picos: _coloresPicos,
@@ -1283,13 +1320,13 @@ async function saveColores(){
 
   collectNamesFromDOM("picos");
   collectNamesFromDOM("tambor");
-
-  console.log("Guardando colores — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length);
+  collectTemasFromDOM();
+  console.log("Guardando — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length, "temas:", _temas.length);
 
   // Intentar guardar en todas las columnas disponibles
   const payload = {
     id:"default",
-    colores: {picos:_coloresPicos, tambor:_coloresTambor},
+    colores: {picos:_coloresPicos, tambor:_coloresTambor, temas:_temas},
     colores_picos: _coloresPicos,
     colores_tambor: _coloresTambor
   };
@@ -1439,10 +1476,63 @@ function addNewColor(sec){
   },80);
 }
 
+/* ─── Gestión de Figuras/Temas ─────────────────────────────── */
+function renderTemaSection(){
+  const list = document.getElementById("temasList");
+  if(!list) return;
+  list.innerHTML = _temas.map((t,i) => `
+    <div class="color-row ${t.activo===false?'inactive':''}" data-trow="${i}">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        <input type="text" class="tema-emoji-edit" value="${esc(t.emoji||'🎉')}" placeholder="🎉" maxlength="4"
+          style="width:44px;font-size:20px;text-align:center;border:1.5px solid var(--border);border-radius:8px;padding:6px;background:#fafafa">
+        <input type="text" class="tema-name-edit" value="${esc(t.nombre||'')}" placeholder="Nombre figura"
+          style="flex:1;font-size:14px;font-weight:700;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;background:#fafafa">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="color-toggle-btn ${t.activo===false?'off':'on'}" data-ttoggle="${i}">${t.activo===false?'Inactivo':'Activo'}</button>
+        <button class="color-delete-btn" data-tdel="${i}" style="width:auto;border-radius:8px;padding:0 10px">✕</button>
+      </div>
+    </div>
+  `).join("");
+
+  // Delegación de eventos
+  list.onclick = e => {
+    const tog = e.target.closest("[data-ttoggle]");
+    const del = e.target.closest("[data-tdel]");
+    if(tog){ const i=parseInt(tog.dataset.ttoggle); _temas[i].activo=!(_temas[i].activo===false); renderTemaSection(); }
+    if(del){ const i=parseInt(del.dataset.tdel); _temas.splice(i,1); renderTemaSection(); }
+  };
+}
+
+function collectTemasFromDOM(){
+  const list = document.getElementById("temasList");
+  if(!list) return;
+  list.querySelectorAll("[data-trow]").forEach(row => {
+    const i = parseInt(row.dataset.trow);
+    if(!_temas[i]) return;
+    const n = row.querySelector(".tema-name-edit");
+    const e = row.querySelector(".tema-emoji-edit");
+    if(n) _temas[i].nombre = n.value.trim() || "Figura";
+    if(e) _temas[i].emoji  = e.value.trim() || "🎉";
+  });
+}
+
+function addNewTema(){
+  collectTemasFromDOM();
+  _temas.push({id:`t_${Date.now()}`, nombre:"Nueva figura", emoji:"🎉", activo:true});
+  renderTemaSection();
+  setTimeout(()=>{
+    const rows = document.querySelectorAll("#temasList [data-trow]");
+    const last = rows[rows.length-1];
+    if(last){ last.scrollIntoView({behavior:"smooth"}); last.querySelector(".tema-name-edit")?.focus(); last.querySelector(".tema-name-edit")?.select(); }
+  },80);
+}
+
 function openSettings(){
   document.getElementById("settingsModal").style.display="block";
   renderColorSection("picos");
   renderColorSection("tambor");
+  renderTemaSection();
 }
 function closeSettings(){ document.getElementById("settingsModal").style.display="none"; closeColorPicker(); }
 
@@ -1451,6 +1541,7 @@ document.getElementById("settingsClose").addEventListener("click", closeSettings
 document.getElementById("settingsOverlay").addEventListener("click", closeSettings);
 document.getElementById("btnAddColorPicos").addEventListener("click",()=>addNewColor("picos"));
 document.getElementById("btnAddColorTambor").addEventListener("click",()=>addNewColor("tambor"));
+document.getElementById("btnAddTema").addEventListener("click", addNewTema);
 document.getElementById("btnSaveColors").addEventListener("click", saveColores);
 
 /* ── Instalación PWA ── */

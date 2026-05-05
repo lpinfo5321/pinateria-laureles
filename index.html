@@ -258,26 +258,10 @@
         </div>
         <div id="imagenDescWrap" style="display:none;margin-top:14px">
           <div class="estrella-tematica-wrap">
-            <p style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">Sugerencias rápidas:</p>
-            <div class="theme-suggestions" id="themeSuggestions">
-              <button class="chip-sugg" data-theme="Spiderman" data-emoji="🕸️"><span class="chip-emoji">🕸️</span>Spiderman</button>
-              <button class="chip-sugg" data-theme="Superhéroe" data-emoji="🦸"><span class="chip-emoji">🦸</span>Superhéroe</button>
-              <button class="chip-sugg" data-theme="Batman" data-emoji="🦇"><span class="chip-emoji">🦇</span>Batman</button>
-              <button class="chip-sugg" data-theme="Unicornio" data-emoji="🦄"><span class="chip-emoji">🦄</span>Unicornio</button>
-              <button class="chip-sugg" data-theme="Princesa" data-emoji="👑"><span class="chip-emoji">👑</span>Princesa</button>
-              <button class="chip-sugg" data-theme="Sirenita" data-emoji="🧜‍♀️"><span class="chip-emoji">🧜‍♀️</span>Sirenita</button>
-              <button class="chip-sugg" data-theme="Bluey" data-emoji="🐾"><span class="chip-emoji">🐾</span>Bluey</button>
-              <button class="chip-sugg" data-theme="Dinosaurio" data-emoji="🦖"><span class="chip-emoji">🦖</span>Dinosaurio</button>
-              <button class="chip-sugg" data-theme="Fútbol" data-emoji="⚽"><span class="chip-emoji">⚽</span>Fútbol</button>
-              <button class="chip-sugg" data-theme="Carros" data-emoji="🏎️"><span class="chip-emoji">🏎️</span>Carros</button>
-              <button class="chip-sugg" data-theme="Mario Bros" data-emoji="🍄"><span class="chip-emoji">🍄</span>Mario Bros</button>
-              <button class="chip-sugg" data-theme="Mariposa" data-emoji="🦋"><span class="chip-emoji">🦋</span>Mariposa</button>
-              <button class="chip-sugg" data-theme="Espacio" data-emoji="🚀"><span class="chip-emoji">🚀</span>Espacio</button>
-              <button class="chip-sugg" data-theme="Arcoíris" data-emoji="🌈"><span class="chip-emoji">🌈</span>Arcoíris</button>
-              <button class="chip-sugg" data-theme="Flores" data-emoji="🌸"><span class="chip-emoji">🌸</span>Flores</button>
-              <button class="chip-sugg" data-theme="Corazones" data-emoji="💖"><span class="chip-emoji">💖</span>Corazones</button>
-            </div>
-            <input type="text" id="imagenDesc" class="input" placeholder="¿Qué imagen? Ej: Spiderman, logo de cumpleañero..." style="margin-top:10px" />
+            <p style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">Elige la figura:</p>
+            <!-- Chips cargados dinámicamente desde Supabase -->
+            <div class="theme-suggestions" id="themeSuggestions"></div>
+            <p id="temasVaciosMsg" style="display:none;font-size:13px;color:#999;margin-top:8px">Sin figuras disponibles. Agrega desde la app del taller.</p>
             <!-- alias oculto para compatibilidad con el estado -->
             <input type="hidden" id="tematica" />
           </div>

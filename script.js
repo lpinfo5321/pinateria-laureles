@@ -218,6 +218,27 @@ $$(".type-card").forEach(card => {
 let COLORES_PICOS  = [];
 let COLORES_TAMBOR = [];
 
+// Figuras/temas disponibles cargados desde Supabase
+let TEMAS_DISPONIBLES = [];
+const BASE_TEMAS_PC = [
+  {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
+  {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
+  {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
+  {id:"t-unicornio",  nombre:"Unicornio",  emoji:"🦄",  activo:true},
+  {id:"t-princesa",   nombre:"Princesa",   emoji:"👑",  activo:true},
+  {id:"t-sirenita",   nombre:"Sirenita",   emoji:"🧜‍♀️", activo:true},
+  {id:"t-bluey",      nombre:"Bluey",      emoji:"🐾",  activo:true},
+  {id:"t-dinosaurio", nombre:"Dinosaurio", emoji:"🦖",  activo:true},
+  {id:"t-futbol",     nombre:"Fútbol",     emoji:"⚽",  activo:true},
+  {id:"t-carros",     nombre:"Carros",     emoji:"🏎️", activo:true},
+  {id:"t-mario",      nombre:"Mario Bros", emoji:"🍄",  activo:true},
+  {id:"t-mariposa",   nombre:"Mariposa",   emoji:"🦋",  activo:true},
+  {id:"t-espacio",    nombre:"Espacio",    emoji:"🚀",  activo:true},
+  {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
+  {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
+  {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
+];
+
 // Colores base idénticos a los del taller (BASE_PICOS / BASE_TAMBOR en taller.html)
 const BASE_PICOS_PC = [
   {id:"rojo",    nombre:"Rojo",     hex:"#e63946"},
@@ -272,11 +293,35 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
   // Legado: COLORES genérico (para edición de órdenes viejas)
   COLORES = COLORES_PICOS;
 
+  // Figuras/temas
+  const temasRaw = (cloudColores && !Array.isArray(cloudColores)) ? (cloudColores.temas || []) : [];
+  const activosTemas = temasRaw.filter(t => t.activo !== false);
+  TEMAS_DISPONIBLES = activosTemas.length > 0 ? activosTemas : BASE_TEMAS_PC;
+
   // Re-renderizar si está en pantalla estrella
   if (state && state.step === "estrella") {
     renderPicosGrid();
     renderTamborGrid();
+    renderTemaChips();
   }
+}
+
+function renderTemaChips() {
+  const container = document.getElementById("themeSuggestions");
+  const emptyMsg  = document.getElementById("temasVaciosMsg");
+  if (!container) return;
+  if (!TEMAS_DISPONIBLES.length) {
+    container.innerHTML = "";
+    if (emptyMsg) emptyMsg.style.display = "block";
+    return;
+  }
+  if (emptyMsg) emptyMsg.style.display = "none";
+  const sel = state.estrella.tematica;
+  container.innerHTML = TEMAS_DISPONIBLES.map(t =>
+    `<button class="chip-sugg${t.nombre === sel ? " is-active" : ""}" data-theme="${t.nombre}" data-emoji="${t.emoji}" type="button">
+      <span class="chip-emoji">${t.emoji}</span>${t.nombre}
+    </button>`
+  ).join("");
 }
 
 /* ── Modo de picos ── */
@@ -309,11 +354,11 @@ function initEstrellaPantalla() {
       const tiene = btn.dataset.val === "si";
       state.estrella.imagen.tiene = tiene;
       $("#imagenDescWrap").style.display = tiene ? "block" : "none";
+      if (tiene) renderTemaChips();
     });
   });
-  $("#imagenDesc")?.addEventListener("input", e => {
-    state.estrella.imagen.descripcion = e.target.value.trim();
-  });
+  // Renderizar chips al iniciar pantalla estrella
+  renderTemaChips();
 }
 
 function renderSwatchGrid(container, colores, seleccionados, maxSel, onToggle) {
@@ -482,30 +527,22 @@ function stopColorCycle() {
   }
 }
 
-/* Temática / personaje — chips llenan #imagenDesc y el estado */
-$$(".chip-sugg[data-theme]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    $$(".chip-sugg[data-theme]").forEach(b => b.classList.remove("is-active"));
-    btn.classList.add("is-active");
-    state.estrella.tematica = btn.dataset.theme;
-    state.estrella.imagen.descripcion = btn.dataset.theme;
-    state.estrella.emoji = btn.dataset.emoji;
-    const descEl = $("#imagenDesc");
-    if (descEl) descEl.value = btn.dataset.theme;
-    const hidEl = $("#tematica");
-    if (hidEl) hidEl.value = btn.dataset.theme;
-    $("#starEmoji").textContent = btn.dataset.emoji;
-    $("#starLabel").textContent = btn.dataset.theme;
-  });
-});
-
-// El campo #imagenDesc actualiza la descripción y la temática
-$("#imagenDesc")?.addEventListener("input", (e) => {
-  const v = e.target.value.trim();
-  state.estrella.imagen.descripcion = v;
-  state.estrella.tematica = v;
-  $$(".chip-sugg[data-theme]").forEach(b => b.classList.remove("is-active"));
-  $("#starLabel").textContent = v || "Tu piñata estrella";
+/* Temática / personaje — delegación para chips dinámicos */
+document.getElementById("themeSuggestions")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-theme]");
+  if (!btn) return;
+  // Deseleccionar todos
+  document.querySelectorAll("#themeSuggestions [data-theme]").forEach(b => b.classList.remove("is-active"));
+  btn.classList.add("is-active");
+  const tema  = btn.dataset.theme;
+  const emoji = btn.dataset.emoji || "🪅";
+  state.estrella.tematica = tema;
+  state.estrella.imagen.descripcion = tema;
+  state.estrella.emoji = emoji;
+  const hidEl = $("#tematica");
+  if (hidEl) hidEl.value = tema;
+  $("#starEmoji").textContent = emoji;
+  $("#starLabel").textContent = tema;
 });
 
 $("#estrellaNotas").addEventListener("input", (e) => {
@@ -985,9 +1022,9 @@ function resetState() {
   setPagoState("no");
   if ($("#depositAmount")) $("#depositAmount").value = "";
   const tdEl = $("#tematica"); if (tdEl) tdEl.value = "";
-  const idEl = $("#imagenDesc"); if (idEl) idEl.value = "";
   $("#imagenDescWrap").style.display = "none";
   $$(".imagen-toggle-btn").forEach(b => b.classList.toggle("is-active", b.dataset.val === "no"));
+  document.querySelectorAll("#themeSuggestions [data-theme]").forEach(b => b.classList.remove("is-active"));
   $("#estrellaNotas").value = "";
   $("#descripcion").value = "";
   $("#nombre").value = "";
