@@ -187,6 +187,12 @@
     .btn-ghost { background:#f3f4f6; color:var(--soft); }
     .btn-pink  { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; box-shadow:0 3px 12px rgba(236,72,153,.28); }
 
+    /* Modo taller (factura para Laureles) */
+    body.taller-mode .ed-back { font-size:18px; }
+    body.taller-mode [data-taller-hide] { display:none !important; }
+    body.taller-mode .ed-title-default,
+    body:not(.taller-mode) .ed-title-taller { display:none; }
+
     /* PIN */
     .pin-wrap { max-width:320px; margin:60px auto; text-align:center; padding:20px; }
     .pin-inp { font-size:26px; letter-spacing:.3em; text-align:center; padding:12px; border-radius:12px; border:2px solid var(--border); width:100%; margin:14px 0; font-family:inherit; font-weight:700; }
@@ -272,20 +278,23 @@
 
     <!-- ──── Step 2: Cliente (mínimo) ──── -->
     <div class="ed-step" data-step="1">
-      <div class="field"><label class="lbl">Nombre del cliente *</label><input class="inp" id="fCliente" placeholder="Ej: María Pérez" autocomplete="off" /></div>
-      <div class="field"><label class="lbl">Teléfono (opcional)</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
-      <div class="field"><label class="lbl">Correo (opcional, para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
+      <div class="field">
+        <label class="lbl"><span class="ed-title-default">Nombre del cliente *</span><span class="ed-title-taller">Tu nombre (quién hizo las piñatas) *</span></label>
+        <input class="inp" id="fCliente" placeholder="Ej: María Pérez" autocomplete="off" />
+      </div>
+      <div class="field" data-taller-hide><label class="lbl">Teléfono (opcional)</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
+      <div class="field" data-taller-hide><label class="lbl">Correo (opcional, para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
       <input type="hidden" id="fEmpresa" value="" />
 
-      <div class="sec-h">Detalles de la factura</div>
-      <div class="field"><label class="lbl">Estado</label>
+      <div class="sec-h" data-taller-hide>Detalles de la factura</div>
+      <div class="field" data-taller-hide><label class="lbl">Estado</label>
         <select class="inp" id="fEstado">
           <option value="pendiente">⏳ Pendiente de pago</option>
           <option value="pagado">✅ Pagado</option>
           <option value="cancelado">❌ Cancelado</option>
         </select>
       </div>
-      <label class="ck" style="margin-bottom:14px">
+      <label class="ck" style="margin-bottom:14px" data-taller-hide>
         <input type="checkbox" id="fIva" />
         <div><div style="font-weight:700">Aplicar IVA (16%)</div><div style="font-size:11px;color:var(--soft);font-weight:500">Agrega impuesto al total</div></div>
       </label>
@@ -346,6 +355,7 @@ let _curStep=0;                 // 0=piñatas, 1=cliente
 let _selOrders=new Map();       // id -> precio
 let _manuals=[];                // [{desc,cantidad,precio}]
 let _precios={estrella:0,personalizada:0,libre:{nombre:"",precio:0}};
+const _tallerMode = new URLSearchParams(location.search).get("new")==="1";
 
 /* ══════════════════════════════════
    HELPERS
@@ -369,7 +379,18 @@ async function checkPin(){
   if(sessionStorage.getItem("fac_ok")===_pin){showMain();return;}
   document.getElementById("pinGate").style.display="block";
 }
-function showMain(){document.getElementById("pinGate").style.display="none";document.getElementById("mainApp").style.display="block";loadAll();}
+async function showMain(){
+  document.getElementById("pinGate").style.display="none";
+  if(_tallerMode){
+    document.body.classList.add("taller-mode");
+    await loadAll();
+    openEditor(null);
+    document.getElementById("edBack").innerHTML = "✕";
+  } else {
+    document.getElementById("mainApp").style.display="block";
+    loadAll();
+  }
+}
 document.getElementById("pinBtn").addEventListener("click",tryPin);
 document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
 function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v===_pin){sessionStorage.setItem("fac_ok",_pin);showMain();}else{document.getElementById("pinErr").textContent="PIN incorrecto";document.getElementById("pinInput").value="";}}
@@ -509,8 +530,13 @@ function openEditor(inv){
       else _manuals.push({desc:it.desc||"",cantidad:it.cantidad||1,precio:it.precio||0});
     });
   }
-  document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Nueva factura";
-  document.getElementById("edSub").textContent=inv?"Modifica los datos de la factura":"Selecciona piñatas y captura cliente";
+  if(_tallerMode){
+    document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Factura para Laureles";
+    document.getElementById("edSub").textContent="Selecciona las piñatas que hiciste";
+  } else {
+    document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Nueva factura";
+    document.getElementById("edSub").textContent=inv?"Modifica los datos de la factura":"Selecciona piñatas y captura cliente";
+  }
   document.getElementById("fCliente").value=inv?.cliente?.nombre||"";
   document.getElementById("fEmpresa").value=inv?.cliente?.empresa||"";
   document.getElementById("fTelefono").value=inv?.cliente?.telefono||"";
@@ -527,7 +553,16 @@ function openEditor(inv){
   document.getElementById("editor").classList.add("open");
   document.body.style.overflow="hidden";
 }
-function closeEditor(){document.getElementById("editor").classList.remove("open");document.body.style.overflow="";}
+function closeEditor(){
+  if(_tallerMode){
+    // En modo taller: cerrar pestaña o regresar
+    if(window.opener || history.length<=1) { try{ window.close(); }catch(_){} }
+    else history.back();
+    return;
+  }
+  document.getElementById("editor").classList.remove("open");
+  document.body.style.overflow="";
+}
 
 /* ══════════════════════════════════
    PICKER — Orders
@@ -734,7 +769,17 @@ async function saveCurrent(){
   btn.disabled=true;btn.textContent="Guardando...";
   const ok=await saveInvoice(inv);
   recalcTotals();
-  if(ok){closeEditor();toast("✅ Factura guardada");}
+  if(ok){
+    toast("✅ Factura guardada");
+    if(_tallerMode){
+      // Mostrar preview para descargar/compartir PDF
+      const saved = _invoices.find(i=>i.id===inv.id) || inv;
+      document.getElementById("editor").classList.remove("open");
+      openPreview(saved);
+    } else {
+      closeEditor();
+    }
+  }
 }
 
 /* ══════════════════════════════════
@@ -748,7 +793,13 @@ function openPreview(inv){
   document.getElementById("prevOverlay").classList.add("open");
   document.body.style.overflow="hidden";
 }
-function closePreview(){document.getElementById("prevOverlay").classList.remove("open");document.body.style.overflow="";}
+function closePreview(){
+  document.getElementById("prevOverlay").classList.remove("open");
+  document.body.style.overflow="";
+  if(_tallerMode){
+    try{ window.close(); }catch(_){}
+  }
+}
 document.getElementById("prevClose").addEventListener("click",closePreview);
 document.getElementById("btnEditPrev").addEventListener("click",()=>{closePreview();openEditor(_preview);});
 document.getElementById("btnTogglePago").addEventListener("click",async()=>{
