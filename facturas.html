@@ -184,9 +184,20 @@
     .pdf-notes { background:#fdf2f8; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:12px; }
     .pdf-notes-lbl { font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; margin-bottom:3px; }
 
-    .btn { padding:10px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; }
-    .btn-ghost { background:#f3f4f6; color:var(--soft); }
+    .btn { padding:10px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; font-family:inherit; }
+    .btn-ghost { background:#f3f4f6; color:var(--text); }
     .btn-pink  { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; box-shadow:0 3px 12px rgba(236,72,153,.28); }
+    .btn-danger{ background:#fff1f2; color:#dc2626; border:1.5px solid #fca5a5; }
+
+    /* Footer del preview */
+    .prev-foot { flex-direction:column; gap:8px; align-items:stretch; }
+    .prev-primary { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .prev-primary .btn { padding:12px 14px; font-size:14px; font-weight:800; }
+    .prev-secondary { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .prev-secondary .btn { padding:8px 8px; font-size:12px; }
+    @media(min-width:600px){
+      .prev-secondary { grid-template-columns:repeat(5,1fr); }
+    }
 
     /* Modo taller (factura para Laureles) */
     body.taller-mode .ed-back { font-size:18px; }
@@ -329,15 +340,18 @@
     <div class="modal-body">
       <div class="pdf-wrap" id="pdfPreview"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" id="btnEditPrev">✏️ Editar</button>
-      <button class="btn btn-ghost" id="btnTogglePago">✅ Pagar</button>
-      <button class="btn" id="btnDeletePrev" style="background:#fff1f2;color:#dc2626;border:1.5px solid #fca5a5">🗑 Eliminar</button>
-      <div style="flex:1"></div>
-      <button class="btn btn-ghost" id="btnPrint">🖨️</button>
-      <button class="btn btn-ghost" id="btnEmail">📧</button>
-      <button class="btn btn-pink" id="btnDownload">⬇️ PDF</button>
-      <button class="btn btn-pink" id="btnShare">📤</button>
+    <div class="modal-foot prev-foot">
+      <div class="prev-primary">
+        <button class="btn btn-pink" id="btnDownload">⬇️ Descargar PDF</button>
+        <button class="btn btn-pink" id="btnShare">📤 Compartir</button>
+      </div>
+      <div class="prev-secondary">
+        <button class="btn btn-ghost" id="btnEditPrev">✏️ Editar</button>
+        <button class="btn btn-ghost" id="btnTogglePago">✅ Pagar</button>
+        <button class="btn btn-ghost" id="btnPrint">🖨️ Imprimir</button>
+        <button class="btn btn-ghost" id="btnEmail">📧 Email</button>
+        <button class="btn btn-danger" id="btnDeletePrev">🗑 Eliminar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -347,6 +361,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="supabase-config.js"></script>
 <script>
 /* ══════════════════════════════════
@@ -490,7 +505,9 @@ function renderList(){
         <button class="act-btn act-btn--pink" data-act="view" data-id="${inv.id}">👁 Ver</button>
         <button class="act-btn" data-act="edit" data-id="${inv.id}">✏️ Editar</button>
         ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagar</button>`:""}
-        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}">🗑</button>
+        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}" title="${(inv.ordenIds||[]).length?'Cancelar y regresar piñatas':'Eliminar factura'}">
+          ${(inv.ordenIds||[]).length?`↩ Regresar (${inv.ordenIds.length})`:"🗑 Eliminar"}
+        </button>
       </div>
     </div>`;
   }).join("");
@@ -835,6 +852,9 @@ function openPreview(inv){
   _preview=inv;
   document.getElementById("prevTitle").textContent=`FAC-${String(inv.numero).padStart(4,"0")}`;
   document.getElementById("btnTogglePago").textContent=inv.estado==="pagado"?"↩ Pendiente":"✅ Pagar";
+  const tienOrdenes=(inv.ordenIds||[]).length>0;
+  const delBtn=document.getElementById("btnDeletePrev");
+  if(delBtn) delBtn.innerHTML = tienOrdenes ? `↩ Cancelar y regresar (${inv.ordenIds.length})` : "🗑 Eliminar";
   renderPreview(inv);
   document.getElementById("prevOverlay").classList.add("open");
   document.body.style.overflow="hidden";
@@ -857,29 +877,28 @@ document.getElementById("btnDeletePrev").addEventListener("click",async()=>{
   if(!_preview) return;
   const tienOrdenes = (_preview.ordenIds||[]).length>0;
   const msg = tienOrdenes
-    ? `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?\n\nLas ${_preview.ordenIds.length} piñata(s) volverán a estar disponibles como órdenes normales.`
+    ? `¿Cancelar esta factura y regresar las ${_preview.ordenIds.length} piñata(s) a la lista de órdenes terminadas?\n\nLa factura se borrará y las piñatas quedarán libres para usarlas en otra factura.`
     : `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?`;
   if(!confirm(msg)) return;
   await deleteInvoice(_preview.id);
   closePreview();
-  toast(tienOrdenes ? "🗑 Eliminada · piñatas regresadas" : "🗑 Factura eliminada");
+  toast(tienOrdenes ? "↩ Piñatas regresadas a órdenes" : "🗑 Factura eliminada");
 });
+
 
 function renderPreview(inv){
   const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
   const items=inv.items||[];
-  const subInfo=[inv.cliente?.telefono,inv.cliente?.email].filter(Boolean).map(esc).join(" · ");
   document.getElementById("pdfPreview").innerHTML=`
     <div class="pdf-head">
-      <div><h2>🪅 Piñatas Laureles</h2><p>${fmtDate(inv.creada)}</p></div>
+      <div><h2>PIÑATAS</h2><p>${fmtDate(inv.creada)}</p></div>
       <div class="pdf-head-right"><div class="fac">FACTURA</div><div class="num">${num}</div></div>
     </div>
     <div class="pdf-body">
       <div class="pdf-client" style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div class="pdf-client-lbl">Cliente</div>
-          <div class="pdf-client-name">${esc(inv.cliente?.nombre||"—")}</div>
-          ${subInfo?`<div class="pdf-client-sub">${subInfo}</div>`:""}
+          <div class="pdf-client-lbl">Para</div>
+          <div class="pdf-client-name">PIÑATAS</div>
         </div>
         <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
       </div>
@@ -902,14 +921,46 @@ function renderPreview(inv){
         <div class="pdf-tot-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
       </div></div>
       ${inv.notas?`<div class="pdf-notes"><div class="pdf-notes-lbl">Notas</div>${esc(inv.notas)}</div>`:""}
-      <div class="pdf-footer">¡Gracias por su preferencia! 🪅</div>
+      <div class="pdf-footer">¡Gracias!</div>
     </div>`;
 }
 
 /* ══════════════════════════════════
    PDF
 ══════════════════════════════════ */
-function buildPDF(inv){
+// PDF a partir de la vista previa (html2canvas → jsPDF imagen). Garantiza que el PDF se vea idéntico al preview.
+async function buildPDF(inv){
+  // Aseguramos que el preview tenga este inv renderizado y sea visible
+  const wasOpen = document.getElementById("prevOverlay").classList.contains("open");
+  if(!wasOpen){
+    renderPreview(inv);
+    document.getElementById("prevOverlay").classList.add("open");
+    document.getElementById("prevOverlay").style.opacity="0";
+  } else {
+    renderPreview(inv);
+  }
+  await new Promise(r=>setTimeout(r,60));
+  const node=document.getElementById("pdfPreview");
+  const canvas=await html2canvas(node,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});
+  if(!wasOpen){
+    document.getElementById("prevOverlay").classList.remove("open");
+    document.getElementById("prevOverlay").style.opacity="";
+  }
+  const img=canvas.toDataURL("image/jpeg",0.92);
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({format:"a4",unit:"mm"});
+  const pdfW=210,pdfH=297,margin=10;
+  const imgAspect=canvas.width/canvas.height;
+  let w=pdfW-margin*2;
+  let h=w/imgAspect;
+  if(h>pdfH-margin*2){ h=pdfH-margin*2; w=h*imgAspect; }
+  const x=(pdfW-w)/2;
+  pdf.addImage(img,"JPEG",x,margin,w,h);
+  return pdf;
+}
+
+// Versión vieja (sin uso) — mantenida por compat
+function buildPDFOld(inv){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({format:"a4",unit:"mm"});
   const W=210,M=18;let y=0;
@@ -997,21 +1048,34 @@ function buildPDF(inv){
   doc.text("¡Gracias por su preferencia! 🪅",W/2,291,{align:"center"});
   return doc;
 }
+async function _withPdfBtn(id, fn){
+  const btn=document.getElementById(id);
+  const old=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML="⏳ ...";
+  try{ await fn(); }
+  finally{ btn.disabled=false; btn.innerHTML=old; }
+}
 document.getElementById("btnDownload").addEventListener("click",()=>{
   if(!_preview)return;
-  const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
-  buildPDF(_preview).save(name);
-  toast("⬇️ PDF descargado");
+  _withPdfBtn("btnDownload", async()=>{
+    const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
+    const pdf=await buildPDF(_preview);
+    pdf.save(name);
+    toast("⬇️ PDF descargado");
+  });
 });
-document.getElementById("btnShare").addEventListener("click",async()=>{
+document.getElementById("btnShare").addEventListener("click",()=>{
   if(!_preview)return;
-  const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
-  const blob=buildPDF(_preview).output("blob");
-  const file=new File([blob],name,{type:"application/pdf"});
-  if(navigator.share&&navigator.canShare?.({files:[file]})){
-    try{await navigator.share({title:"Factura Piñatería Laureles",files:[file]});}
-    catch(er){if(er.name!=="AbortError")buildPDF(_preview).save(name);}
-  }else{buildPDF(_preview).save(name);toast("📥 PDF descargado");}
+  _withPdfBtn("btnShare", async()=>{
+    const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
+    const pdf=await buildPDF(_preview);
+    const blob=pdf.output("blob");
+    const file=new File([blob],name,{type:"application/pdf"});
+    if(navigator.share&&navigator.canShare?.({files:[file]})){
+      try{await navigator.share({title:"Factura PIÑATAS",files:[file]});}
+      catch(er){if(er.name!=="AbortError"){ pdf.save(name); }}
+    } else { pdf.save(name); toast("📥 PDF descargado"); }
+  });
 });
 document.getElementById("btnEmail").addEventListener("click",()=>{
   if(!_preview)return;
