@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <title>Facturas · Piñatería Laureles</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -12,40 +13,40 @@
       --pink:#ec4899; --purple:#a855f7; --green:#16a34a; --amber:#d97706;
       --text:#111827; --soft:#6b7280; --border:#e5e7eb; --bg:#fdf8fc; --radius:14px;
     }
-    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    html, body { height:100%; overflow-x:hidden; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); }
 
-    /* topbar */
-    .topbar { background:#fff; border-bottom:1px solid var(--border); padding:0 20px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-    .topbar__brand { display:flex; align-items:center; gap:10px; }
-    .topbar__emoji { font-size:24px; }
-    .topbar__title { font-size:17px; font-weight:800; }
-    .topbar__sub   { font-size:12px; color:var(--soft); font-weight:500; }
-    .btn-new { display:flex; align-items:center; gap:7px; padding:9px 18px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 3px 12px rgba(236,72,153,.35); }
+    /* ───── topbar ───── */
+    .topbar { background:#fff; border-bottom:1px solid var(--border); padding:0 16px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+    .topbar__brand { display:flex; align-items:center; gap:10px; min-width:0; }
+    .topbar__emoji { font-size:22px; }
+    .topbar__title { font-size:15px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .topbar__sub { font-size:11px; color:var(--soft); font-weight:500; }
+    .btn-new { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(236,72,153,.32); white-space:nowrap; }
 
-    /* filter bar */
-    .filter-bar { padding:12px 16px; display:flex; gap:8px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+    /* ───── filter ───── */
+    .filter-bar { padding:10px 16px; display:flex; gap:6px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
     .filter-bar::-webkit-scrollbar { display:none; }
-    .filter-btn { flex-shrink:0; padding:8px 18px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:14px; font-weight:700; color:var(--soft); cursor:pointer; transition:all .18s; display:flex; align-items:center; gap:6px; }
-    .filter-btn.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; box-shadow:0 3px 10px rgba(236,72,153,.3); }
-    .cnt { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; border-radius:999px; font-size:11px; font-weight:800; padding:0 5px; background:#f3f4f6; color:var(--soft); }
-    .filter-btn.is-active .cnt { background:rgba(255,255,255,.28); color:#fff; }
+    .filter-btn { flex-shrink:0; padding:6px 14px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; transition:all .18s; }
+    .filter-btn.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; }
+    .cnt { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:999px; font-size:10px; font-weight:800; margin-left:4px; background:#f3f4f6; color:var(--soft); }
+    .filter-btn.is-active .cnt { background:rgba(255,255,255,.25); color:#fff; }
 
-    /* list */
-    .list-wrap { padding:16px 20px; max-width:860px; margin:0 auto; }
-    .inv-card { background:#fff; border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:10px; cursor:pointer; transition:box-shadow .18s; }
-    .inv-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.07); }
-    .inv-card__row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-    .inv-card__num    { font-size:12px; font-weight:800; color:var(--pink); }
-    .inv-card__client { font-size:15px; font-weight:700; margin-top:2px; }
+    /* ───── list ───── */
+    .list-wrap { padding:14px 16px 80px; max-width:860px; margin:0 auto; }
+    .inv-card { background:#fff; border:1.5px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px; }
+    .inv-card__row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .inv-card__num    { font-size:11px; font-weight:800; color:var(--pink); }
+    .inv-card__client { font-size:15px; font-weight:800; margin-top:2px; }
     .inv-card__date   { font-size:12px; color:var(--soft); margin-top:1px; }
-    .inv-card__total  { font-size:18px; font-weight:900; }
-    .inv-card__items  { font-size:12px; color:var(--soft); margin-top:8px; }
+    .inv-card__total  { font-size:18px; font-weight:900; white-space:nowrap; }
+    .inv-card__items  { font-size:12px; color:var(--soft); margin-top:8px; line-height:1.4; }
     .inv-card__actions { display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
-    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
     .badge--pendiente { background:#fef3c7; color:#92400e; border:1.5px solid #fbbf24; }
     .badge--pagado    { background:#dcfce7; color:#166534; border:1.5px solid #86efac; }
     .badge--cancelado { background:#f1f5f9; color:#64748b; border:1.5px solid #cbd5e1; }
-    .act-btn { display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:700; color:var(--soft); cursor:pointer; }
+    .act-btn { display:flex; align-items:center; gap:5px; padding:6px 11px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:700; color:var(--soft); cursor:pointer; }
     .act-btn--pink   { background:#fdf2f8; border-color:var(--pink); color:var(--pink); }
     .act-btn--green  { background:#f0fdf4; border-color:#86efac; color:var(--green); }
     .act-btn--danger { background:#fff1f2; border-color:#fca5a5; color:#dc2626; }
@@ -53,74 +54,117 @@
     .empty__icon { font-size:44px; margin-bottom:10px; }
     .empty h3 { font-size:16px; font-weight:700; color:var(--text); }
 
-    /* modal base */
-    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:200; align-items:flex-start; justify-content:center; overflow-y:auto; padding:20px; }
+    /* ═══════════════════════════════════════════════
+       FULL-SCREEN EDITOR MODAL (mobile-first)
+       ═══════════════════════════════════════════════ */
+    .editor { position:fixed; inset:0; background:var(--bg); z-index:200; display:none; flex-direction:column; }
+    .editor.open { display:flex; }
+
+    .ed-head { background:#fff; border-bottom:1px solid var(--border); padding:0 16px; height:56px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+    .ed-back { width:36px; height:36px; border-radius:10px; border:none; background:#f3f4f6; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text); }
+    .ed-title { font-size:16px; font-weight:800; }
+    .ed-sub   { font-size:11px; color:var(--soft); }
+
+    /* Step tabs */
+    .step-tabs { background:#fff; border-bottom:1px solid var(--border); display:flex; padding:0 8px; flex-shrink:0; }
+    .step-tab { flex:1; padding:12px 8px; border:none; background:transparent; font-size:13px; font-weight:700; color:var(--soft); cursor:pointer; border-bottom:3px solid transparent; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .step-tab.is-active { color:var(--pink); border-bottom-color:var(--pink); }
+    .step-tab .badge-num { background:#f3f4f6; color:var(--soft); width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; }
+    .step-tab.is-active .badge-num { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; }
+
+    .ed-body { flex:1; overflow-y:auto; padding:14px 14px 100px; }
+    .ed-step { display:none; }
+    .ed-step.is-active { display:block; }
+
+    /* ── Step 1: Piñatas ── */
+    .picker-tabs { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px; }
+    .picker-tabs::-webkit-scrollbar { display:none; }
+    .pck-tab { flex-shrink:0; padding:7px 14px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:700; color:var(--soft); cursor:pointer; }
+    .pck-tab.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; }
+    .pck-tab .cnt { background:#f3f4f6; }
+    .pck-tab.is-active .cnt { background:rgba(255,255,255,.25); color:#fff; }
+
+    .pin-card { background:#fff; border:2px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; cursor:pointer; transition:all .15s; position:relative; }
+    .pin-card.sel { border-color:var(--pink); background:#fff; box-shadow:0 4px 16px rgba(236,72,153,.15); }
+    .pin-card__top { display:flex; align-items:flex-start; gap:10px; }
+    .pin-check { width:24px; height:24px; border-radius:7px; border:2px solid var(--border); background:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; transition:all .15s; margin-top:1px; }
+    .pin-card.sel .pin-check { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; }
+    .pin-card.sel .pin-check::after { content:"✓"; font-size:14px; font-weight:900; }
+    .pin-info { flex:1; min-width:0; }
+    .pin-num   { font-size:11px; font-weight:800; color:var(--pink); }
+    .pin-tipo  { font-size:14px; font-weight:800; margin-top:1px; line-height:1.2; }
+    .pin-meta  { font-size:12px; color:var(--soft); margin-top:3px; }
+    .pin-badge { position:absolute; top:12px; right:12px; }
+
+    .pin-price { display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); align-items:center; gap:10px; }
+    .pin-card.sel .pin-price { display:flex; }
+    .pin-price-lbl { font-size:11px; font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; }
+    .pin-price input { flex:1; padding:9px 12px; border-radius:9px; border:1.5px solid var(--border); font-size:15px; font-weight:700; font-family:inherit; background:#fafafa; text-align:right; }
+    .pin-price input:focus { outline:none; border-color:var(--pink); background:#fff; }
+    .pin-price .cur { color:var(--pink); font-weight:900; font-size:16px; }
+
+    /* Manual extras */
+    .manual-list .pin-card { background:#fffbeb; border-color:#fde68a; }
+    .manual-list .pin-card.sel { background:#fff; border-color:var(--pink); }
+    .manual-row { display:grid; grid-template-columns:1fr 60px 100px 32px; gap:8px; align-items:center; }
+    .manual-row .inp { padding:9px 10px; border-radius:8px; border:1.5px solid var(--border); font-size:14px; font-family:inherit; background:#fafafa; }
+    .manual-row .inp:focus { outline:none; border-color:var(--pink); background:#fff; }
+    .btn-del { width:32px; height:32px; border-radius:8px; border:none; background:#fff1f2; color:#ef4444; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .btn-add { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:12px; border-radius:12px; border:1.5px dashed #cbd5e1; background:transparent; font-size:14px; font-weight:700; color:var(--soft); cursor:pointer; margin-top:6px; }
+    .btn-add:hover, .btn-add:active { border-color:var(--pink); color:var(--pink); background:#fdf2f8; }
+
+    .sec-h { font-size:12px; font-weight:800; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin:18px 0 8px; }
+
+    .pick-empty { text-align:center; padding:30px 20px; color:var(--soft); font-size:13px; background:#fff; border-radius:12px; border:1.5px dashed var(--border); }
+    .pick-empty .ic { font-size:32px; margin-bottom:6px; }
+
+    /* ── Step 2: Cliente ── */
+    .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .lbl { font-size:11px; font-weight:800; color:var(--soft); text-transform:uppercase; letter-spacing:.05em; }
+    .inp { padding:12px 14px; border-radius:10px; border:1.5px solid var(--border); font-size:15px; font-family:inherit; background:#fff; color:var(--text); width:100%; }
+    .inp:focus { outline:none; border-color:var(--pink); box-shadow:0 0 0 3px rgba(236,72,153,.1); }
+    textarea.inp { resize:vertical; min-height:80px; }
+    select.inp { background:#fff; appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
+
+    .ck { display:flex; align-items:center; gap:10px; padding:14px; background:#fff; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; font-size:14px; font-weight:600; }
+    .ck input { width:18px; height:18px; accent-color:var(--pink); }
+
+    /* ── Footer fijo con totales ── */
+    .ed-foot { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:12px 16px env(safe-area-inset-bottom,12px); display:flex; align-items:center; gap:10px; z-index:10; box-shadow:0 -4px 14px rgba(0,0,0,.05); }
+    .foot-total { flex:1; min-width:0; }
+    .foot-total-lbl { font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; }
+    .foot-total-val { font-size:22px; font-weight:900; color:var(--pink); line-height:1.1; }
+    .foot-total-sub { font-size:11px; color:var(--soft); }
+    .btn-next { padding:12px 20px; border-radius:12px; border:none; background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(236,72,153,.32); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .btn-next:disabled { opacity:.4; cursor:not-allowed; box-shadow:none; }
+
+    /* ═══════════════════════════════════════════════
+       PREVIEW MODAL
+       ═══════════════════════════════════════════════ */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:200; align-items:flex-start; justify-content:center; overflow-y:auto; padding:0; }
     .overlay.open { display:flex; }
-    .modal { background:#fff; border-radius:20px; width:100%; max-width:700px; box-shadow:0 24px 80px rgba(0,0,0,.2); margin:auto; }
-    .modal-head { display:flex; align-items:center; justify-content:space-between; padding:18px 22px 14px; border-bottom:1px solid var(--border); }
-    .modal-head h2 { font-size:17px; font-weight:800; }
-    .btn-x { width:30px; height:30px; border-radius:50%; border:none; background:#f3f4f6; font-size:15px; cursor:pointer; color:var(--soft); }
-    .modal-body { padding:18px 22px; max-height:72vh; overflow-y:auto; }
-    .modal-foot { padding:14px 22px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
-
-    /* form */
-    .sec-title { font-size:11px; font-weight:800; color:var(--soft); text-transform:uppercase; letter-spacing:.07em; margin:16px 0 10px; padding-bottom:6px; border-bottom:1.5px solid var(--border); }
-    .sec-title:first-child { margin-top:0; }
-    .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media(max-width:520px){ .fgrid { grid-template-columns:1fr; } }
-    .field { display:flex; flex-direction:column; gap:4px; }
-    .field.full { grid-column:1/-1; }
-    .lbl { font-size:11px; font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; }
-    .inp { padding:9px 12px; border-radius:9px; border:1.5px solid var(--border); font-size:14px; font-weight:500; font-family:inherit; background:#fafafa; color:var(--text); }
-    .inp:focus { outline:none; border-color:var(--pink); background:#fff; }
-    textarea.inp { resize:vertical; }
-
-    /* orders picker */
-    .orders-picker { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
-    .order-pick-card {
-      display:flex; align-items:center; gap:10px;
-      padding:10px 12px; border-radius:10px; border:1.5px solid var(--border);
-      cursor:pointer; transition:all .15s; background:#fafafa;
+    .modal { background:#fff; border-radius:0; width:100%; max-width:760px; min-height:100vh; margin:auto; }
+    @media(min-width:700px){
+      .overlay { padding:20px; }
+      .modal { border-radius:20px; min-height:auto; }
     }
-    .order-pick-card.sel { border-color:var(--pink); background:#fdf2f8; }
-    .order-pick-card input[type=checkbox] { accent-color:var(--pink); width:16px; height:16px; flex-shrink:0; }
-    .order-pick-num  { font-size:12px; font-weight:800; color:var(--pink); }
-    .order-pick-desc { font-size:13px; font-weight:600; color:var(--text); }
-    .order-pick-sub  { font-size:11px; color:var(--soft); margin-top:1px; }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); position:sticky; top:0; background:#fff; z-index:5; }
+    .modal-head h2 { font-size:16px; font-weight:800; }
+    .btn-x { width:32px; height:32px; border-radius:50%; border:none; background:#f3f4f6; font-size:15px; cursor:pointer; color:var(--soft); }
+    .modal-body { padding:14px 16px; }
+    .modal-foot { padding:12px 14px env(safe-area-inset-bottom,12px); border-top:1px solid var(--border); display:flex; gap:6px; flex-wrap:wrap; position:sticky; bottom:0; background:#fff; }
+    .modal-foot .btn { padding:9px 14px; }
 
-    /* items */
-    .items-header { display:grid; grid-template-columns:1fr 60px 90px 80px 28px; gap:6px; padding:5px 8px; background:#f9fafb; border-radius:8px 8px 0 0; font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; }
-    .item-row { display:grid; grid-template-columns:1fr 60px 90px 80px 28px; gap:6px; padding:5px 8px; align-items:center; border-bottom:1px solid #f3f4f6; }
-    .item-row .inp { padding:7px 8px; font-size:13px; }
-    .item-total { font-size:13px; font-weight:700; text-align:right; }
-    .btn-del { width:26px; height:26px; border-radius:6px; border:none; background:#fff1f2; color:#ef4444; font-size:13px; cursor:pointer; }
-    .btn-add-item { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:8px; border-radius:8px; border:1.5px dashed var(--border); background:#fafafa; font-size:13px; font-weight:700; color:var(--soft); cursor:pointer; margin-top:8px; }
-    .btn-add-item:hover { border-color:var(--pink); color:var(--pink); background:#fdf2f8; }
-
-    /* totals */
-    .totals { background:#f9fafb; border-radius:10px; padding:12px 14px; margin-top:12px; }
-    .total-row { display:flex; justify-content:space-between; padding:3px 0; font-size:13px; }
-    .total-row.grand { border-top:1.5px solid var(--border); margin-top:6px; padding-top:8px; font-size:16px; font-weight:900; }
-    .total-row .lbl { color:var(--soft); font-weight:600; }
-    .total-row.grand .lbl { color:var(--text); font-weight:900; }
-    .total-row .val { font-weight:700; }
-    .total-row.grand .val { color:var(--pink); font-size:18px; }
-
-    /* btn */
-    .btn { padding:10px 18px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; font-family:inherit; }
-    .btn-ghost { background:#f3f4f6; color:var(--soft); }
-    .btn-pink  { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; box-shadow:0 3px 12px rgba(236,72,153,.28); }
-
-    /* pdf preview */
-    .pdf-wrap { background:#fff; border-radius:10px; }
-    .pdf-head { background:linear-gradient(135deg,#ec4899,#a855f7); border-radius:10px 10px 0 0; padding:20px 22px; display:flex; justify-content:space-between; align-items:flex-end; color:#fff; }
-    .pdf-head h2 { font-size:18px; font-weight:900; }
-    .pdf-head p  { font-size:12px; opacity:.85; margin-top:3px; }
-    .pdf-head-right .fac { font-size:26px; font-weight:900; line-height:1; }
-    .pdf-head-right .num { font-size:13px; opacity:.85; }
-    .pdf-body { padding:20px 22px; }
-    .pdf-meta { display:flex; justify-content:space-between; margin-bottom:16px; font-size:13px; color:var(--soft); }
-    .pdf-client { background:#f9fafb; border-radius:8px; padding:12px 14px; margin-bottom:16px; }
+    /* PDF preview */
+    .pdf-wrap { background:#fff; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+    .pdf-head { background:linear-gradient(135deg,#ec4899,#a855f7); padding:18px 20px; display:flex; justify-content:space-between; align-items:flex-end; color:#fff; }
+    .pdf-head h2 { font-size:16px; font-weight:900; }
+    .pdf-head p  { font-size:11px; opacity:.85; margin-top:2px; }
+    .pdf-head-right .fac { font-size:22px; font-weight:900; line-height:1; }
+    .pdf-head-right .num { font-size:12px; opacity:.85; }
+    .pdf-body { padding:18px 20px; }
+    .pdf-meta { display:flex; justify-content:space-between; margin-bottom:14px; font-size:12px; color:var(--soft); }
+    .pdf-client { background:#f9fafb; border-radius:8px; padding:12px 14px; margin-bottom:14px; }
     .pdf-client-lbl  { font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
     .pdf-client-name { font-size:15px; font-weight:800; }
     .pdf-client-sub  { font-size:12px; color:var(--soft); margin-top:2px; }
@@ -132,22 +176,22 @@
     .pdf-table tbody td { padding:8px 10px; font-size:13px; border-bottom:1px solid #f3f4f6; }
     .pdf-table tbody td:not(:first-child) { text-align:right; font-weight:600; }
     .pdf-totals { display:flex; justify-content:flex-end; margin-bottom:14px; }
-    .pdf-totals-inner { width:200px; }
+    .pdf-totals-inner { width:200px; max-width:100%; }
     .pdf-tot-row { display:flex; justify-content:space-between; padding:3px 0; font-size:13px; }
     .pdf-tot-row.grand { border-top:2px solid var(--border); margin-top:5px; padding-top:7px; font-weight:900; font-size:15px; color:var(--pink); }
     .pdf-footer { padding-top:12px; border-top:1px solid var(--border); text-align:center; font-size:12px; color:var(--soft); }
     .pdf-notes { background:#fdf2f8; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:12px; }
     .pdf-notes-lbl { font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; margin-bottom:3px; }
 
-    /* pin */
+    .btn { padding:10px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; }
+    .btn-ghost { background:#f3f4f6; color:var(--soft); }
+    .btn-pink  { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; box-shadow:0 3px 12px rgba(236,72,153,.28); }
+
+    /* PIN */
     .pin-wrap { max-width:320px; margin:60px auto; text-align:center; padding:20px; }
     .pin-inp { font-size:26px; letter-spacing:.3em; text-align:center; padding:12px; border-radius:12px; border:2px solid var(--border); width:100%; margin:14px 0; font-family:inherit; font-weight:700; }
     .pin-inp:focus { outline:none; border-color:var(--pink); }
     .pin-err { color:#dc2626; font-size:13px; font-weight:700; min-height:18px; }
-
-    @media(max-width:500px){
-      .items-header,.item-row { grid-template-columns:1fr 48px 78px 68px 26px; gap:4px; }
-    }
   </style>
 </head>
 <body>
@@ -167,7 +211,7 @@
   </div>
 </div>
 
-<!-- Main -->
+<!-- ═══ MAIN LIST ═══ -->
 <div id="mainApp" style="display:none">
   <header class="topbar">
     <div class="topbar__brand">
@@ -175,8 +219,8 @@
       <div><div class="topbar__title">Piñatería Laureles</div><div class="topbar__sub">Facturas</div></div>
     </div>
     <button class="btn-new" id="btnNew">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva factura
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva
     </button>
   </header>
 
@@ -190,102 +234,102 @@
   <div class="list-wrap" id="listWrap"></div>
 </div>
 
-<!-- ═══ Modal Crear/Editar ═══ -->
-<div class="overlay" id="editOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="editTitle">Nueva factura</h2>
-      <button class="btn-x" id="editClose">✕</button>
+<!-- ═══ EDITOR FULL-SCREEN ═══ -->
+<div class="editor" id="editor">
+  <div class="ed-head">
+    <button class="ed-back" id="edBack">←</button>
+    <div style="flex:1;min-width:0">
+      <div class="ed-title" id="edTitle">Nueva factura</div>
+      <div class="ed-sub" id="edSub">Selecciona piñatas y captura cliente</div>
     </div>
-    <div class="modal-body">
+  </div>
 
-      <!-- Cliente -->
-      <div class="sec-title">👤 Datos del cliente</div>
-      <div class="fgrid">
-        <div class="field"><label class="lbl">Nombre *</label><input class="inp" id="fCliente" placeholder="Nombre completo" /></div>
-        <div class="field"><label class="lbl">Empresa (opcional)</label><input class="inp" id="fEmpresa" placeholder="Nombre empresa" /></div>
-        <div class="field"><label class="lbl">Teléfono</label><input class="inp" id="fTelefono" type="tel" placeholder="33 1234 5678" /></div>
-        <div class="field"><label class="lbl">Correo</label><input class="inp" id="fEmail" type="email" placeholder="correo@ejemplo.com" /></div>
+  <div class="step-tabs">
+    <button class="step-tab is-active" data-step="0"><span class="badge-num">1</span>Piñatas</button>
+    <button class="step-tab" data-step="1"><span class="badge-num">2</span>Cliente</button>
+  </div>
+
+  <div class="ed-body">
+
+    <!-- ──── Step 1: Piñatas ──── -->
+    <div class="ed-step is-active" data-step="0">
+      <div class="picker-tabs" id="pickerTabs">
+        <button class="pck-tab is-active" data-p="terminadas">Terminadas <span class="cnt" id="pcT">0</span></button>
+        <button class="pck-tab" data-p="pendientes">Pendientes <span class="cnt" id="pcP">0</span></button>
+        <button class="pck-tab" data-p="todas">Todas <span class="cnt" id="pcA">0</span></button>
       </div>
 
-      <!-- Importar de órdenes listas -->
-      <div class="sec-title" id="ordPickerTitle">🪅 Seleccionar órdenes terminadas</div>
-      <p style="font-size:12px;color:var(--soft);margin-bottom:10px">Selecciona las piñatas ya listas para incluirlas en la factura. Puedes editar el precio después.</p>
-      <div class="orders-picker" id="ordersPicker">
-        <div style="font-size:13px;color:var(--soft);text-align:center;padding:16px">Cargando órdenes...</div>
-      </div>
+      <div id="ordersList"></div>
 
-      <!-- Items (piñatas) -->
-      <div class="sec-title" style="margin-top:18px">🛒 Piñatas a facturar</div>
-      <div class="items-header">
-        <span>Descripción</span><span>Cant.</span><span>Precio u.</span><span style="text-align:right">Total</span><span></span>
-      </div>
-      <div id="itemsWrap"></div>
-      <button class="btn-add-item" id="btnAddItem">+ Agregar piñata manualmente</button>
-
-      <!-- Totals -->
-      <div class="totals" id="totalsBox">
-        <div class="total-row"><span class="lbl">Subtotal</span><span class="val" id="tSub">$0</span></div>
-        <div class="total-row" id="taxRow" style="display:none"><span class="lbl">IVA (16%)</span><span class="val" id="tIva">$0</span></div>
-        <div class="total-row grand"><span class="lbl">TOTAL</span><span class="val" id="tTot">$0</span></div>
-      </div>
-
-      <!-- Config -->
-      <div class="fgrid" style="margin-top:14px">
-        <div class="field">
-          <label class="lbl">Estado</label>
-          <select class="inp" id="fEstado">
-            <option value="pendiente">⏳ Pendiente de pago</option>
-            <option value="pagado">✅ Pagado</option>
-            <option value="cancelado">❌ Cancelado</option>
-          </select>
-        </div>
-        <div class="field" style="justify-content:center">
-          <label class="lbl" style="display:flex;align-items:center;gap:6px;margin-top:18px">
-            <input type="checkbox" id="fIva" style="width:15px;height:15px;accent-color:var(--pink)">
-            Agregar IVA (16%)
-          </label>
-        </div>
-        <div class="field full">
-          <label class="lbl">Notas (opcional)</label>
-          <textarea class="inp" id="fNotas" rows="2" placeholder="Detalles de pago, condiciones, etc."></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" id="editCancel">Cancelar</button>
-      <button class="btn btn-pink" id="editSave">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Guardar factura
+      <div class="sec-h" id="manSecTitle" style="display:none">Piñatas extra (manual)</div>
+      <div id="manualList" class="manual-list"></div>
+      <button class="btn-add" id="btnAddManual">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar piñata suelta
       </button>
     </div>
+
+    <!-- ──── Step 2: Cliente ──── -->
+    <div class="ed-step" data-step="1">
+      <div class="field"><label class="lbl">Nombre del cliente *</label><input class="inp" id="fCliente" placeholder="Ej: María Pérez" autocomplete="off" /></div>
+      <div class="field"><label class="lbl">Teléfono</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
+      <div class="field"><label class="lbl">Correo (para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
+      <div class="field"><label class="lbl">Empresa (opcional)</label><input class="inp" id="fEmpresa" placeholder="Razón social" autocomplete="off" /></div>
+
+      <div class="sec-h">Detalles</div>
+      <div class="field"><label class="lbl">Estado</label>
+        <select class="inp" id="fEstado">
+          <option value="pendiente">⏳ Pendiente de pago</option>
+          <option value="pagado">✅ Pagado</option>
+          <option value="cancelado">❌ Cancelado</option>
+        </select>
+      </div>
+      <label class="ck" style="margin-bottom:14px">
+        <input type="checkbox" id="fIva" />
+        <div><div style="font-weight:700">Aplicar IVA (16%)</div><div style="font-size:11px;color:var(--soft);font-weight:500">Agrega impuesto al total</div></div>
+      </label>
+      <div class="field"><label class="lbl">Notas (opcional)</label><textarea class="inp" id="fNotas" rows="2" placeholder="Detalles de pago, observaciones…"></textarea></div>
+    </div>
+
+  </div>
+
+  <div class="ed-foot">
+    <div class="foot-total">
+      <div class="foot-total-lbl">Total</div>
+      <div class="foot-total-val" id="footTotal">$0.00</div>
+      <div class="foot-total-sub" id="footSub">0 piñatas</div>
+    </div>
+    <button class="btn-next" id="btnNext">
+      Siguiente
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 </div>
 
-<!-- ═══ Modal Preview ═══ -->
+<!-- ═══ Preview ═══ -->
 <div class="overlay" id="prevOverlay">
-  <div class="modal" style="max-width:760px">
+  <div class="modal">
     <div class="modal-head">
       <h2 id="prevTitle">Factura</h2>
       <button class="btn-x" id="prevClose">✕</button>
     </div>
-    <div class="modal-body" style="max-height:none">
+    <div class="modal-body">
       <div class="pdf-wrap" id="pdfPreview"></div>
     </div>
-    <div class="modal-foot" style="flex-wrap:wrap">
+    <div class="modal-foot">
       <button class="btn btn-ghost" id="btnEditPrev">✏️ Editar</button>
-      <button class="btn btn-ghost" id="btnTogglePago">✅ Marcar pagado</button>
+      <button class="btn btn-ghost" id="btnTogglePago">✅ Pagar</button>
       <div style="flex:1"></div>
-      <button class="btn btn-ghost" id="btnPrint">🖨️ Imprimir</button>
-      <button class="btn btn-ghost" id="btnEmail">📧 Email</button>
+      <button class="btn btn-ghost" id="btnPrint">🖨️</button>
+      <button class="btn btn-ghost" id="btnEmail">📧</button>
       <button class="btn btn-pink" id="btnDownload">⬇️ PDF</button>
-      <button class="btn btn-pink" id="btnShare">📤 Compartir</button>
+      <button class="btn btn-pink" id="btnShare">📤</button>
     </div>
   </div>
 </div>
 
 <!-- Toast -->
-<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:14px;font-weight:700;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap"></div>
+<div id="toast" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -294,372 +338,416 @@
 /* ══════════════════════════════════
    GLOBALS
 ══════════════════════════════════ */
-let _sb = null, _invoices = [], _orders = [], _filter = "todas";
-let _editing = null, _preview = null;
-let _items = [];        // items en formulario activo
-let _selOrders = new Set(); // IDs de órdenes seleccionadas en picker
-
-/* ══════════════════════════════════
-   TOAST
-══════════════════════════════════ */
-let _tt;
-function toast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.style.transform = "translateX(-50%) translateY(0)";
-  clearTimeout(_tt);
-  _tt = setTimeout(() => { el.style.transform = "translateX(-50%) translateY(80px)"; }, 2600);
-}
+let _sb=null, _invoices=[], _orders=[], _filter="todas";
+let _editing=null, _preview=null;
+let _selPicker="terminadas";   // tab activo del selector
+let _curStep=0;                 // 0=piñatas, 1=cliente
+let _selOrders=new Map();       // id -> precio
+let _manuals=[];                // [{desc,cantidad,precio}]
 
 /* ══════════════════════════════════
    HELPERS
 ══════════════════════════════════ */
-function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function fmt(n){ return "$" + Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtDate(ts){ if(!ts) return "—"; const d=new Date(ts); return d.toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }
-const LABELS = { pendiente:"⏳ Pendiente", pagado:"✅ Pagado", cancelado:"❌ Cancelado" };
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmt(n){return "$"+Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(ts){if(!ts) return "—";const d=new Date(ts);return d.toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});}
+const LABELS={pendiente:"⏳ Pendiente",pagado:"✅ Pagado",cancelado:"❌ Cancelado"};
+
+let _tt;
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.style.transform="translateX(-50%) translateY(0)";clearTimeout(_tt);_tt=setTimeout(()=>el.style.transform="translateX(-50%) translateY(80px)",2600);}
 
 /* ══════════════════════════════════
    PIN
 ══════════════════════════════════ */
-let _pin = "";
+let _pin="";
 async function checkPin(){
-  if(!_sb){ showMain(); return; }
-  try { const {data} = await _sb.from("app_config").select("pin").eq("id","default").maybeSingle(); _pin = data?.pin||""; } catch(_){}
-  if(!_pin){ showMain(); return; }
-  if(sessionStorage.getItem("fac_ok") === _pin){ showMain(); return; }
-  document.getElementById("pinGate").style.display = "block";
+  if(!_sb){showMain();return;}
+  try{const{data}=await _sb.from("app_config").select("pin").eq("id","default").maybeSingle();_pin=data?.pin||"";}catch(_){}
+  if(!_pin){showMain();return;}
+  if(sessionStorage.getItem("fac_ok")===_pin){showMain();return;}
+  document.getElementById("pinGate").style.display="block";
 }
-function showMain(){
-  document.getElementById("pinGate").style.display = "none";
-  document.getElementById("mainApp").style.display = "block";
-  loadAll();
-}
-document.getElementById("pinBtn").addEventListener("click", tryPin);
-document.getElementById("pinInput").addEventListener("keydown", e => { if(e.key==="Enter") tryPin(); });
-function tryPin(){
-  const v = document.getElementById("pinInput").value.trim();
-  if(v===_pin){ sessionStorage.setItem("fac_ok",_pin); showMain(); }
-  else { document.getElementById("pinErr").textContent="PIN incorrecto"; document.getElementById("pinInput").value=""; }
-}
+function showMain(){document.getElementById("pinGate").style.display="none";document.getElementById("mainApp").style.display="block";loadAll();}
+document.getElementById("pinBtn").addEventListener("click",tryPin);
+document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
+function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v===_pin){sessionStorage.setItem("fac_ok",_pin);showMain();}else{document.getElementById("pinErr").textContent="PIN incorrecto";document.getElementById("pinInput").value="";}}
 
 /* ══════════════════════════════════
    DATA
 ══════════════════════════════════ */
 async function loadAll(){
-  if(!_sb){ renderList(); return; }
-  // Cargar facturas (independiente de ordenes)
-  try {
-    const {data,error} = await _sb.from("invoices").select("*").order("numero",{ascending:false});
-    if(!error) _invoices = (data||[]).map(r => ({ id:r.id, numero:r.numero, estado:r.estado, creada:r.created_at, ...(r.data||{}) }));
-    else console.warn("invoices error:", error.message);
-  } catch(e){ console.warn("invoices load failed:", e); }
-
-  // Cargar ordenes terminadas
-  await loadOrders();
+  if(!_sb){renderList();return;}
+  const[invRes,ordRes]=await Promise.all([
+    _sb.from("invoices").select("*").order("numero",{ascending:false}),
+    _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false})
+  ]);
+  _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
+  _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   renderList();
 }
 
-async function loadOrders(){
-  if(!_sb) return;
-  try {
-    const {data,error} = await _sb
-      .from("orders")
-      .select("id,numero,estado,data,created_at")
-      .in("estado",["lista","entregada"])
-      .order("numero",{ascending:false});
-    if(error){ console.warn("orders error:", error.message); return; }
-    _orders = (data||[]).map(r => ({ ...r.data, id:r.id, numero:r.numero, estado:r.estado }));
-  } catch(e){ console.warn("orders load failed:", e); }
-}
-
 async function saveInvoice(inv){
-  if(!_sb){ toast("Sin conexión"); return false; }
-  const {cliente,items,subtotal,impuesto,total,notas,estado,iva,ordenIds} = inv;
-  const {error} = await _sb.from("invoices").upsert({
-    id: inv.id, estado,
-    data: {cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}
-  });
-  if(error){ toast("Error: "+error.message); return false; }
-  await loadAll();
-  return true;
+  if(!_sb){toast("Sin conexión");return false;}
+  const{cliente,items,subtotal,impuesto,total,notas,estado,iva,ordenIds}=inv;
+  const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}});
+  if(error){toast("Error: "+error.message);return false;}
+  await loadAll();return true;
 }
-
-async function deleteInvoice(id){
-  if(!_sb) return;
-  await _sb.from("invoices").delete().eq("id",id);
-  await loadAll();
-}
+async function deleteInvoice(id){if(!_sb)return;await _sb.from("invoices").delete().eq("id",id);await loadAll();}
 
 /* ══════════════════════════════════
-   LISTA
+   LIST
 ══════════════════════════════════ */
 function updateCounts(){
-  document.getElementById("cTodas").textContent = _invoices.length;
-  document.getElementById("cPend").textContent  = _invoices.filter(i=>i.estado==="pendiente").length;
-  document.getElementById("cPag").textContent   = _invoices.filter(i=>i.estado==="pagado").length;
-  document.getElementById("cCan").textContent   = _invoices.filter(i=>i.estado==="cancelado").length;
+  document.getElementById("cTodas").textContent=_invoices.length;
+  document.getElementById("cPend").textContent =_invoices.filter(i=>i.estado==="pendiente").length;
+  document.getElementById("cPag").textContent  =_invoices.filter(i=>i.estado==="pagado").length;
+  document.getElementById("cCan").textContent  =_invoices.filter(i=>i.estado==="cancelado").length;
 }
-
 function renderList(){
   updateCounts();
-  const wrap = document.getElementById("listWrap");
-  const list = _filter==="todas" ? _invoices : _invoices.filter(i=>i.estado===_filter);
+  const wrap=document.getElementById("listWrap");
+  const list=_filter==="todas"?_invoices:_invoices.filter(i=>i.estado===_filter);
   if(!list.length){
-    wrap.innerHTML = `<div class="empty"><div class="empty__icon">🧾</div><h3>${_filter==="todas"?"No hay facturas aún":"Sin facturas aquí"}</h3><p style="margin-top:6px;font-size:13px">Presiona "Nueva factura" para crear una</p></div>`;
-    return;
+    wrap.innerHTML=`<div class="empty"><div class="empty__icon">🧾</div><h3>${_filter==="todas"?"No hay facturas aún":"Sin facturas aquí"}</h3><p style="margin-top:6px;font-size:13px">Presiona "Nueva" para crear una</p></div>`;return;
   }
-  wrap.innerHTML = list.map(inv=>{
-    const num   = `FAC-${String(inv.numero).padStart(4,"0")}`;
-    const items = (inv.items||[]).map(it=>it.desc||it.descripcion).filter(Boolean).slice(0,3).join(" · ") || "Sin artículos";
+  wrap.innerHTML=list.map(inv=>{
+    const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
+    const items=(inv.items||[]).map(it=>it.desc||it.descripcion).filter(Boolean).slice(0,3).join(" · ")||"Sin artículos";
     return `<div class="inv-card">
       <div class="inv-card__row">
-        <div>
+        <div style="min-width:0;flex:1">
           <div class="inv-card__num">${num}</div>
           <div class="inv-card__client">${esc(inv.cliente?.nombre||"Sin cliente")}</div>
           <div class="inv-card__date">${fmtDate(inv.creada)}${inv.cliente?.empresa?" · "+esc(inv.cliente.empresa):""}</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="inv-card__total">${fmt(inv.total)}</div>
           <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
         </div>
       </div>
       <div class="inv-card__items">${esc(items)}</div>
       <div class="inv-card__actions">
-        <button class="act-btn act-btn--pink" data-act="view"   data-id="${inv.id}">👁 Ver / PDF</button>
-        <button class="act-btn"               data-act="edit"   data-id="${inv.id}">✏️ Editar</button>
-        ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagado</button>`:""}
-        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}">🗑 Eliminar</button>
+        <button class="act-btn act-btn--pink" data-act="view" data-id="${inv.id}">👁 Ver</button>
+        <button class="act-btn" data-act="edit" data-id="${inv.id}">✏️ Editar</button>
+        ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagar</button>`:""}
+        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}">🗑</button>
       </div>
     </div>`;
   }).join("");
 }
 
-document.getElementById("listWrap").addEventListener("click", async e=>{
-  const btn = e.target.closest("[data-act]"); if(!btn) return;
-  const id = btn.dataset.id, act = btn.dataset.act;
-  const inv = _invoices.find(i=>i.id===id); if(!inv) return;
-  if(act==="view")  { openPreview(inv); return; }
-  if(act==="edit")  { openEdit(inv);    return; }
-  if(act==="del")   { if(!confirm("¿Eliminar factura?")) return; await deleteInvoice(id); toast("🗑 Eliminada"); return; }
-  if(act==="pagar") { await saveInvoice({...inv,estado:"pagado"}); toast("✅ Marcada como pagada"); }
+document.getElementById("listWrap").addEventListener("click",async e=>{
+  const btn=e.target.closest("[data-act]");if(!btn)return;
+  const id=btn.dataset.id,act=btn.dataset.act;
+  const inv=_invoices.find(i=>i.id===id);if(!inv)return;
+  if(act==="view"){openPreview(inv);return;}
+  if(act==="edit"){openEditor(inv);return;}
+  if(act==="del"){if(!confirm("¿Eliminar factura?"))return;await deleteInvoice(id);toast("🗑 Eliminada");return;}
+  if(act==="pagar"){await saveInvoice({...inv,estado:"pagado"});toast("✅ Marcada como pagada");}
 });
-
-document.querySelector(".filter-bar").addEventListener("click", e=>{
-  const btn = e.target.closest("[data-f]"); if(!btn) return;
-  _filter = btn.dataset.f;
-  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.toggle("is-active", b.dataset.f===_filter));
+document.querySelector(".filter-bar").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-f]");if(!btn)return;
+  _filter=btn.dataset.f;
+  document.querySelectorAll(".filter-bar .filter-btn").forEach(b=>b.classList.toggle("is-active",b.dataset.f===_filter));
   renderList();
 });
 
 /* ══════════════════════════════════
-   ORDERS PICKER
+   EDITOR — STEPS
 ══════════════════════════════════ */
-function renderOrdersPicker(){
-  const wrap = document.getElementById("ordersPicker");
-  // Filtrar órdenes que no están ya en otras facturas
-  const usedIds = new Set(_invoices.flatMap(i=>i.ordenIds||[]));
-  const available = _orders.filter(o=>!usedIds.has(o.id) || _selOrders.has(o.id));
-  if(!available.length){
-    wrap.innerHTML = `<div style="font-size:13px;color:var(--soft);padding:16px;text-align:center">
-      <div style="font-size:28px;margin-bottom:6px">🪅</div>
-      No hay órdenes terminadas disponibles<br>
-      <span style="font-size:11px">Solo aparecen las marcadas como "Lista" o "Entregada" en el Taller</span><br>
-      <button onclick="loadOrders().then(renderOrdersPicker)" style="margin-top:10px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:700;color:var(--pink);cursor:pointer">↺ Recargar</button>
-    </div>`;
+document.getElementById("btnNew").addEventListener("click",()=>openEditor(null));
+document.getElementById("edBack").addEventListener("click",()=>{
+  if(_curStep===1){gotoStep(0);return;}
+  closeEditor();
+});
+
+document.querySelectorAll(".step-tab").forEach(t=>t.addEventListener("click",()=>gotoStep(parseInt(t.dataset.step))));
+
+function gotoStep(s){
+  _curStep=s;
+  document.querySelectorAll(".step-tab").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
+  document.querySelectorAll(".ed-step").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
+  document.getElementById("btnNext").innerHTML=s===0
+    ? `Siguiente <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`
+    : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg> Guardar`;
+  document.querySelector(".ed-body").scrollTop=0;
+}
+
+document.getElementById("btnNext").addEventListener("click",async()=>{
+  if(_curStep===0){
+    if(!_selOrders.size && !_manuals.length){toast("Selecciona al menos una piñata");return;}
+    gotoStep(1);
+    setTimeout(()=>document.getElementById("fCliente").focus(),120);
     return;
   }
-  wrap.innerHTML = available.map(o=>{
-    const sel = _selOrders.has(o.id);
-    const num = `#${String(o.numero).padStart(3,"0")}`;
-    const tipo = o.tipo==="estrella" ? "Piñata estrella 6 picos" : "Piñata personalizada";
-    const sub  = o.cliente?.nombre || "";
-    return `<div class="order-pick-card ${sel?"sel":""}" data-oid="${o.id}">
-      <input type="checkbox" ${sel?"checked":""} data-chk="${o.id}" />
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="order-pick-num">${num}</span>
-          <span class="order-pick-desc">${tipo}</span>
+  await saveCurrent();
+});
+
+function openEditor(inv){
+  _editing=inv||null;
+  _selOrders=new Map();
+  _manuals=[];
+  if(inv){
+    (inv.items||[]).forEach(it=>{
+      if(it._orderId) _selOrders.set(it._orderId,it.precio||0);
+      else _manuals.push({desc:it.desc||"",cantidad:it.cantidad||1,precio:it.precio||0});
+    });
+  }
+  document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Nueva factura";
+  document.getElementById("edSub").textContent=inv?"Modifica los datos de la factura":"Selecciona piñatas y captura cliente";
+  document.getElementById("fCliente").value=inv?.cliente?.nombre||"";
+  document.getElementById("fEmpresa").value=inv?.cliente?.empresa||"";
+  document.getElementById("fTelefono").value=inv?.cliente?.telefono||"";
+  document.getElementById("fEmail").value=inv?.cliente?.email||"";
+  document.getElementById("fNotas").value=inv?.notas||"";
+  document.getElementById("fEstado").value=inv?.estado||"pendiente";
+  document.getElementById("fIva").checked=!!inv?.iva;
+  _selPicker="terminadas";
+  document.querySelectorAll(".pck-tab").forEach(t=>t.classList.toggle("is-active",t.dataset.p===_selPicker));
+  gotoStep(0);
+  renderOrdersList();
+  renderManuals();
+  recalcTotals();
+  document.getElementById("editor").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+function closeEditor(){document.getElementById("editor").classList.remove("open");document.body.style.overflow="";}
+
+/* ══════════════════════════════════
+   PICKER — Orders
+══════════════════════════════════ */
+function orderIsAvailable(o){
+  // ya en otra factura?
+  const usedIds=new Set(_invoices.filter(i=>!_editing||i.id!==_editing.id).flatMap(i=>i.ordenIds||[]));
+  return !usedIds.has(o.id);
+}
+function ordersByTab(){
+  const av=_orders.filter(orderIsAvailable);
+  return {
+    terminadas: av.filter(o=>o.estado==="lista"||o.estado==="entregada"),
+    pendientes: av.filter(o=>o.estado==="pendiente"),
+    todas: av,
+  };
+}
+function renderPickerCounts(){
+  const g=ordersByTab();
+  document.getElementById("pcT").textContent=g.terminadas.length;
+  document.getElementById("pcP").textContent=g.pendientes.length;
+  document.getElementById("pcA").textContent=g.todas.length;
+}
+
+document.getElementById("pickerTabs").addEventListener("click",e=>{
+  const t=e.target.closest("[data-p]");if(!t)return;
+  _selPicker=t.dataset.p;
+  document.querySelectorAll(".pck-tab").forEach(b=>b.classList.toggle("is-active",b.dataset.p===_selPicker));
+  renderOrdersList();
+});
+
+function describeOrder(o){
+  const tipo=o.tipo==="estrella"?"Piñata estrella":"Piñata personalizada";
+  const extras=[];
+  if(o.tipo==="estrella"){
+    if(o.estrella?.tematica) extras.push(o.estrella.tematica);
+    if(o.estrella?.imagen?.tiene) extras.push("con imagen");
+  } else if(o.personalizada?.descripcion){
+    extras.push(o.personalizada.descripcion.slice(0,40));
+  }
+  return {tipo,detalle:extras.join(" · ")};
+}
+
+function renderOrdersList(){
+  renderPickerCounts();
+  const wrap=document.getElementById("ordersList");
+  const list=ordersByTab()[_selPicker]||[];
+  if(!list.length){
+    wrap.innerHTML=`<div class="pick-empty"><div class="ic">📭</div>No hay órdenes ${_selPicker==="terminadas"?"terminadas":_selPicker==="pendientes"?"pendientes":""} disponibles<br><span style="font-size:11px">Puedes agregar piñatas manualmente abajo</span></div>`;
+    return;
+  }
+  wrap.innerHTML=list.map(o=>{
+    const sel=_selOrders.has(o.id);
+    const precio=_selOrders.get(o.id)||"";
+    const {tipo,detalle}=describeOrder(o);
+    const num=`#${String(o.numero).padStart(3,"0")}`;
+    const cli=o.cliente?.nombre||"";
+    const estBadge=o.estado==="lista"?"badge--pendiente":o.estado==="entregada"?"badge--pagado":"badge--cancelado";
+    const estTxt=o.estado==="lista"?"LISTA":o.estado==="entregada"?"ENTREGADA":"PENDIENTE";
+    return `<div class="pin-card ${sel?"sel":""}" data-oid="${o.id}">
+      <div class="pin-card__top">
+        <div class="pin-check"></div>
+        <div class="pin-info">
+          <div class="pin-num">${num}</div>
+          <div class="pin-tipo">${esc(tipo)}</div>
+          ${detalle?`<div class="pin-meta">${esc(detalle)}</div>`:""}
+          ${cli?`<div class="pin-meta">👤 ${esc(cli)}</div>`:""}
         </div>
-        ${sub?`<div class="order-pick-sub">Cliente: ${esc(sub)}</div>`:""}
+        <span class="badge ${estBadge} pin-badge">${estTxt}</span>
       </div>
-      <span class="badge badge--${o.estado==="lista"?"pendiente":"pagado"}" style="flex-shrink:0">${o.estado==="lista"?"🔨 Lista":"✅ Entregada"}</span>
+      <div class="pin-price" data-stop="1">
+        <span class="pin-price-lbl">Precio</span>
+        <span class="cur">$</span>
+        <input type="number" min="0" step="1" placeholder="0" value="${precio}" data-price="${o.id}" inputmode="decimal" />
+      </div>
     </div>`;
   }).join("");
 }
 
-document.getElementById("ordersPicker").addEventListener("click", e=>{
-  const card = e.target.closest("[data-oid]"); if(!card) return;
-  const oid = card.dataset.oid;
+document.getElementById("ordersList").addEventListener("click",e=>{
+  if(e.target.closest("[data-stop]")) return;
+  const card=e.target.closest("[data-oid]");if(!card)return;
+  const oid=card.dataset.oid;
   if(_selOrders.has(oid)) _selOrders.delete(oid);
-  else _selOrders.add(oid);
-  syncOrdersToItems();
-  renderOrdersPicker();
-  renderItems(); calcTotals();
+  else _selOrders.set(oid,0);
+  renderOrdersList(); recalcTotals();
+  if(_selOrders.has(oid)){
+    setTimeout(()=>{
+      const inp=document.querySelector(`[data-price="${oid}"]`);
+      if(inp){ inp.focus(); inp.select(); }
+    },50);
+  }
+});
+document.getElementById("ordersList").addEventListener("input",e=>{
+  if(!e.target.dataset.price)return;
+  _selOrders.set(e.target.dataset.price,parseFloat(e.target.value)||0);
+  recalcTotals();
 });
 
-function orderToItem(o){
-  const tipo = o.tipo==="estrella" ? "Piñata estrella 6 picos" : "Piñata personalizada";
-  const extra = o.tipo==="estrella"
-    ? [o.estrella?.tematica, o.estrella?.imagen?.tiene ? "con imagen" : ""].filter(Boolean).join(" · ")
-    : (o.personalizada?.descripcion||"").slice(0,40);
-  const desc = extra ? `${tipo} — ${extra}` : tipo;
-  return { _orderId: o.id, desc, cantidad:1, precio:0, total:0 };
-}
-
-function syncOrdersToItems(){
-  // Quitar items de órdenes que se deseleccionaron
-  _items = _items.filter(it => !it._orderId || _selOrders.has(it._orderId));
-  // Agregar items nuevos de órdenes recién seleccionadas
-  const existing = new Set(_items.filter(it=>it._orderId).map(it=>it._orderId));
-  _selOrders.forEach(oid=>{
-    if(!existing.has(oid)){
-      const o = _orders.find(x=>x.id===oid);
-      if(o) _items.push(orderToItem(o));
-    }
-  });
-}
-
 /* ══════════════════════════════════
-   ITEMS
+   MANUAL
 ══════════════════════════════════ */
-function newItem(){ return { _orderId:null, desc:"", cantidad:1, precio:0, total:0 }; }
-
-function renderItems(){
-  const wrap = document.getElementById("itemsWrap");
-  if(!_items.length){ wrap.innerHTML=""; return; }
-  wrap.innerHTML = _items.map((it,i)=>`
-    <div class="item-row" data-row="${i}">
-      <input class="inp" placeholder="Ej: Piñata estrella rosa" value="${esc(it.desc)}" data-i="${i}" data-f="desc" />
-      <input class="inp" type="number" min="1" value="${it.cantidad}" data-i="${i}" data-f="cantidad" style="text-align:center" />
-      <input class="inp" type="number" min="0" step="0.01" placeholder="0.00" value="${it.precio||""}" data-i="${i}" data-f="precio" style="text-align:right" />
-      <div class="item-total">${fmt(it.total)}</div>
-      <button class="btn-del" data-di="${i}" title="Quitar">✕</button>
+function renderManuals(){
+  const wrap=document.getElementById("manualList");
+  document.getElementById("manSecTitle").style.display=_manuals.length?"block":"none";
+  if(!_manuals.length){wrap.innerHTML="";return;}
+  wrap.innerHTML=_manuals.map((m,i)=>`
+    <div class="pin-card sel" style="background:#fffbeb;border-color:#fde68a">
+      <div class="manual-row">
+        <input class="inp" placeholder="Tipo de piñata" value="${esc(m.desc)}" data-mi="${i}" data-mf="desc" />
+        <input class="inp" type="number" min="1" value="${m.cantidad}" data-mi="${i}" data-mf="cantidad" style="text-align:center" inputmode="numeric" />
+        <input class="inp" type="number" min="0" step="1" placeholder="Precio" value="${m.precio||""}" data-mi="${i}" data-mf="precio" style="text-align:right" inputmode="decimal" />
+        <button class="btn-del" data-mdel="${i}">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--soft);margin-top:8px;text-align:right">Subtotal: <b style="color:var(--pink)">${fmt((m.cantidad||0)*(m.precio||0))}</b></div>
     </div>
   `).join("");
 }
-
-document.getElementById("itemsWrap").addEventListener("input", e=>{
-  const inp = e.target; if(!inp.dataset.i) return;
-  const i=parseInt(inp.dataset.i), f=inp.dataset.f;
-  _items[i][f] = f==="desc" ? inp.value : parseFloat(inp.value)||0;
-  _items[i].total = (_items[i].cantidad||0) * (_items[i].precio||0);
-  const row = document.querySelectorAll(".item-row")[i];
-  if(row) row.querySelector(".item-total").textContent = fmt(_items[i].total);
-  calcTotals();
+document.getElementById("manualList").addEventListener("input",e=>{
+  const i=e.target.dataset.mi;if(i===undefined)return;
+  const f=e.target.dataset.mf,v=e.target.value;
+  _manuals[i][f]=f==="desc"?v:(parseFloat(v)||0);
+  recalcTotals();
+  // actualiza solo el subtotal local sin redibujar
+  const m=_manuals[i];
+  const card=e.target.closest(".pin-card");
+  if(card){
+    const sb=card.querySelector("div[style*='right']");
+    if(sb) sb.innerHTML=`Subtotal: <b style="color:var(--pink)">${fmt((m.cantidad||0)*(m.precio||0))}</b>`;
+  }
 });
-
-document.getElementById("itemsWrap").addEventListener("click", e=>{
-  const btn = e.target.closest("[data-di]"); if(!btn) return;
-  const i=parseInt(btn.dataset.di);
-  if(_items[i]?._orderId) _selOrders.delete(_items[i]._orderId);
-  _items.splice(i,1);
-  renderOrdersPicker(); renderItems(); calcTotals();
+document.getElementById("manualList").addEventListener("click",e=>{
+  const b=e.target.closest("[data-mdel]");if(!b)return;
+  _manuals.splice(parseInt(b.dataset.mdel),1);
+  renderManuals();recalcTotals();
 });
-
-document.getElementById("btnAddItem").addEventListener("click", ()=>{
-  _items.push(newItem()); renderItems(); calcTotals();
+document.getElementById("btnAddManual").addEventListener("click",()=>{
+  _manuals.push({desc:"",cantidad:1,precio:0});
+  renderManuals();recalcTotals();
   setTimeout(()=>{
-    const rows = document.querySelectorAll(".item-row");
-    rows[rows.length-1]?.querySelector("[data-f='desc']")?.focus();
+    const inps=document.querySelectorAll("[data-mf='desc']");
+    inps[inps.length-1]?.focus();
   },50);
 });
 
-document.getElementById("fIva").addEventListener("change", calcTotals);
+document.getElementById("fIva").addEventListener("change",recalcTotals);
 
-function calcTotals(){
-  const sub = _items.reduce((s,it)=>s+(it.total||0),0);
-  const iva = document.getElementById("fIva").checked;
-  const imp = iva ? Math.round(sub*0.16*100)/100 : 0;
-  const tot = sub + imp;
-  document.getElementById("tSub").textContent = fmt(sub);
-  document.getElementById("tIva").textContent = fmt(imp);
-  document.getElementById("tTot").textContent = fmt(tot);
-  document.getElementById("taxRow").style.display = iva ? "flex" : "none";
+/* ══════════════════════════════════
+   TOTALS
+══════════════════════════════════ */
+function buildItemsFromState(){
+  const out=[];
+  _selOrders.forEach((precio,oid)=>{
+    const o=_orders.find(x=>x.id===oid);if(!o)return;
+    const{tipo,detalle}=describeOrder(o);
+    const desc=detalle?`${tipo} — ${detalle}`:tipo;
+    out.push({_orderId:oid,desc,cantidad:1,precio:precio||0,total:precio||0});
+  });
+  _manuals.forEach(m=>{
+    if(!m.desc&&!m.precio)return;
+    out.push({_orderId:null,desc:m.desc||"Piñata",cantidad:m.cantidad||1,precio:m.precio||0,total:(m.cantidad||0)*(m.precio||0)});
+  });
+  return out;
+}
+
+function recalcTotals(){
+  const items=buildItemsFromState();
+  const sub=items.reduce((s,it)=>s+(it.total||0),0);
+  const iva=document.getElementById("fIva").checked;
+  const imp=iva?Math.round(sub*0.16*100)/100:0;
+  const tot=sub+imp;
+  const count=items.reduce((s,it)=>s+(it.cantidad||0),0);
+  document.getElementById("footTotal").textContent=fmt(tot);
+  document.getElementById("footSub").textContent=`${count} piñata${count===1?"":"s"}${iva?" · con IVA":""}`;
+  const btn=document.getElementById("btnNext");
+  btn.disabled=!items.length;
 }
 
 /* ══════════════════════════════════
-   ABRIR / CERRAR MODAL EDICIÓN
+   SAVE
 ══════════════════════════════════ */
-async function openEdit(inv){
-  _editing = inv||null;
-  _selOrders = new Set(inv?.ordenIds||[]);
-  document.getElementById("editTitle").textContent = inv ? `Editar FAC-${String(inv.numero).padStart(4,"0")}` : "Nueva factura";
-  document.getElementById("fCliente").value   = inv?.cliente?.nombre   || "";
-  document.getElementById("fEmpresa").value   = inv?.cliente?.empresa  || "";
-  document.getElementById("fTelefono").value  = inv?.cliente?.telefono || "";
-  document.getElementById("fEmail").value     = inv?.cliente?.email    || "";
-  document.getElementById("fNotas").value     = inv?.notas             || "";
-  document.getElementById("fEstado").value    = inv?.estado            || "pendiente";
-  document.getElementById("fIva").checked     = !!inv?.iva;
-  _items = inv?.items?.length ? inv.items.map(it=>({...it})) : [];
-  // Mostrar modal inmediatamente mientras cargan las ordenes
-  document.getElementById("editOverlay").classList.add("open");
-  document.getElementById("fCliente").focus();
-  document.getElementById("ordersPicker").innerHTML = `<div style="font-size:13px;color:var(--soft);text-align:center;padding:14px">Cargando órdenes terminadas...</div>`;
-  renderItems(); calcTotals();
-  // Recargar ordenes frescas al abrir
-  await loadOrders();
-  renderOrdersPicker();
-}
-
-function closeEdit(){ document.getElementById("editOverlay").classList.remove("open"); }
-document.getElementById("editClose").addEventListener("click", closeEdit);
-document.getElementById("editCancel").addEventListener("click", closeEdit);
-document.getElementById("btnNew").addEventListener("click", ()=>openEdit(null));
-
-document.getElementById("editSave").addEventListener("click", async()=>{
-  const nombre = document.getElementById("fCliente").value.trim();
-  if(!nombre){ toast("⚠️ El nombre del cliente es obligatorio"); document.getElementById("fCliente").focus(); return; }
-  const iva  = document.getElementById("fIva").checked;
-  const sub  = _items.reduce((s,it)=>s+(it.total||0),0);
-  const imp  = iva ? Math.round(sub*0.16*100)/100 : 0;
-  const tot  = sub + imp;
-  const inv  = {
-    id:      _editing?.id || crypto.randomUUID(),
-    numero:  _editing?.numero,
-    estado:  document.getElementById("fEstado").value,
-    creada:  _editing?.creada || new Date().toISOString(),
+async function saveCurrent(){
+  const nombre=document.getElementById("fCliente").value.trim();
+  if(!nombre){toast("⚠️ El nombre del cliente es obligatorio");gotoStep(1);document.getElementById("fCliente").focus();return;}
+  const items=buildItemsFromState();
+  if(!items.length){toast("⚠️ Agrega al menos una piñata");gotoStep(0);return;}
+  const iva=document.getElementById("fIva").checked;
+  const sub=items.reduce((s,it)=>s+(it.total||0),0);
+  const imp=iva?Math.round(sub*0.16*100)/100:0;
+  const tot=sub+imp;
+  const inv={
+    id:_editing?.id||crypto.randomUUID(),
+    numero:_editing?.numero,
+    estado:document.getElementById("fEstado").value,
+    creada:_editing?.creada||new Date().toISOString(),
     iva,
-    cliente: { nombre, empresa:document.getElementById("fEmpresa").value.trim(), telefono:document.getElementById("fTelefono").value.trim(), email:document.getElementById("fEmail").value.trim() },
-    items:   _items.filter(it=>it.desc||it.total),
-    subtotal:sub, impuesto:imp, total:tot,
-    notas:   document.getElementById("fNotas").value.trim(),
-    ordenIds: [..._selOrders],
+    cliente:{nombre,empresa:document.getElementById("fEmpresa").value.trim(),telefono:document.getElementById("fTelefono").value.trim(),email:document.getElementById("fEmail").value.trim()},
+    items,
+    subtotal:sub,impuesto:imp,total:tot,
+    notas:document.getElementById("fNotas").value.trim(),
+    ordenIds:[..._selOrders.keys()],
   };
-  const btn = document.getElementById("editSave");
-  btn.disabled=true; btn.textContent="Guardando...";
-  const ok = await saveInvoice(inv);
-  btn.disabled=false; btn.innerHTML=`<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Guardar factura`;
-  if(ok){ closeEdit(); toast("✅ Factura guardada"); }
-});
+  const btn=document.getElementById("btnNext");
+  btn.disabled=true;btn.textContent="Guardando...";
+  const ok=await saveInvoice(inv);
+  recalcTotals();
+  if(ok){closeEditor();toast("✅ Factura guardada");}
+}
 
 /* ══════════════════════════════════
    PREVIEW
 ══════════════════════════════════ */
 function openPreview(inv){
-  _preview = inv;
-  const num = `FAC-${String(inv.numero).padStart(4,"0")}`;
-  document.getElementById("prevTitle").textContent = num;
-  document.getElementById("btnTogglePago").textContent = inv.estado==="pagado" ? "↩ Marcar pendiente" : "✅ Marcar pagado";
+  _preview=inv;
+  document.getElementById("prevTitle").textContent=`FAC-${String(inv.numero).padStart(4,"0")}`;
+  document.getElementById("btnTogglePago").textContent=inv.estado==="pagado"?"↩ Pendiente":"✅ Pagar";
   renderPreview(inv);
   document.getElementById("prevOverlay").classList.add("open");
+  document.body.style.overflow="hidden";
 }
-function closePreview(){ document.getElementById("prevOverlay").classList.remove("open"); }
-document.getElementById("prevClose").addEventListener("click", closePreview);
-document.getElementById("btnEditPrev").addEventListener("click", ()=>{ closePreview(); openEdit(_preview); });
-document.getElementById("btnTogglePago").addEventListener("click", async()=>{
-  const nuevo = _preview.estado==="pagado" ? "pendiente" : "pagado";
-  await saveInvoice({..._preview, estado:nuevo});
-  _preview = _invoices.find(i=>i.id===_preview.id)||_preview;
+function closePreview(){document.getElementById("prevOverlay").classList.remove("open");document.body.style.overflow="";}
+document.getElementById("prevClose").addEventListener("click",closePreview);
+document.getElementById("btnEditPrev").addEventListener("click",()=>{closePreview();openEditor(_preview);});
+document.getElementById("btnTogglePago").addEventListener("click",async()=>{
+  const nuevo=_preview.estado==="pagado"?"pendiente":"pagado";
+  await saveInvoice({..._preview,estado:nuevo});
+  _preview=_invoices.find(i=>i.id===_preview.id)||_preview;
   openPreview(_preview);
   toast(nuevo==="pagado"?"✅ Pagada":"↩ Pendiente");
 });
 
 function renderPreview(inv){
-  const num   = `FAC-${String(inv.numero).padStart(4,"0")}`;
-  const items = inv.items||[];
-  document.getElementById("pdfPreview").innerHTML = `
+  const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
+  const items=inv.items||[];
+  document.getElementById("pdfPreview").innerHTML=`
     <div class="pdf-head">
       <div><h2>🪅 Piñatería Laureles</h2><p id="previewDir">Laureles</p></div>
       <div class="pdf-head-right"><div class="fac">FACTURA</div><div class="num">${num}</div></div>
@@ -676,92 +764,73 @@ function renderPreview(inv){
       </div>
       <table class="pdf-table">
         <thead><tr>
-          <th>Descripción</th><th style="text-align:right">Cant.</th>
-          <th style="text-align:right">Precio unit.</th><th style="text-align:right">Total</th>
+          <th>Descripción</th><th>Cant.</th><th>Precio unit.</th><th>Total</th>
         </tr></thead>
         <tbody>
-          ${items.length ? items.map(it=>`<tr>
+          ${items.length?items.map(it=>`<tr>
             <td>${esc(it.desc||it.descripcion||"—")}</td>
             <td>${it.cantidad||1}</td>
             <td>${fmt(it.precio||it.precioUnitario)}</td>
             <td>${fmt(it.total)}</td>
-          </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--soft)">Sin artículos</td></tr>`}
+          </tr>`).join(""):`<tr><td colspan="4" style="text-align:center;color:var(--soft)">Sin artículos</td></tr>`}
         </tbody>
       </table>
-      <div class="pdf-totals">
-        <div class="pdf-totals-inner">
-          <div class="pdf-tot-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
-          ${(inv.impuesto||0)>0?`<div class="pdf-tot-row"><span>IVA (16%)</span><span>${fmt(inv.impuesto)}</span></div>`:""}
-          <div class="pdf-tot-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
-        </div>
-      </div>
+      <div class="pdf-totals"><div class="pdf-totals-inner">
+        <div class="pdf-tot-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
+        ${(inv.impuesto||0)>0?`<div class="pdf-tot-row"><span>IVA (16%)</span><span>${fmt(inv.impuesto)}</span></div>`:""}
+        <div class="pdf-tot-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
+      </div></div>
       ${inv.notas?`<div class="pdf-notes"><div class="pdf-notes-lbl">Notas</div>${esc(inv.notas)}</div>`:""}
       <div class="pdf-footer">Piñatería Laureles · ¡Gracias por su preferencia! 🪅</div>
-    </div>
-  `;
-  if(_sb) _sb.from("app_config").select("direccion").eq("id","default").maybeSingle().then(({data})=>{
-    const el=document.getElementById("previewDir"); if(el&&data?.direccion) el.textContent=data.direccion;
-  });
+    </div>`;
+  if(_sb) _sb.from("app_config").select("direccion").eq("id","default").maybeSingle().then(({data})=>{const el=document.getElementById("previewDir");if(el&&data?.direccion)el.textContent=data.direccion;});
 }
 
 /* ══════════════════════════════════
-   PDF / COMPARTIR / IMPRIMIR
+   PDF
 ══════════════════════════════════ */
 function buildPDF(inv){
-  const {jsPDF}=window.jspdf;
+  const{jsPDF}=window.jspdf;
   const doc=new jsPDF({format:"a4",unit:"mm"});
-  const W=210,M=18; let y=0;
+  const W=210,M=18;let y=0;
   const P=[236,72,153],PU=[168,85,247],DK=[17,24,39],SF=[107,114,128],LT=[249,250,251];
   const fmtN=n=>"$"+Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});
-
-  // Header
-  doc.setFillColor(...P); doc.rect(0,0,W/2,36,"F");
-  doc.setFillColor(...PU); doc.rect(W/2,0,W/2,36,"F");
-  doc.setTextColor(255,255,255);
-  doc.setFont("helvetica","bold"); doc.setFontSize(15);
+  doc.setFillColor(...P);doc.rect(0,0,W/2,36,"F");
+  doc.setFillColor(...PU);doc.rect(W/2,0,W/2,36,"F");
+  doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);
   doc.text("PIÑATERÍA LAURELES",M,15);
-  doc.setFontSize(8); doc.setFont("helvetica","normal");
+  doc.setFontSize(8);doc.setFont("helvetica","normal");
   doc.text("Piñatas de calidad para tus fiestas",M,22);
-  doc.setFontSize(24); doc.setFont("helvetica","bold");
+  doc.setFontSize(24);doc.setFont("helvetica","bold");
   doc.text("FACTURA",W-M,16,{align:"right"});
   doc.setFontSize(11);
   doc.text(`FAC-${String(inv.numero).padStart(4,"0")}`,W-M,25,{align:"right"});
   y=46;
-
-  // Meta
-  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
+  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
   doc.text(`Fecha: ${fmtDate(inv.creada)}`,M,y);
   const ec=inv.estado==="pagado"?[22,163,74]:inv.estado==="cancelado"?[100,116,139]:[217,119,6];
-  doc.setFillColor(...ec);
-  doc.roundedRect(W-M-30,y-5,30,7,2,2,"F");
-  doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont("helvetica","bold");
+  doc.setFillColor(...ec);doc.roundedRect(W-M-30,y-5,30,7,2,2,"F");
+  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont("helvetica","bold");
   doc.text(inv.estado==="pagado"?"PAGADO":inv.estado==="cancelado"?"CANCELADO":"PENDIENTE",W-M-15,y-0.2,{align:"center"});
   y+=12;
-
-  // Client
-  doc.setFillColor(...LT); doc.setDrawColor(229,231,235);
-  doc.roundedRect(M,y,W-M*2,22,3,3,"FD");
-  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(...SF);
+  doc.setFillColor(...LT);doc.setDrawColor(229,231,235);doc.roundedRect(M,y,W-M*2,22,3,3,"FD");
+  doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
   doc.text("FACTURAR A:",M+5,y+6);
-  doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(...DK);
+  doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
   doc.text(inv.cliente?.nombre||"—",M+5,y+13);
   const meta=[inv.cliente?.empresa,inv.cliente?.email,inv.cliente?.telefono].filter(Boolean).join("  ·  ");
-  if(meta){ doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...SF); doc.text(meta,M+5,y+19); }
+  if(meta){doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);doc.text(meta,M+5,y+19);}
   y+=30;
-
-  // Table header
-  doc.setFillColor(...P); doc.rect(M,y,W-M*2,8,"F");
-  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.setFillColor(...P);doc.rect(M,y,W-M*2,8,"F");
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont("helvetica","bold");
   doc.text("DESCRIPCIÓN",M+3,y+5.5);
   doc.text("CANT",W-M-90,y+5.5,{align:"right"});
   doc.text("PRECIO UNIT.",W-M-48,y+5.5,{align:"right"});
   doc.text("TOTAL",W-M,y+5.5,{align:"right"});
   y+=8;
-
-  // Rows
   (inv.items||[]).forEach((it,i)=>{
-    if(i%2===1){ doc.setFillColor(...LT); doc.rect(M,y,W-M*2,8,"F"); }
-    doc.setTextColor(...DK); doc.setFontSize(9); doc.setFont("helvetica","normal");
+    if(i%2===1){doc.setFillColor(...LT);doc.rect(M,y,W-M*2,8,"F");}
+    doc.setTextColor(...DK);doc.setFontSize(9);doc.setFont("helvetica","normal");
     const d=doc.splitTextToSize(it.desc||it.descripcion||"—",W-M*2-95);
     doc.text(d[0],M+3,y+5.5);
     doc.text(String(it.cantidad||1),W-M-90,y+5.5,{align:"right"});
@@ -770,72 +839,58 @@ function buildPDF(inv){
     doc.text(fmtN(it.total),W-M,y+5.5,{align:"right"});
     y+=8;
   });
-
-  doc.setDrawColor(229,231,235); doc.line(M,y,W-M,y); y+=9;
-
-  // Totals
+  doc.setDrawColor(229,231,235);doc.line(M,y,W-M,y);y+=9;
   const tx=W-M-56;
-  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
-  doc.text("Subtotal:",tx,y); doc.setTextColor(...DK); doc.setFont("helvetica","bold");
-  doc.text(fmtN(inv.subtotal),W-M,y,{align:"right"}); y+=6;
+  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
+  doc.text("Subtotal:",tx,y);doc.setTextColor(...DK);doc.setFont("helvetica","bold");
+  doc.text(fmtN(inv.subtotal),W-M,y,{align:"right"});y+=6;
   if((inv.impuesto||0)>0){
-    doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
+    doc.setFont("helvetica","normal");doc.setTextColor(...SF);
     doc.text("IVA (16%):",tx,y);
-    doc.setTextColor(...DK); doc.setFont("helvetica","bold");
-    doc.text(fmtN(inv.impuesto),W-M,y,{align:"right"}); y+=6;
+    doc.setTextColor(...DK);doc.setFont("helvetica","bold");
+    doc.text(fmtN(inv.impuesto),W-M,y,{align:"right"});y+=6;
   }
-  doc.setFillColor(...LT);
-  doc.roundedRect(tx-3,y-1,W-M-tx+3,9,2,2,"F");
-  doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(...DK);
-  doc.text("TOTAL:",tx,y+6);
-  doc.setTextColor(...P); doc.text(fmtN(inv.total),W-M,y+6,{align:"right"}); y+=16;
-
-  // Notes
+  doc.setFillColor(...LT);doc.roundedRect(tx-3,y-1,W-M-tx+3,9,2,2,"F");
+  doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
+  doc.text("TOTAL:",tx,y+6);doc.setTextColor(...P);doc.text(fmtN(inv.total),W-M,y+6,{align:"right"});y+=16;
   if(inv.notas){
-    doc.setFillColor(253,242,248); doc.setDrawColor(251,207,232);
+    doc.setFillColor(253,242,248);doc.setDrawColor(251,207,232);
     doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
-    doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(...SF);
+    doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
     doc.text("NOTAS:",M+5,y+6);
-    doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...DK);
-    doc.text(doc.splitTextToSize(inv.notas,W-M*2-10).slice(0,1),M+5,y+12); y+=20;
+    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...DK);
+    doc.text(doc.splitTextToSize(inv.notas,W-M*2-10).slice(0,1),M+5,y+12);y+=20;
   }
-
-  // Footer
-  doc.setFillColor(253,242,248); doc.rect(0,283,W,14,"F");
-  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
+  doc.setFillColor(253,242,248);doc.rect(0,283,W,14,"F");
+  doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
   doc.text("Piñatería Laureles · ¡Gracias por su preferencia! 🪅",W/2,291,{align:"center"});
-
   return doc;
 }
-
 document.getElementById("btnDownload").addEventListener("click",()=>{
-  if(!_preview) return;
+  if(!_preview)return;
   const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
   buildPDF(_preview).save(name);
   toast("⬇️ PDF descargado");
 });
-
 document.getElementById("btnShare").addEventListener("click",async()=>{
-  if(!_preview) return;
+  if(!_preview)return;
   const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
   const blob=buildPDF(_preview).output("blob");
   const file=new File([blob],name,{type:"application/pdf"});
-  if(navigator.share && navigator.canShare?.({files:[file]})){
-    try{ await navigator.share({title:"Factura Piñatería Laureles",files:[file]}); }
-    catch(er){ if(er.name!=="AbortError") buildPDF(_preview).save(name); }
-  } else { buildPDF(_preview).save(name); toast("📥 PDF descargado"); }
+  if(navigator.share&&navigator.canShare?.({files:[file]})){
+    try{await navigator.share({title:"Factura Piñatería Laureles",files:[file]});}
+    catch(er){if(er.name!=="AbortError")buildPDF(_preview).save(name);}
+  }else{buildPDF(_preview).save(name);toast("📥 PDF descargado");}
 });
-
 document.getElementById("btnEmail").addEventListener("click",()=>{
-  if(!_preview) return;
+  if(!_preview)return;
   const num=`FAC-${String(_preview.numero).padStart(4,"0")}`;
   const subj=encodeURIComponent(`${num} - Piñatería Laureles`);
   const body=encodeURIComponent(`Hola ${_preview.cliente?.nombre||""},\n\nAdjunto encontrará su factura ${num} por un total de ${fmt(_preview.total)}.\n\nEstado: ${LABELS[_preview.estado]||_preview.estado}\n\n¡Gracias!\nPiñatería Laureles`);
   window.open(`mailto:${encodeURIComponent(_preview.cliente?.email||"")}?subject=${subj}&body=${body}`);
 });
-
 document.getElementById("btnPrint").addEventListener("click",()=>{
-  if(!_preview) return;
+  if(!_preview)return;
   const content=document.getElementById("pdfPreview").innerHTML;
   const w=window.open("","_blank","width=900,height=700");
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura</title>
@@ -871,10 +926,7 @@ document.getElementById("btnPrint").addEventListener("click",()=>{
 /* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
-function initSb(){
-  const cfg=window.SUPABASE_CONFIG||{};
-  if(cfg.url&&cfg.anonKey) _sb=supabase.createClient(cfg.url,cfg.anonKey);
-}
+function initSb(){const cfg=window.SUPABASE_CONFIG||{};if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
 initSb();
 checkPin();
 </script>
