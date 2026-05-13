@@ -272,10 +272,11 @@
 
     <!-- ──── Único paso: Piñatas ──── -->
     <div class="ed-step is-active" data-step="0">
+      <div class="sec-h" style="margin-top:0">Piñatas terminadas disponibles</div>
       <div class="picker-tabs" id="pickerTabs">
-        <button class="pck-tab is-active" data-p="terminadas">Terminadas <span class="cnt" id="pcT">0</span></button>
-        <button class="pck-tab" data-p="pendientes">Pendientes <span class="cnt" id="pcP">0</span></button>
-        <button class="pck-tab" data-p="todas">Todas <span class="cnt" id="pcA">0</span></button>
+        <button class="pck-tab is-active" data-p="terminadas">✅ Terminadas <span class="cnt" id="pcT">0</span></button>
+        <button class="pck-tab" data-p="pendientes">⏳ Pendientes <span class="cnt" id="pcP">0</span></button>
+        <button class="pck-tab" data-p="todas">📋 Todas <span class="cnt" id="pcA">0</span></button>
       </div>
 
       <div id="ordersList"></div>
@@ -287,7 +288,6 @@
         <button class="btn-add" id="btnAddPerso" style="flex:1;min-width:130px">+ Personalizada</button>
         <button class="btn-add" id="btnAddLibre" style="flex:1;min-width:130px" data-libre>+ Libre</button>
       </div>
-    </div>
 
       <!-- Notas / IVA opcionales abajo del listado -->
       <div class="sec-h" style="margin-top:18px">Opcional</div>
@@ -314,8 +314,8 @@
       <div class="foot-total-sub" id="footSub">0 piñatas</div>
     </div>
     <button class="btn-next" id="btnNext">
-      Ver factura
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+      Guardar factura
     </button>
   </div>
 </div>
@@ -816,13 +816,14 @@ async function saveCurrent(){
   btn.disabled=true;btn.textContent="Guardando...";
   const ok=await saveInvoice(inv);
   recalcTotals();
+  // restablecer botón
+  btn.disabled=false;
+  btn.innerHTML=`<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg> Guardar factura`;
   if(ok){
     toast("✅ Factura guardada");
-    // Siempre abrir vista previa para revisar/descargar/compartir el PDF
-    const saved = _invoices.find(i=>i.id===inv.id) || inv;
-    document.getElementById("editor").classList.remove("open");
-    document.body.style.overflow="";
-    openPreview(saved);
+    // Cierra el editor y regresa a la lista. El usuario puede tocar la
+    // factura en la lista para ver/descargar el PDF cuando quiera.
+    closeEditor();
   }
 }
 
