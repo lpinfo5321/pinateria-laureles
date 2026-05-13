@@ -191,6 +191,8 @@
     /* Modo taller (factura para Laureles) */
     body.taller-mode .ed-back { font-size:18px; }
     body.taller-mode [data-taller-hide] { display:none !important; }
+    body.taller-mode .step-tabs { display:none; }   /* ocultar tabs, sólo paso 1 */
+    body.taller-mode .ed-step[data-step="1"] { display:none !important; }
     body.taller-mode .ed-title-default,
     body:not(.taller-mode) .ed-title-taller { display:none; }
 
@@ -525,15 +527,24 @@ function gotoStep(s){
   _curStep=s;
   document.querySelectorAll(".step-tab").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
   document.querySelectorAll(".ed-step").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
-  document.getElementById("btnNext").innerHTML=s===0
-    ? `Siguiente <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`
-    : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg> Guardar`;
+  const btn=document.getElementById("btnNext");
+  if(_tallerMode){
+    btn.innerHTML = `Ver factura <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`;
+  } else {
+    btn.innerHTML = s===0
+      ? `Siguiente <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`
+      : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg> Guardar`;
+  }
   document.querySelector(".ed-body").scrollTop=0;
 }
 
 document.getElementById("btnNext").addEventListener("click",async()=>{
+  if(!_selOrders.size && !_manuals.length){toast("Selecciona al menos una piñata");return;}
+  if(_tallerMode){
+    await saveCurrent();
+    return;
+  }
   if(_curStep===0){
-    if(!_selOrders.size && !_manuals.length){toast("Selecciona al menos una piñata");return;}
     gotoStep(1);
     setTimeout(()=>document.getElementById("fCliente").focus(),120);
     return;
@@ -772,8 +783,9 @@ function recalcTotals(){
    SAVE
 ══════════════════════════════════ */
 async function saveCurrent(){
-  const nombre=document.getElementById("fCliente").value.trim();
-  if(!nombre){toast("⚠️ El nombre del cliente es obligatorio");gotoStep(1);document.getElementById("fCliente").focus();return;}
+  let nombre=document.getElementById("fCliente").value.trim();
+  if(!_tallerMode && !nombre){toast("⚠️ El nombre del cliente es obligatorio");gotoStep(1);document.getElementById("fCliente").focus();return;}
+  if(_tallerMode && !nombre) nombre="Piñatería Laureles";
   const items=buildItemsFromState();
   if(!items.length){toast("⚠️ Agrega al menos una piñata");gotoStep(0);return;}
   const iva=document.getElementById("fIva").checked;
