@@ -23,12 +23,12 @@
     .btn-new { display:flex; align-items:center; gap:7px; padding:9px 18px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 3px 12px rgba(236,72,153,.35); }
 
     /* filter bar */
-    .filter-bar { padding:12px 20px; display:flex; gap:8px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+    .filter-bar { padding:12px 16px; display:flex; gap:8px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
     .filter-bar::-webkit-scrollbar { display:none; }
-    .filter-btn { flex-shrink:0; padding:6px 14px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; transition:all .18s; }
-    .filter-btn.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; }
-    .cnt { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; font-size:10px; font-weight:800; margin-left:3px; background:#f3f4f6; color:var(--soft); }
-    .filter-btn.is-active .cnt { background:rgba(255,255,255,.25); color:#fff; }
+    .filter-btn { flex-shrink:0; padding:8px 18px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:14px; font-weight:700; color:var(--soft); cursor:pointer; transition:all .18s; display:flex; align-items:center; gap:6px; }
+    .filter-btn.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; box-shadow:0 3px 10px rgba(236,72,153,.3); }
+    .cnt { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; border-radius:999px; font-size:11px; font-weight:800; padding:0 5px; background:#f3f4f6; color:var(--soft); }
+    .filter-btn.is-active .cnt { background:rgba(255,255,255,.28); color:#fff; }
 
     /* list */
     .list-wrap { padding:16px 20px; max-width:860px; margin:0 auto; }
@@ -348,13 +348,29 @@ function tryPin(){
 ══════════════════════════════════ */
 async function loadAll(){
   if(!_sb){ renderList(); return; }
-  const [invRes, ordRes] = await Promise.all([
-    _sb.from("invoices").select("*").order("numero",{ascending:false}),
-    _sb.from("orders").select("id,numero,estado,data").in("estado",["lista","entregada"]).order("numero",{ascending:false})
-  ]);
-  _invoices = (invRes.data||[]).map(r => ({ id:r.id, numero:r.numero, estado:r.estado, creada:r.created_at, ...(r.data||{}) }));
-  _orders   = (ordRes.data||[]).map(r => ({ id:r.id, numero:r.numero, estado:r.estado, ...(r.data||{}) }));
+  // Cargar facturas (independiente de ordenes)
+  try {
+    const {data,error} = await _sb.from("invoices").select("*").order("numero",{ascending:false});
+    if(!error) _invoices = (data||[]).map(r => ({ id:r.id, numero:r.numero, estado:r.estado, creada:r.created_at, ...(r.data||{}) }));
+    else console.warn("invoices error:", error.message);
+  } catch(e){ console.warn("invoices load failed:", e); }
+
+  // Cargar ordenes terminadas
+  await loadOrders();
   renderList();
+}
+
+async function loadOrders(){
+  if(!_sb) return;
+  try {
+    const {data,error} = await _sb
+      .from("orders")
+      .select("id,numero,estado,data,created_at")
+      .in("estado",["lista","entregada"])
+      .order("numero",{ascending:false});
+    if(error){ console.warn("orders error:", error.message); return; }
+    _orders = (data||[]).map(r => ({ ...r.data, id:r.id, numero:r.numero, estado:r.estado }));
+  } catch(e){ console.warn("orders load failed:", e); }
 }
 
 async function saveInvoice(inv){
@@ -445,7 +461,12 @@ function renderOrdersPicker(){
   const usedIds = new Set(_invoices.flatMap(i=>i.ordenIds||[]));
   const available = _orders.filter(o=>!usedIds.has(o.id) || _selOrders.has(o.id));
   if(!available.length){
-    wrap.innerHTML = `<div style="font-size:13px;color:var(--soft);padding:12px;text-align:center">No hay órdenes terminadas disponibles<br><span style="font-size:11px">Solo aparecen las marcadas como "Lista" o "Entregada"</span></div>`;
+    wrap.innerHTML = `<div style="font-size:13px;color:var(--soft);padding:16px;text-align:center">
+      <div style="font-size:28px;margin-bottom:6px">🪅</div>
+      No hay órdenes terminadas disponibles<br>
+      <span style="font-size:11px">Solo aparecen las marcadas como "Lista" o "Entregada" en el Taller</span><br>
+      <button onclick="loadOrders().then(renderOrdersPicker)" style="margin-top:10px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:700;color:var(--pink);cursor:pointer">↺ Recargar</button>
+    </div>`;
     return;
   }
   wrap.innerHTML = available.map(o=>{
@@ -560,7 +581,7 @@ function calcTotals(){
 /* ══════════════════════════════════
    ABRIR / CERRAR MODAL EDICIÓN
 ══════════════════════════════════ */
-function openEdit(inv){
+async function openEdit(inv){
   _editing = inv||null;
   _selOrders = new Set(inv?.ordenIds||[]);
   document.getElementById("editTitle").textContent = inv ? `Editar FAC-${String(inv.numero).padStart(4,"0")}` : "Nueva factura";
@@ -572,11 +593,14 @@ function openEdit(inv){
   document.getElementById("fEstado").value    = inv?.estado            || "pendiente";
   document.getElementById("fIva").checked     = !!inv?.iva;
   _items = inv?.items?.length ? inv.items.map(it=>({...it})) : [];
-  renderOrdersPicker();
-  renderItems();
-  calcTotals();
+  // Mostrar modal inmediatamente mientras cargan las ordenes
   document.getElementById("editOverlay").classList.add("open");
   document.getElementById("fCliente").focus();
+  document.getElementById("ordersPicker").innerHTML = `<div style="font-size:13px;color:var(--soft);text-align:center;padding:14px">Cargando órdenes terminadas...</div>`;
+  renderItems(); calcTotals();
+  // Recargar ordenes frescas al abrir
+  await loadOrders();
+  renderOrdersPicker();
 }
 
 function closeEdit(){ document.getElementById("editOverlay").classList.remove("open"); }
