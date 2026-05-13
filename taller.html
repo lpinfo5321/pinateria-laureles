@@ -349,11 +349,11 @@
 
       <!-- Tabs -->
       <div class="settings-tabs" id="settingsTabs">
-        <button class="set-tab is-active" data-st="precios">💰 Precios</button>
-        <button class="set-tab" data-st="factura">🧾 Factura</button>
+        <button class="set-tab is-active" data-st="tambor">🥁 Tambor</button>
         <button class="set-tab" data-st="picos">⭐ Picos</button>
-        <button class="set-tab" data-st="tambor">🥁 Tambor</button>
         <button class="set-tab" data-st="figuras">🖼️ Figuras</button>
+        <button class="set-tab" data-st="precios">💰 Precios</button>
+        <button class="set-tab" data-st="factura">🧾 Factura</button>
       </div>
 
       <div class="settings-body">
@@ -1908,7 +1908,7 @@ function openSettings(){
   loadPreciosToDOM();
   loadFacturaToDOM();
   applyViewMode();
-  switchSettingsTab("precios");
+  switchSettingsTab("tambor");
 }
 function closeSettings(){ document.getElementById("settingsModal").style.display="none"; closeColorPicker(); }
 

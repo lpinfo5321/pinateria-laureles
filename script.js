@@ -1292,6 +1292,7 @@ async function initCloud() {
     });
     await pullAllFromCloud();
     subscribeToCloudChanges();
+    startAppConfigPolling();
     _cloudReady = true;
     updateCloudBadge(true);
     console.info("☁️ Supabase conectado — realtime activo");
@@ -1358,6 +1359,41 @@ function rowToOrder(row) {
   };
 }
 
+/* ─── Polling agresivo de app_config como fallback de realtime ───
+   Si realtime no entrega cambios (p.ej. tabla no publicada o WS caído),
+   esto garantiza que los cambios de colores/figuras/precios del taller
+   se reflejen en el creador de órdenes en pocos segundos. */
+let _cfgLastSig = "";
+async function pollAppConfigOnce(){
+  if(!_sb) return;
+  try{
+    const { data } = await _sb.from("app_config").select("colores,colores_picos,colores_tambor,whatsapp,nombre,direccion,pin").eq("id","default").maybeSingle();
+    if(!data) return;
+    const sig = JSON.stringify({c:data.colores,p:data.colores_picos,t:data.colores_tambor,w:data.whatsapp,n:data.nombre,d:data.direccion,k:data.pin});
+    if(sig === _cfgLastSig) return; // sin cambios
+    _cfgLastSig = sig;
+    _mem.config = {
+      whatsappPinatera: data.whatsapp  || "",
+      nombreNegocio:    data.nombre    || "Piñatería Laureles",
+      direccion:        data.direccion || "Laureles",
+      pin:              data.pin       || "",
+    };
+    applyCloudColors(data.colores || [], data.colores_picos || [], data.colores_tambor || []);
+    persistLocal();
+    if (state.step === "admin") renderAdmin();
+    console.log("[poll] app_config cambió → app actualizada");
+  }catch(_){}
+}
+function startAppConfigPolling(){
+  // poll suave continuo cada 6s
+  setInterval(pollAppConfigOnce, 6000);
+  // refetch inmediato al volver del background
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState === "visible") pollAppConfigOnce();
+  });
+  window.addEventListener("focus", pollAppConfigOnce);
+}
+
 function subscribeToCloudChanges() {
   _sb.channel("orders-realtime")
     .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (p) => {
@@ -1394,6 +1430,7 @@ function subscribeToCloudChanges() {
         applyCloudColors(p.new.colores || [], p.new.colores_picos || [], p.new.colores_tambor || []);
         persistLocal();
         if (state.step === "admin") renderAdmin();
+        console.log("[realtime] app_config actualizado");
       }
     })
     .subscribe();
