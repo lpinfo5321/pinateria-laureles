@@ -1821,8 +1821,8 @@ function renderTemaSection(){
       <input type="text" class="tema-emoji-edit" value="${esc(t.emoji||'🎉')}" placeholder="🎉" maxlength="4">
       <input type="text" class="tema-name-edit" value="${esc(t.nombre||'')}" placeholder="Nombre">
       <div class="tema-actions">
-        <button class="color-toggle-btn ${t.activo===false?'off':'on'}" data-ttoggle="${i}">${t.activo===false?'Inactivo':'Activo'}</button>
-        <button class="color-delete-btn" data-tdel="${i}">✕</button>
+        <button class="color-toggle-btn ${t.activo===false?'off':'on'}" data-ttoggle="${i}" type="button">${t.activo===false?'Inactivo':'Activo'}</button>
+        <button class="color-delete-btn" data-tdel="${i}" type="button" title="Eliminar">✕</button>
       </div>
     </div>
   `).join("");
@@ -1831,8 +1831,21 @@ function renderTemaSection(){
   list.onclick = e => {
     const tog = e.target.closest("[data-ttoggle]");
     const del = e.target.closest("[data-tdel]");
-    if(tog){ const i=parseInt(tog.dataset.ttoggle); _temas[i].activo=!(_temas[i].activo===false); renderTemaSection(); }
-    if(del){ const i=parseInt(del.dataset.tdel); _temas.splice(i,1); renderTemaSection(); }
+    if(tog){
+      const i=parseInt(tog.dataset.ttoggle);
+      collectTemasFromDOM(); // preservar ediciones nombre/emoji
+      // Toggle correcto: si está activo (true o undefined) lo apaga, si está apagado lo prende
+      _temas[i].activo = (_temas[i].activo === false) ? true : false;
+      renderTemaSection();
+    }
+    if(del){
+      const i=parseInt(del.dataset.tdel);
+      collectTemasFromDOM();
+      if(confirm(`¿Eliminar la figura "${_temas[i]?.nombre||"esta figura"}"?`)){
+        _temas.splice(i,1);
+        renderTemaSection();
+      }
+    }
   };
 }
 
