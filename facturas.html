@@ -184,20 +184,24 @@
     .pdf-notes { background:#fdf2f8; border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:12px; }
     .pdf-notes-lbl { font-size:10px; font-weight:800; color:var(--soft); text-transform:uppercase; margin-bottom:3px; }
 
-    .btn { padding:10px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; font-family:inherit; }
-    .btn-ghost { background:#f3f4f6; color:var(--text); }
+    .btn { padding:10px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; }
+    .btn-ghost { background:#f3f4f6; color:var(--soft); }
     .btn-pink  { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; box-shadow:0 3px 12px rgba(236,72,153,.28); }
-    .btn-danger{ background:#fff1f2; color:#dc2626; border:1.5px solid #fca5a5; }
 
-    /* Footer del preview */
-    .prev-foot { flex-direction:column; gap:8px; align-items:stretch; }
-    .prev-primary { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .prev-primary .btn { padding:12px 14px; font-size:14px; font-weight:800; }
-    .prev-secondary { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-    .prev-secondary .btn { padding:8px 8px; font-size:12px; }
-    @media(min-width:600px){
-      .prev-secondary { grid-template-columns:repeat(5,1fr); }
+    /* ─── Footer de la preview reorganizado ─── */
+    .prev-foot { padding:14px 14px env(safe-area-inset-bottom,14px); border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; background:#fff; position:sticky; bottom:0; }
+    .prev-foot__row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .prev-foot__row--main { grid-template-columns:1fr 1fr; }
+    .prev-foot__row:not(.prev-foot__row--main):has(> :nth-child(4)) { grid-template-columns:1fr 1fr; }
+    @media(min-width:560px){
+      .prev-foot__row:not(.prev-foot__row--main) { grid-template-columns:repeat(4,1fr); }
     }
+    .btn-prev { padding:11px 10px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; min-height:42px; transition:all .15s; }
+    .btn-prev:hover, .btn-prev:active { border-color:var(--pink); color:var(--pink); }
+    .btn-prev--primary { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; border-color:transparent; box-shadow:0 4px 14px rgba(236,72,153,.3); font-size:14px; font-weight:800; }
+    .btn-prev--primary:hover, .btn-prev--primary:active { color:#fff; opacity:.92; }
+    .btn-prev--danger { background:#fff1f2; color:#dc2626; border-color:#fca5a5; }
+    .btn-prev--danger:hover, .btn-prev--danger:active { background:#fee2e2; border-color:#dc2626; color:#b91c1c; }
 
     /* Modo taller (factura para Laureles) */
     body.taller-mode .ed-back { font-size:18px; }
@@ -264,14 +268,9 @@
     </div>
   </div>
 
-  <div class="step-tabs">
-    <button class="step-tab is-active" data-step="0"><span class="badge-num">1</span>Piñatas</button>
-    <button class="step-tab" data-step="1"><span class="badge-num">2</span>Cliente</button>
-  </div>
-
   <div class="ed-body">
 
-    <!-- ──── Step 1: Piñatas ──── -->
+    <!-- ──── Único paso: Piñatas ──── -->
     <div class="ed-step is-active" data-step="0">
       <div class="picker-tabs" id="pickerTabs">
         <button class="pck-tab is-active" data-p="terminadas">Terminadas <span class="cnt" id="pcT">0</span></button>
@@ -290,29 +289,20 @@
       </div>
     </div>
 
-    <!-- ──── Step 2: Cliente (mínimo) ──── -->
-    <div class="ed-step" data-step="1">
-      <div class="field">
-        <label class="lbl"><span class="ed-title-default">Nombre del cliente *</span><span class="ed-title-taller">Tu nombre (quién hizo las piñatas) *</span></label>
-        <input class="inp" id="fCliente" placeholder="Ej: María Pérez" autocomplete="off" />
-      </div>
-      <div class="field" data-taller-hide><label class="lbl">Teléfono (opcional)</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
-      <div class="field" data-taller-hide><label class="lbl">Correo (opcional, para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
-      <input type="hidden" id="fEmpresa" value="" />
-
-      <div class="sec-h" data-taller-hide>Detalles de la factura</div>
-      <div class="field" data-taller-hide><label class="lbl">Estado</label>
-        <select class="inp" id="fEstado">
-          <option value="pendiente">⏳ Pendiente de pago</option>
-          <option value="pagado">✅ Pagado</option>
-          <option value="cancelado">❌ Cancelado</option>
-        </select>
-      </div>
-      <label class="ck" style="margin-bottom:14px" data-taller-hide>
+      <!-- Notas / IVA opcionales abajo del listado -->
+      <div class="sec-h" style="margin-top:18px">Opcional</div>
+      <label class="ck" style="margin-bottom:10px">
         <input type="checkbox" id="fIva" />
         <div><div style="font-weight:700">Aplicar IVA (16%)</div><div style="font-size:11px;color:var(--soft);font-weight:500">Agrega impuesto al total</div></div>
       </label>
-      <div class="field"><label class="lbl">Notas (opcional)</label><textarea class="inp" id="fNotas" rows="2" placeholder="Observaciones, condiciones, etc…"></textarea></div>
+      <div class="field"><label class="lbl">Notas (opcional)</label><textarea class="inp" id="fNotas" rows="2" placeholder="Observaciones, condiciones…"></textarea></div>
+
+      <!-- ocultos: cliente queda fijo como PIÑATAS -->
+      <input type="hidden" id="fCliente" value="" />
+      <input type="hidden" id="fTelefono" value="" />
+      <input type="hidden" id="fEmail" value="" />
+      <input type="hidden" id="fEmpresa" value="" />
+      <select id="fEstado" style="display:none"><option value="pendiente" selected>pendiente</option><option value="pagado">pagado</option><option value="cancelado">cancelado</option></select>
     </div>
 
   </div>
@@ -324,7 +314,7 @@
       <div class="foot-total-sub" id="footSub">0 piñatas</div>
     </div>
     <button class="btn-next" id="btnNext">
-      Siguiente
+      Ver factura
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
@@ -340,17 +330,31 @@
     <div class="modal-body">
       <div class="pdf-wrap" id="pdfPreview"></div>
     </div>
-    <div class="modal-foot prev-foot">
-      <div class="prev-primary">
-        <button class="btn btn-pink" id="btnDownload">⬇️ Descargar PDF</button>
-        <button class="btn btn-pink" id="btnShare">📤 Compartir</button>
+    <div class="prev-foot">
+      <!-- Fila 1: acciones principales -->
+      <div class="prev-foot__row prev-foot__row--main">
+        <button class="btn-prev btn-prev--primary" id="btnShare">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Compartir
+        </button>
+        <button class="btn-prev btn-prev--primary" id="btnDownload">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar PDF
+        </button>
       </div>
-      <div class="prev-secondary">
-        <button class="btn btn-ghost" id="btnEditPrev">✏️ Editar</button>
-        <button class="btn btn-ghost" id="btnTogglePago">✅ Pagar</button>
-        <button class="btn btn-ghost" id="btnPrint">🖨️ Imprimir</button>
-        <button class="btn btn-ghost" id="btnEmail">📧 Email</button>
-        <button class="btn btn-danger" id="btnDeletePrev">🗑 Eliminar</button>
+      <!-- Fila 2: acciones secundarias -->
+      <div class="prev-foot__row">
+        <button class="btn-prev" id="btnEditPrev">✏️ Editar</button>
+        <button class="btn-prev" id="btnTogglePago">✅ Pagar</button>
+        <button class="btn-prev" id="btnPrint">🖨️ Imprimir</button>
+        <button class="btn-prev" id="btnEmail">📧 Email</button>
+      </div>
+      <!-- Fila 3: peligro / regresar -->
+      <div class="prev-foot__row">
+        <button class="btn-prev btn-prev--danger" id="btnDeletePrev" style="width:100%;justify-content:center">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+          Regresar piñatas a órdenes (eliminar factura)
+        </button>
       </div>
     </div>
   </div>
@@ -361,7 +365,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="supabase-config.js"></script>
 <script>
 /* ══════════════════════════════════
@@ -416,13 +419,9 @@ async function checkPin(){
 
 function showMain(){
   document.getElementById("pinGate").style.display="none";
-  if(_tallerMode) document.body.classList.add("taller-mode");
   document.getElementById("mainApp").style.display="block";
-  // En modo taller con ?new=1: abrimos editor encima
-  if(_tallerMode){
-    openEditor(null);
-    document.getElementById("edBack").innerHTML = "✕";
-  }
+  // ?new=1 auto-abre el formulario "nueva" (atajo opcional)
+  if(_tallerMode) openEditor(null);
   loadAll();
 }
 document.getElementById("pinBtn").addEventListener("click",tryPin);
@@ -505,9 +504,7 @@ function renderList(){
         <button class="act-btn act-btn--pink" data-act="view" data-id="${inv.id}">👁 Ver</button>
         <button class="act-btn" data-act="edit" data-id="${inv.id}">✏️ Editar</button>
         ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagar</button>`:""}
-        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}" title="${(inv.ordenIds||[]).length?'Cancelar y regresar piñatas':'Eliminar factura'}">
-          ${(inv.ordenIds||[]).length?`↩ Regresar (${inv.ordenIds.length})`:"🗑 Eliminar"}
-        </button>
+        <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}">🗑</button>
       </div>
     </div>`;
   }).join("");
@@ -547,34 +544,13 @@ document.getElementById("edBack").addEventListener("click",()=>{
   closeEditor();
 });
 
-document.querySelectorAll(".step-tab").forEach(t=>t.addEventListener("click",()=>gotoStep(parseInt(t.dataset.step))));
-
 function gotoStep(s){
   _curStep=s;
-  document.querySelectorAll(".step-tab").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
-  document.querySelectorAll(".ed-step").forEach(t=>t.classList.toggle("is-active",parseInt(t.dataset.step)===s));
-  const btn=document.getElementById("btnNext");
-  if(_tallerMode){
-    btn.innerHTML = `Ver factura <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`;
-  } else {
-    btn.innerHTML = s===0
-      ? `Siguiente <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>`
-      : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg> Guardar`;
-  }
   document.querySelector(".ed-body").scrollTop=0;
 }
 
 document.getElementById("btnNext").addEventListener("click",async()=>{
   if(!_selOrders.size && !_manuals.length){toast("Selecciona al menos una piñata");return;}
-  if(_tallerMode){
-    await saveCurrent();
-    return;
-  }
-  if(_curStep===0){
-    gotoStep(1);
-    setTimeout(()=>document.getElementById("fCliente").focus(),120);
-    return;
-  }
   await saveCurrent();
 });
 
@@ -588,13 +564,8 @@ function openEditor(inv){
       else _manuals.push({desc:it.desc||"",cantidad:it.cantidad||1,precio:it.precio||0});
     });
   }
-  if(_tallerMode){
-    document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Factura para Laureles";
-    document.getElementById("edSub").textContent="Selecciona las piñatas que hiciste";
-  } else {
-    document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Nueva factura";
-    document.getElementById("edSub").textContent=inv?"Modifica los datos de la factura":"Selecciona piñatas y captura cliente";
-  }
+  document.getElementById("edTitle").textContent=inv?`Editar FAC-${String(inv.numero).padStart(4,"0")}`:"Nueva factura para Laureles";
+  document.getElementById("edSub").textContent="Selecciona las piñatas que vendes a Laureles";
   document.getElementById("fCliente").value=inv?.cliente?.nombre||"";
   document.getElementById("fEmpresa").value=inv?.cliente?.empresa||"";
   document.getElementById("fTelefono").value=inv?.cliente?.telefono||"";
@@ -807,11 +778,10 @@ function recalcTotals(){
    SAVE
 ══════════════════════════════════ */
 async function saveCurrent(){
-  let nombre=document.getElementById("fCliente").value.trim();
-  if(!_tallerMode && !nombre){toast("⚠️ El nombre del cliente es obligatorio");gotoStep(1);document.getElementById("fCliente").focus();return;}
-  if(_tallerMode && !nombre) nombre="Piñatería Laureles";
+  // Cliente siempre fijo: PIÑATAS (el comprador es Piñatas Laureles)
+  let nombre = (document.getElementById("fCliente").value.trim() || "PIÑATAS");
   const items=buildItemsFromState();
-  if(!items.length){toast("⚠️ Agrega al menos una piñata");gotoStep(0);return;}
+  if(!items.length){toast("⚠️ Agrega al menos una piñata");return;}
   const iva=document.getElementById("fIva").checked;
   const sub=items.reduce((s,it)=>s+(it.total||0),0);
   const imp=iva?Math.round(sub*0.16*100)/100:0;
@@ -834,14 +804,11 @@ async function saveCurrent(){
   recalcTotals();
   if(ok){
     toast("✅ Factura guardada");
-    if(_tallerMode){
-      // Mostrar preview para descargar/compartir PDF
-      const saved = _invoices.find(i=>i.id===inv.id) || inv;
-      document.getElementById("editor").classList.remove("open");
-      openPreview(saved);
-    } else {
-      closeEditor();
-    }
+    // Siempre abrir vista previa para revisar/descargar/compartir el PDF
+    const saved = _invoices.find(i=>i.id===inv.id) || inv;
+    document.getElementById("editor").classList.remove("open");
+    document.body.style.overflow="";
+    openPreview(saved);
   }
 }
 
@@ -852,9 +819,6 @@ function openPreview(inv){
   _preview=inv;
   document.getElementById("prevTitle").textContent=`FAC-${String(inv.numero).padStart(4,"0")}`;
   document.getElementById("btnTogglePago").textContent=inv.estado==="pagado"?"↩ Pendiente":"✅ Pagar";
-  const tienOrdenes=(inv.ordenIds||[]).length>0;
-  const delBtn=document.getElementById("btnDeletePrev");
-  if(delBtn) delBtn.innerHTML = tienOrdenes ? `↩ Cancelar y regresar (${inv.ordenIds.length})` : "🗑 Eliminar";
   renderPreview(inv);
   document.getElementById("prevOverlay").classList.add("open");
   document.body.style.overflow="hidden";
@@ -877,14 +841,13 @@ document.getElementById("btnDeletePrev").addEventListener("click",async()=>{
   if(!_preview) return;
   const tienOrdenes = (_preview.ordenIds||[]).length>0;
   const msg = tienOrdenes
-    ? `¿Cancelar esta factura y regresar las ${_preview.ordenIds.length} piñata(s) a la lista de órdenes terminadas?\n\nLa factura se borrará y las piñatas quedarán libres para usarlas en otra factura.`
+    ? `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?\n\nLas ${_preview.ordenIds.length} piñata(s) volverán a estar disponibles como órdenes normales.`
     : `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?`;
   if(!confirm(msg)) return;
   await deleteInvoice(_preview.id);
   closePreview();
-  toast(tienOrdenes ? "↩ Piñatas regresadas a órdenes" : "🗑 Factura eliminada");
+  toast(tienOrdenes ? "🗑 Eliminada · piñatas regresadas" : "🗑 Factura eliminada");
 });
-
 
 function renderPreview(inv){
   const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
@@ -897,18 +860,18 @@ function renderPreview(inv){
     <div class="pdf-body">
       <div class="pdf-client" style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div class="pdf-client-lbl">Para</div>
+          <div class="pdf-client-lbl">Cliente</div>
           <div class="pdf-client-name">PIÑATAS</div>
         </div>
         <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
       </div>
       <table class="pdf-table">
         <thead><tr>
-          <th style="width:48px">Cant.</th><th>Piñata</th><th>Precio</th><th>Total</th>
+          <th style="width:54px">Cant.</th><th>Piñata</th><th style="width:84px">Precio</th><th style="width:84px">Total</th>
         </tr></thead>
         <tbody>
           ${items.length?items.map(it=>`<tr>
-            <td>${it.cantidad||1}</td>
+            <td style="text-align:center;font-weight:800;font-size:15px">${it.cantidad||1}</td>
             <td>${esc(it.desc||it.descripcion||"—")}</td>
             <td>${fmt(it.precio||it.precioUnitario)}</td>
             <td>${fmt(it.total)}</td>
@@ -916,166 +879,152 @@ function renderPreview(inv){
         </tbody>
       </table>
       <div class="pdf-totals"><div class="pdf-totals-inner">
-        <div class="pdf-tot-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
-        ${(inv.impuesto||0)>0?`<div class="pdf-tot-row"><span>IVA (16%)</span><span>${fmt(inv.impuesto)}</span></div>`:""}
+        ${(inv.impuesto||0)>0?`
+          <div class="pdf-tot-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
+          <div class="pdf-tot-row"><span>IVA (16%)</span><span>${fmt(inv.impuesto)}</span></div>
+        `:""}
         <div class="pdf-tot-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
       </div></div>
       ${inv.notas?`<div class="pdf-notes"><div class="pdf-notes-lbl">Notas</div>${esc(inv.notas)}</div>`:""}
-      <div class="pdf-footer">¡Gracias!</div>
+      <div class="pdf-footer">Gracias por su preferencia</div>
     </div>`;
 }
 
 /* ══════════════════════════════════
    PDF
 ══════════════════════════════════ */
-// PDF a partir de la vista previa (html2canvas → jsPDF imagen). Garantiza que el PDF se vea idéntico al preview.
-async function buildPDF(inv){
-  // Aseguramos que el preview tenga este inv renderizado y sea visible
-  const wasOpen = document.getElementById("prevOverlay").classList.contains("open");
-  if(!wasOpen){
-    renderPreview(inv);
-    document.getElementById("prevOverlay").classList.add("open");
-    document.getElementById("prevOverlay").style.opacity="0";
-  } else {
-    renderPreview(inv);
-  }
-  await new Promise(r=>setTimeout(r,60));
-  const node=document.getElementById("pdfPreview");
-  const canvas=await html2canvas(node,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});
-  if(!wasOpen){
-    document.getElementById("prevOverlay").classList.remove("open");
-    document.getElementById("prevOverlay").style.opacity="";
-  }
-  const img=canvas.toDataURL("image/jpeg",0.92);
-  const{jsPDF}=window.jspdf;
-  const pdf=new jsPDF({format:"a4",unit:"mm"});
-  const pdfW=210,pdfH=297,margin=10;
-  const imgAspect=canvas.width/canvas.height;
-  let w=pdfW-margin*2;
-  let h=w/imgAspect;
-  if(h>pdfH-margin*2){ h=pdfH-margin*2; w=h*imgAspect; }
-  const x=(pdfW-w)/2;
-  pdf.addImage(img,"JPEG",x,margin,w,h);
-  return pdf;
-}
-
-// Versión vieja (sin uso) — mantenida por compat
-function buildPDFOld(inv){
+function buildPDF(inv){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({format:"a4",unit:"mm"});
-  const W=210,M=18;let y=0;
-  const P=[236,72,153],PU=[168,85,247],DK=[17,24,39],SF=[107,114,128],LT=[249,250,251];
+  const W=210,M=15;let y=0;
+  const P=[236,72,153],PU=[168,85,247],DK=[17,24,39],SF=[107,114,128],LT=[249,250,251],BR=[229,231,235];
   const fmtN=n=>"$"+Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});
 
-  // Header con logo Piñatas
-  doc.setFillColor(...P);doc.rect(0,0,W/2,36,"F");
-  doc.setFillColor(...PU);doc.rect(W/2,0,W/2,36,"F");
-  doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(20);
-  doc.text("🪅 PIÑATAS LAURELES",M,18);
-  doc.setFontSize(9);doc.setFont("helvetica","normal");
-  doc.text(fmtDate(inv.creada),M,25);
-  doc.setFontSize(22);doc.setFont("helvetica","bold");
-  doc.text("FACTURA",W-M,17,{align:"right"});
-  doc.setFontSize(11);
-  doc.text(`FAC-${String(inv.numero).padStart(4,"0")}`,W-M,25,{align:"right"});
-  y=48;
+  // ──── HEADER: degradado simulado pink → purple ────
+  // jsPDF no soporta degradados nativos, simulamos con dos rectángulos
+  doc.setFillColor(...P); doc.rect(0,0,W*0.55,40,"F");
+  doc.setFillColor(...PU); doc.rect(W*0.55,0,W*0.45,40,"F");
 
-  // Cliente mini
-  doc.setFillColor(...LT);doc.setDrawColor(229,231,235);doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
-  doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
-  doc.text("CLIENTE",M+5,y+5);
-  doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
-  doc.text(inv.cliente?.nombre||"—",M+5,y+11);
-  const sub=[inv.cliente?.telefono,inv.cliente?.email].filter(Boolean).join("  ·  ");
-  if(sub){doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);doc.text(sub,W-M-5,y+11,{align:"right"});}
+  // Lado izquierdo: PIÑATAS + fecha
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold"); doc.setFontSize(26);
+  doc.text("PINATAS",M,22);   // sin ñ ni emoji para evitar caracteres raros
+  doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  doc.text(fmtDate(inv.creada),M,30);
+
+  // Lado derecho: FACTURA + número
+  doc.setFont("helvetica","bold"); doc.setFontSize(22);
+  doc.text("FACTURA",W-M,20,{align:"right"});
+  doc.setFontSize(11); doc.setFont("helvetica","normal");
+  doc.text(`FAC-${String(inv.numero).padStart(4,"0")}`,W-M,28,{align:"right"});
+
+  y=52;
+
+  // ──── CLIENTE BOX ────
+  doc.setFillColor(...LT); doc.setDrawColor(...BR);
+  doc.roundedRect(M,y,W-M*2,20,4,4,"FD");
+  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(...SF);
+  doc.text("CLIENTE",M+6,y+7);
+  doc.setFontSize(14); doc.setFont("helvetica","bold"); doc.setTextColor(...DK);
+  doc.text("PINATAS",M+6,y+15);
+
   // Estado a la derecha
-  const ec=inv.estado==="pagado"?[22,163,74]:inv.estado==="cancelado"?[100,116,139]:[217,119,6];
-  doc.setFillColor(...ec);doc.roundedRect(W-M-30,y+2,28,6,2,2,"F");
-  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont("helvetica","bold");
-  doc.text(inv.estado==="pagado"?"PAGADO":inv.estado==="cancelado"?"CANCELADO":"PENDIENTE",W-M-16,y+6,{align:"center"});
-  y+=24;
+  const ec = inv.estado==="pagado" ? [22,163,74] : inv.estado==="cancelado" ? [100,116,139] : [217,119,6];
+  const estTxt = inv.estado==="pagado" ? "PAGADO" : inv.estado==="cancelado" ? "CANCELADO" : "PENDIENTE";
+  doc.setFillColor(...ec);
+  doc.roundedRect(W-M-38,y+6,32,9,3,3,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont("helvetica","bold");
+  doc.text(estTxt, W-M-22, y+12, {align:"center"});
 
-  // Tabla simple: Cant | Piñata | Precio | Total
-  doc.setFillColor(...P);doc.rect(M,y,W-M*2,9,"F");
-  doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont("helvetica","bold");
-  doc.text("CANT",M+5,y+6);
-  doc.text("PIÑATA",M+22,y+6);
-  doc.text("PRECIO",W-M-42,y+6,{align:"right"});
-  doc.text("TOTAL",W-M-3,y+6,{align:"right"});
-  y+=9;
+  y += 28;
+
+  // ──── TABLA ────
+  // Header rosa→morado (simulado en dos)
+  doc.setFillColor(...P); doc.rect(M,y,(W-M*2)*0.55,10,"F");
+  doc.setFillColor(...PU); doc.rect(M+(W-M*2)*0.55,y,(W-M*2)*0.45,10,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont("helvetica","bold");
+  doc.text("CANT.",M+8,y+6.5,{align:"center"});
+  doc.text("PINATA",M+22,y+6.5);
+  doc.text("PRECIO",W-M-38,y+6.5,{align:"right"});
+  doc.text("TOTAL",W-M-5,y+6.5,{align:"right"});
+  y += 10;
+
+  // Filas con zebra
   (inv.items||[]).forEach((it,i)=>{
-    if(i%2===1){doc.setFillColor(...LT);doc.rect(M,y,W-M*2,9,"F");}
-    doc.setTextColor(...DK);doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text(String(it.cantidad||1),M+8,y+6.2,{align:"center"});
-    doc.setFontSize(10);doc.setFont("helvetica","normal");
-    const d=doc.splitTextToSize(it.desc||it.descripcion||"—",W-M*2-75);
-    doc.text(d[0],M+22,y+6.2);
-    doc.text(fmtN(it.precio||it.precioUnitario),W-M-42,y+6.2,{align:"right"});
+    const rowH = 11;
+    if(i%2===1){ doc.setFillColor(...LT); doc.rect(M,y,W-M*2,rowH,"F"); }
+    doc.setTextColor(...DK); doc.setFontSize(13); doc.setFont("helvetica","bold");
+    doc.text(String(it.cantidad||1), M+8, y+7.5, {align:"center"});
+    doc.setFontSize(10); doc.setFont("helvetica","normal");
+    const desc = (it.desc||it.descripcion||"—").replace(/ñ/g,"n").replace(/Ñ/g,"N");
+    const lines = doc.splitTextToSize(desc, W-M*2-90);
+    doc.text(lines[0], M+22, y+7.5);
+    doc.text(fmtN(it.precio||it.precioUnitario), W-M-38, y+7.5, {align:"right"});
     doc.setFont("helvetica","bold");
-    doc.text(fmtN(it.total),W-M-3,y+6.2,{align:"right"});
-    y+=9;
+    doc.text(fmtN(it.total), W-M-5, y+7.5, {align:"right"});
+    y += rowH;
   });
-  doc.setDrawColor(229,231,235);doc.line(M,y,W-M,y);y+=10;
 
-  // Totales (solo TOTAL grande, IVA si aplica)
-  const tx=W-M-70;
+  // Línea separadora
+  doc.setDrawColor(...BR);
+  doc.line(M,y,W-M,y);
+  y += 8;
+
+  // ──── TOTALES ────
+  const totX = W-M-78;
   if((inv.impuesto||0)>0){
-    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
-    doc.text("Subtotal:",tx,y);
-    doc.setTextColor(...DK);doc.setFont("helvetica","bold");
-    doc.text(fmtN(inv.subtotal),W-M,y,{align:"right"});y+=6;
-    doc.setFont("helvetica","normal");doc.setTextColor(...SF);
-    doc.text("IVA (16%):",tx,y);
-    doc.setTextColor(...DK);doc.setFont("helvetica","bold");
-    doc.text(fmtN(inv.impuesto),W-M,y,{align:"right"});y+=8;
+    doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
+    doc.text("Subtotal", totX, y);
+    doc.setTextColor(...DK); doc.setFont("helvetica","bold");
+    doc.text(fmtN(inv.subtotal), W-M-5, y, {align:"right"}); y += 6;
+    doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
+    doc.text("IVA (16%)", totX, y);
+    doc.setTextColor(...DK); doc.setFont("helvetica","bold");
+    doc.text(fmtN(inv.impuesto), W-M-5, y, {align:"right"}); y += 8;
   }
-  doc.setFillColor(...P);doc.roundedRect(tx-5,y-2,W-M-tx+5,14,3,3,"F");
-  doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
-  doc.text("TOTAL",tx,y+7);
+
+  // Caja TOTAL grande
+  doc.setFillColor(...P);
+  doc.roundedRect(totX-4, y-2, W-M-totX+4, 16, 4, 4, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(13); doc.setFont("helvetica","bold");
+  doc.text("TOTAL", totX, y+8);
   doc.setFontSize(18);
-  doc.text(fmtN(inv.total),W-M-3,y+8,{align:"right"});y+=22;
+  doc.text(fmtN(inv.total), W-M-5, y+9, {align:"right"});
+  y += 24;
 
   // Notas
   if(inv.notas){
-    doc.setFillColor(253,242,248);doc.setDrawColor(251,207,232);
-    doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
-    doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
-    doc.text("NOTAS",M+5,y+6);
-    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...DK);
-    doc.text(doc.splitTextToSize(inv.notas,W-M*2-10).slice(0,1),M+5,y+12);y+=20;
+    doc.setFillColor(253,242,248); doc.setDrawColor(251,207,232);
+    doc.roundedRect(M,y,W-M*2,18,3,3,"FD");
+    doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(...SF);
+    doc.text("NOTAS",M+6,y+6);
+    doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(...DK);
+    const nlines = doc.splitTextToSize(inv.notas.replace(/ñ/g,"n").replace(/Ñ/g,"N"), W-M*2-12);
+    doc.text(nlines.slice(0,1), M+6, y+13);
+    y += 22;
   }
-  doc.setFontSize(9);doc.setFont("helvetica","italic");doc.setTextColor(...SF);
-  doc.text("¡Gracias por su preferencia! 🪅",W/2,291,{align:"center"});
+
+  // Footer
+  doc.setFontSize(9); doc.setFont("helvetica","italic"); doc.setTextColor(...SF);
+  doc.text("Gracias por su preferencia", W/2, 285, {align:"center"});
   return doc;
-}
-async function _withPdfBtn(id, fn){
-  const btn=document.getElementById(id);
-  const old=btn.innerHTML;
-  btn.disabled=true; btn.innerHTML="⏳ ...";
-  try{ await fn(); }
-  finally{ btn.disabled=false; btn.innerHTML=old; }
 }
 document.getElementById("btnDownload").addEventListener("click",()=>{
   if(!_preview)return;
-  _withPdfBtn("btnDownload", async()=>{
-    const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
-    const pdf=await buildPDF(_preview);
-    pdf.save(name);
-    toast("⬇️ PDF descargado");
-  });
+  const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
+  buildPDF(_preview).save(name);
+  toast("⬇️ PDF descargado");
 });
-document.getElementById("btnShare").addEventListener("click",()=>{
+document.getElementById("btnShare").addEventListener("click",async()=>{
   if(!_preview)return;
-  _withPdfBtn("btnShare", async()=>{
-    const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
-    const pdf=await buildPDF(_preview);
-    const blob=pdf.output("blob");
-    const file=new File([blob],name,{type:"application/pdf"});
-    if(navigator.share&&navigator.canShare?.({files:[file]})){
-      try{await navigator.share({title:"Factura PIÑATAS",files:[file]});}
-      catch(er){if(er.name!=="AbortError"){ pdf.save(name); }}
-    } else { pdf.save(name); toast("📥 PDF descargado"); }
-  });
+  const name=`Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
+  const blob=buildPDF(_preview).output("blob");
+  const file=new File([blob],name,{type:"application/pdf"});
+  if(navigator.share&&navigator.canShare?.({files:[file]})){
+    try{await navigator.share({title:"Factura Piñatería Laureles",files:[file]});}
+    catch(er){if(er.name!=="AbortError")buildPDF(_preview).save(name);}
+  }else{buildPDF(_preview).save(name);toast("📥 PDF descargado");}
 });
 document.getElementById("btnEmail").addEventListener("click",()=>{
   if(!_preview)return;
