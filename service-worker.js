@@ -8,7 +8,7 @@
    - Permite mensajería desde la app (showOrderNotification).
    ============================================================ */
 
-const CACHE_VERSION = "pinata-v3.0.4";
+const CACHE_VERSION = "pinata-v3.0.5";
 // Solo cacheamos assets estáticos (iconos y manifest)
 // JS y CSS siempre se sirven frescos desde la red
 const APP_SHELL = [

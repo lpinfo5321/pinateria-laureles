@@ -170,8 +170,14 @@
     @keyframes slideRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
     .settings-head{padding:20px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
     .settings-head h2{font-family:'Fraunces',serif;font-size:20px;font-weight:900;letter-spacing:-0.02em}
+    /* Footer fijo con botones de agregar + guardar */
+    .settings-foot{flex-shrink:0;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0)) 16px;border-top:1px solid var(--border);background:#fff;display:flex;flex-direction:column;gap:8px;box-shadow:0 -8px 24px -8px rgba(0,0,0,0.08);z-index:2}
+    .settings-foot .ft-add-row{display:none}
+    .settings-foot .ft-add-row.is-active{display:block}
+    .settings-foot .btn-add-color{margin-top:0}
+    .settings-foot .btn-save-colors{margin-top:0}
     .settings-close{border:0;background:rgba(0,0,0,0.06);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:grid;place-items:center}
-    .settings-body{flex:1;overflow-y:auto;padding:18px}
+    .settings-body{flex:1;overflow-y:auto;padding:18px 18px 24px}
     .settings-section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 
     /* Tabs de ajustes */
@@ -460,7 +466,6 @@
           </div>
           <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores que el cliente puede elegir para los 6 picos de la estrella.</p>
           <div id="coloresList_picos" class="color-grid"></div>
-          <button class="btn-add-color" id="btnAddColorPicos">+ Agregar color de picos</button>
         </div>
 
         <!-- ═══ TAMBOR ═══ -->
@@ -473,7 +478,6 @@
           </div>
           <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores del cuerpo central de la piñata (máximo 2 al pedir).</p>
           <div id="coloresList_tambor" class="color-grid"></div>
-          <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
         </div>
 
         <!-- ═══ FIGURAS ═══ -->
@@ -486,10 +490,22 @@
           </div>
           <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Las figuras activas aparecerán como opciones al pedir una piñata estrella con imagen.</p>
           <div id="temasList" class="color-grid"></div>
-          <button class="btn-add-color" id="btnAddTema">+ Agregar figura</button>
         </div>
 
-        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar cambios</button>
+      </div><!-- /.settings-body -->
+
+      <!-- Footer fijo con botones de agregar + guardar -->
+      <div class="settings-foot" id="settingsFoot">
+        <div class="ft-add-row" data-ft="picos">
+          <button class="btn-add-color" id="btnAddColorPicos">+ Agregar color de picos</button>
+        </div>
+        <div class="ft-add-row" data-ft="tambor">
+          <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
+        </div>
+        <div class="ft-add-row" data-ft="figuras">
+          <button class="btn-add-color" id="btnAddTema">+ Agregar figura</button>
+        </div>
+        <button class="btn-save-colors" id="btnSaveColors">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -1898,6 +1914,11 @@ function applyViewMode(){
 function switchSettingsTab(name){
   document.querySelectorAll(".set-tab").forEach(t=>t.classList.toggle("is-active", t.dataset.st===name));
   document.querySelectorAll(".set-pane").forEach(p=>p.classList.toggle("is-active", p.dataset.pane===name));
+  // Mostrar solo el botón "+ Agregar" correspondiente a la pestaña activa
+  document.querySelectorAll(".ft-add-row").forEach(r=>r.classList.toggle("is-active", r.dataset.ft===name));
+  // Asegurar que el contenido scrollee al inicio al cambiar de tab
+  const body=document.querySelector(".settings-body");
+  if(body) body.scrollTop=0;
 }
 
 function openSettings(){
