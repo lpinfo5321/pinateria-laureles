@@ -74,6 +74,27 @@ CREATE POLICY "config_all"
   USING (true)
   WITH CHECK (true);
 
+-- ───── Tabla de facturas ─────
+CREATE TABLE IF NOT EXISTS public.invoices (
+  id         TEXT        PRIMARY KEY,
+  numero     SERIAL      UNIQUE,
+  estado     TEXT        NOT NULL DEFAULT 'pendiente',
+  data       JSONB       NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TRIGGER IF EXISTS invoices_touch ON public.invoices;
+CREATE TRIGGER invoices_touch
+  BEFORE UPDATE ON public.invoices
+  FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "invoices_all" ON public.invoices;
+CREATE POLICY "invoices_all"
+  ON public.invoices FOR ALL USING (true) WITH CHECK (true);
+
 -- ───── Habilitar Realtime ─────
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.app_config;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.invoices;

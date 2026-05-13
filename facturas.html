@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facturas · Piñatería Laureles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --pink: #ec4899; --pink-dark: #be185d; --pink-light: #fdf2f8;
+      --purple: #a855f7; --green: #16a34a; --amber: #d97706;
+      --text: #111827; --text-soft: #6b7280; --border: #e5e7eb;
+      --bg: #fdf8fc; --card: #fff; --radius: 14px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar__brand { display: flex; align-items: center; gap: 10px; }
+    .topbar__emoji { font-size: 24px; }
+    .topbar__title { font-size: 17px; font-weight: 800; color: var(--text); }
+    .topbar__sub   { font-size: 12px; color: var(--text-soft); font-weight: 500; }
+    .btn-new {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 3px 12px rgba(236,72,153,0.35); transition: opacity 0.2s;
+    }
+    .btn-new:hover { opacity: 0.88; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      padding: 14px 20px; display: flex; gap: 8px; align-items: center;
+      overflow-x: auto; background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      flex-shrink: 0; padding: 7px 16px; border-radius: 999px;
+      border: 1.5px solid var(--border); background: #fff;
+      font-size: 13px; font-weight: 600; color: var(--text-soft); cursor: pointer;
+      transition: all 0.18s;
+    }
+    .filter-btn.is-active {
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      border-color: transparent; color: #fff; box-shadow: 0 2px 8px rgba(236,72,153,0.3);
+    }
+    .filter-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(255,255,255,0.3); font-size: 11px; font-weight: 800; margin-left: 4px;
+    }
+    .filter-btn:not(.is-active) .filter-count { background: #f3f4f6; color: var(--text-soft); }
+
+    /* ── Invoice list ── */
+    .list-wrap { padding: 16px 20px; max-width: 860px; margin: 0 auto; }
+    .inv-card {
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      margin-bottom: 10px; cursor: pointer;
+      transition: box-shadow 0.18s, border-color 0.18s;
+    }
+    .inv-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); border-color: #d1d5db; }
+    .inv-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .inv-card__num { font-size: 13px; font-weight: 800; color: var(--pink); letter-spacing: 0.02em; }
+    .inv-card__client { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 2px; }
+    .inv-card__date   { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+    .inv-card__right  { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .inv-card__total  { font-size: 18px; font-weight: 900; color: var(--text); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    }
+    .badge--pendiente { background: #fef3c7; color: #92400e; border: 1.5px solid #fbbf24; }
+    .badge--pagado    { background: #dcfce7; color: #166534; border: 1.5px solid #86efac; }
+    .badge--cancelado { background: #f1f5f9; color: #64748b; border: 1.5px solid #cbd5e1; }
+    .inv-card__items  { font-size: 12px; color: var(--text-soft); margin-top: 8px; font-weight: 500; }
+    .inv-card__actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .act-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: #fff; font-size: 12px; font-weight: 700; color: var(--text-soft);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .act-btn:hover { background: #f9fafb; }
+    .act-btn--primary { background: var(--pink-light); border-color: var(--pink); color: var(--pink); }
+    .act-btn--green   { background: #f0fdf4; border-color: #86efac; color: var(--green); }
+    .act-btn--danger  { background: #fff1f2; border-color: #fca5a5; color: #dc2626; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-soft); }
+    .empty-state__icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); }
+
+    /* ── Modal base ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+      z-index: 200; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px;
+    }
+    .modal-overlay.is-open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 20px;
+      width: 100%; max-width: 680px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.2); margin: auto;
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+    }
+    .modal-head h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+    .btn-close {
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: #f3f4f6; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; color: var(--text-soft);
+    }
+    .modal-body { padding: 20px 24px; }
+    .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Form elements ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field--full { grid-column: 1 / -1; }
+    label.lbl { font-size: 12px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+    input.inp, textarea.inp, select.inp {
+      padding: 10px 13px; border-radius: 10px; border: 1.5px solid var(--border);
+      font-size: 14px; font-weight: 500; font-family: inherit; background: #fafafa;
+      color: var(--text); transition: border-color 0.18s;
+    }
+    input.inp:focus, textarea.inp:focus, select.inp:focus {
+      outline: none; border-color: var(--pink); background: #fff;
+    }
+    .section-title {
+      font-size: 13px; font-weight: 800; color: var(--text-soft);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid var(--border);
+    }
+
+    /* ── Items table ── */
+    .items-head {
+      display: grid; grid-template-columns: 1fr 70px 100px 90px 32px;
+      gap: 6px; padding: 6px 8px;
+      background: #f9fafb; border-radius: 8px 8px 0 0;
+      font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase;
+    }
+    .item-row {
+      display: grid; grid-template-columns: 1fr 70px 100px 90px 32px;
+      gap: 6px; padding: 6px 8px; align-items: center;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .item-total { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
+    .btn-del-item {
+      width: 28px; height: 28px; border-radius: 6px; border: none;
+      background: #fff1f2; color: #ef4444; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-add-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px;
+      border: 1.5px dashed var(--border); background: #fafafa;
+      font-size: 13px; font-weight: 700; color: var(--text-soft); cursor: pointer;
+      margin-top: 8px; width: 100%; justify-content: center; transition: all 0.15s;
+    }
+    .btn-add-item:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-light); }
+
+    /* ── Totals ── */
+    .totals-box {
+      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+      margin-top: 14px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .totals-row { display: flex; justify-content: space-between; align-items: center; }
+    .totals-row.grand {
+      border-top: 1.5px solid var(--border); padding-top: 8px; margin-top: 4px;
+      font-size: 16px; font-weight: 900;
+    }
+    .totals-row .lbl { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+    .totals-row .val { font-size: 13px; font-weight: 700; color: var(--text); }
+    .totals-row.grand .val { color: var(--pink); font-size: 18px; }
+
+    /* ── Buttons ── */
+    .btn { padding: 11px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.18s; display: flex; align-items: center; gap: 7px; }
+    .btn-ghost { background: #f3f4f6; color: var(--text-soft); }
+    .btn-pink  { background: linear-gradient(135deg, var(--pink), var(--purple)); color: #fff; box-shadow: 0 3px 12px rgba(236,72,153,0.3); }
+    .btn-pink:hover, .btn-ghost:hover { opacity: 0.82; }
+
+    /* ── PDF preview modal ── */
+    #pdfPreview {
+      background: #fff; border-radius: 10px; padding: 32px;
+      font-family: 'Inter', sans-serif; min-height: 400px;
+    }
+    .pdf-header {
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      border-radius: 12px; padding: 22px 24px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 24px; color: #fff;
+    }
+    .pdf-header__left h2 { font-size: 20px; font-weight: 900; }
+    .pdf-header__left p  { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .pdf-header__right { text-align: right; }
+    .pdf-header__right .fac-title { font-size: 28px; font-weight: 900; line-height: 1; }
+    .pdf-header__right .fac-num   { font-size: 14px; opacity: 0.9; margin-top: 2px; }
+    .pdf-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .pdf-meta__date { font-size: 13px; color: var(--text-soft); }
+    .pdf-client {
+      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .pdf-client__lbl { font-size: 10px; font-weight: 800; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .pdf-client__name { font-size: 16px; font-weight: 800; color: var(--text); }
+    .pdf-client__meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+    .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .pdf-table thead tr { background: linear-gradient(135deg, #ec4899, #a855f7); }
+    .pdf-table thead th { padding: 8px 10px; font-size: 11px; font-weight: 800; color: #fff; text-transform: uppercase; text-align: left; }
+    .pdf-table thead th:not(:first-child) { text-align: right; }
+    .pdf-table tbody tr:nth-child(even) { background: #f9fafb; }
+    .pdf-table tbody td { padding: 8px 10px; font-size: 13px; color: var(--text); border-bottom: 1px solid #f3f4f6; }
+    .pdf-table tbody td:not(:first-child) { text-align: right; font-weight: 600; }
+    .pdf-totals { display: flex; justify-content: flex-end; }
+    .pdf-totals-inner { width: 220px; }
+    .pdf-totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+    .pdf-totals-row.grand { border-top: 2px solid var(--border); margin-top: 6px; padding-top: 8px; font-weight: 900; font-size: 16px; color: var(--pink); }
+    .pdf-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-soft); }
+
+    /* ── PIN modal ── */
+    .pin-screen { max-width: 340px; margin: 60px auto; text-align: center; padding: 20px; }
+    .pin-screen h1 { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .pin-input { font-size: 28px; letter-spacing: 0.3em; text-align: center; padding: 14px; border-radius: 12px; border: 2px solid var(--border); width: 100%; margin: 16px 0; font-family: inherit; font-weight: 700; }
+    .pin-input:focus { outline: none; border-color: var(--pink); }
+    .pin-err { color: #dc2626; font-size: 13px; font-weight: 700; min-height: 20px; }
+
+    @media (max-width: 480px) {
+      .items-head, .item-row { grid-template-columns: 1fr 55px 80px 76px 28px; gap: 4px; }
+      .inv-card__actions { gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── PIN gate ── -->
+<div id="pinGate" style="display:none">
+  <div class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__emoji">🪅</span>
+      <div><div class="topbar__title">Piñatería Laureles</div></div>
+    </div>
+  </div>
+  <div class="pin-screen">
+    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+    <h1>Acceso Facturas</h1>
+    <p style="font-size:14px;color:var(--text-soft);margin-bottom:4px">Ingresa el PIN de administrador</p>
+    <input type="password" id="pinInput" class="pin-input" placeholder="••••" inputmode="numeric" maxlength="8" />
+    <div class="pin-err" id="pinErr"></div>
+    <button class="btn btn-pink" id="pinBtn" style="width:100%;justify-content:center;margin-top:4px">Entrar</button>
+  </div>
+</div>
+
+<!-- ── Main app ── -->
+<div id="mainApp" style="display:none">
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__emoji">🪅</span>
+      <div>
+        <div class="topbar__title">Piñatería Laureles</div>
+        <div class="topbar__sub">Facturas</div>
+      </div>
+    </div>
+    <button class="btn-new" id="btnNew">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva factura
+    </button>
+  </header>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn is-active" data-filter="todas">Todas <span class="filter-count" id="cntTodas">0</span></button>
+    <button class="filter-btn" data-filter="pendiente">Pendientes <span class="filter-count" id="cntPendiente">0</span></button>
+    <button class="filter-btn" data-filter="pagado">Pagadas <span class="filter-count" id="cntPagado">0</span></button>
+    <button class="filter-btn" data-filter="cancelado">Canceladas <span class="filter-count" id="cntCancelado">0</span></button>
+  </div>
+
+  <div class="list-wrap" id="listWrap"></div>
+</div>
+
+<!-- ── Modal: Crear / Editar ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="editModalTitle">Nueva factura</h2>
+      <button class="btn-close" id="editClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">Información del cliente</div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="lbl">Nombre *</label>
+          <input class="inp" id="fCliente" placeholder="Nombre completo" />
+        </div>
+        <div class="field">
+          <label class="lbl">Empresa (opcional)</label>
+          <input class="inp" id="fEmpresa" placeholder="Nombre empresa" />
+        </div>
+        <div class="field">
+          <label class="lbl">Teléfono</label>
+          <input class="inp" id="fTelefono" type="tel" placeholder="33 1234 5678" />
+        </div>
+        <div class="field">
+          <label class="lbl">Correo electrónico</label>
+          <input class="inp" id="fEmail" type="email" placeholder="correo@ejemplo.com" />
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:20px">Artículos / Servicios</div>
+      <div class="items-head">
+        <span>Descripción</span><span>Cant.</span><span>Precio unit.</span><span style="text-align:right">Total</span><span></span>
+      </div>
+      <div id="itemsContainer"></div>
+      <button class="btn-add-item" id="btnAddItem">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar artículo
+      </button>
+
+      <div class="totals-box" id="totalsBox">
+        <div class="totals-row"><span class="lbl">Subtotal</span><span class="val" id="tSubtotal">$0</span></div>
+        <div class="totals-row" id="taxRow" style="display:none"><span class="lbl">IVA (16%)</span><span class="val" id="tImpuesto">$0</span></div>
+        <div class="totals-row grand"><span>TOTAL</span><span class="val" id="tTotal">$0</span></div>
+      </div>
+
+      <div class="form-grid" style="margin-top:14px">
+        <div class="field">
+          <label class="lbl">Estado</label>
+          <select class="inp" id="fEstado">
+            <option value="pendiente">⏳ Pendiente</option>
+            <option value="pagado">✅ Pagado</option>
+            <option value="cancelado">❌ Cancelado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="lbl" style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="fIva" style="width:16px;height:16px;accent-color:var(--pink)"> Aplicar IVA (16%)
+          </label>
+          <div style="font-size:12px;color:var(--text-soft);margin-top:4px">Agrega impuesto al total</div>
+        </div>
+        <div class="field field--full">
+          <label class="lbl">Notas (opcional)</label>
+          <textarea class="inp" id="fNotas" rows="3" placeholder="Detalles de pago, observaciones, etc."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="editCancel">Cancelar</button>
+      <button class="btn btn-pink" id="editSave">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Guardar factura
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Detalle / PDF preview ── -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal-box" style="max-width:760px">
+    <div class="modal-head">
+      <h2 id="previewTitle">Factura</h2>
+      <button class="btn-close" id="previewClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="pdfPreview"></div>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-ghost" id="btnEdit2">✏️ Editar</button>
+      <button class="btn btn-ghost" id="btnTogglePago2">✅ Marcar pagado</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" id="btnPrint">🖨️ Imprimir</button>
+      <button class="btn btn-ghost" id="btnEmail">📧 Email</button>
+      <button class="btn btn-pink" id="btnDownload">⬇️ Descargar PDF</button>
+      <button class="btn btn-pink" id="btnShare">📤 Compartir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:11px 22px;border-radius:999px;font-size:14px;font-weight:700;transition:transform 0.3s;z-index:999;white-space:nowrap;pointer-events:none"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   ESTADO Y SUPABASE
+═══════════════════════════════════════════════════ */
+let _sb = null;
+let _invoices = [];
+let _filter   = "todas";
+let _editing  = null; // invoice being edited (null = new)
+let _preview  = null; // invoice being previewed
+
+function initSb() {
+  const cfg = window.SUPABASE_CONFIG || {};
+  if (!cfg.url || !cfg.anonKey) return;
+  _sb = supabase.createClient(cfg.url, cfg.anonKey);
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.transform = "translateX(-50%) translateY(80px)"; }, 2800);
+}
+
+/* ═══════════════════════════════════════════════════
+   PIN
+═══════════════════════════════════════════════════ */
+let _pin = "";
+async function checkPin() {
+  if (!_sb) { showMain(); return; }
+  try {
+    const {data} = await _sb.from("app_config").select("pin").eq("id","default").maybeSingle();
+    _pin = data?.pin || "";
+  } catch(_) {}
+  if (!_pin) { showMain(); return; }
+
+  const stored = sessionStorage.getItem("fac_pin_ok");
+  if (stored === _pin) { showMain(); return; }
+
+  document.getElementById("pinGate").style.display = "block";
+}
+
+function showMain() {
+  document.getElementById("pinGate").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  loadInvoices();
+  subscribeRealtime();
+}
+
+document.getElementById("pinBtn").addEventListener("click", tryPin);
+document.getElementById("pinInput").addEventListener("keydown", e => { if (e.key === "Enter") tryPin(); });
+
+function tryPin() {
+  const val = document.getElementById("pinInput").value.trim();
+  if (val === _pin) {
+    sessionStorage.setItem("fac_pin_ok", _pin);
+    showMain();
+  } else {
+    document.getElementById("pinErr").textContent = "PIN incorrecto";
+    document.getElementById("pinInput").value = "";
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   DATOS
+═══════════════════════════════════════════════════ */
+function rowToInvoice(row) {
+  return { id: row.id, numero: row.numero, estado: row.estado, creada: row.created_at, ...(row.data || {}) };
+}
+
+async function loadInvoices() {
+  if (!_sb) { renderList(); return; }
+  const {data, error} = await _sb.from("invoices").select("*").order("numero", {ascending: false});
+  if (!error && data) _invoices = data.map(rowToInvoice);
+  renderList();
+}
+
+async function saveInvoice(inv) {
+  if (!_sb) { showToast("Sin conexión"); return false; }
+  const {cliente, items, subtotal, impuesto, total, notas, estado, iva} = inv;
+  const payload = { id: inv.id, estado, data: {cliente, items, subtotal, impuesto, total, notas, iva} };
+  const {error} = await _sb.from("invoices").upsert(payload);
+  if (error) { showToast("Error: " + error.message); return false; }
+  await loadInvoices();
+  return true;
+}
+
+async function deleteInvoice(id) {
+  if (!_sb) return;
+  await _sb.from("invoices").delete().eq("id", id);
+  await loadInvoices();
+}
+
+function subscribeRealtime() {
+  if (!_sb) return;
+  _sb.channel("inv-rt").on("postgres_changes", {event:"*", schema:"public", table:"invoices"}, () => loadInvoices()).subscribe();
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER LISTA
+═══════════════════════════════════════════════════ */
+const EST_LABELS = { pendiente:"⏳ Pendiente", pagado:"✅ Pagado", cancelado:"❌ Cancelado" };
+
+function updateCounts() {
+  document.getElementById("cntTodas").textContent    = _invoices.length;
+  document.getElementById("cntPendiente").textContent = _invoices.filter(i=>i.estado==="pendiente").length;
+  document.getElementById("cntPagado").textContent    = _invoices.filter(i=>i.estado==="pagado").length;
+  document.getElementById("cntCancelado").textContent = _invoices.filter(i=>i.estado==="cancelado").length;
+}
+
+function renderList() {
+  updateCounts();
+  const wrap = document.getElementById("listWrap");
+  const list = _filter === "todas" ? _invoices : _invoices.filter(i => i.estado === _filter);
+  if (!list.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🧾</div><h3>${_filter==="todas"?"No hay facturas aún":"Sin facturas aquí"}</h3><p style="margin-top:6px;font-size:13px">Crea una nueva con el botón de arriba</p></div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(inv => {
+    const num   = `FAC-${String(inv.numero).padStart(4,"0")}`;
+    const fecha = fmtDate(inv.creada);
+    const items = (inv.items||[]).map(it=>it.descripcion).filter(Boolean).slice(0,3).join(" · ") || "Sin artículos";
+    const total = `$${Number(inv.total||0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    return `<div class="inv-card" data-id="${inv.id}">
+      <div class="inv-card__top">
+        <div>
+          <div class="inv-card__num">${num}</div>
+          <div class="inv-card__client">${esc(inv.cliente?.nombre||"Sin cliente")}</div>
+          <div class="inv-card__date">${fecha}${inv.cliente?.empresa ? " · "+esc(inv.cliente.empresa) : ""}</div>
+        </div>
+        <div class="inv-card__right">
+          <div class="inv-card__total">${total}</div>
+          <span class="badge badge--${inv.estado}">${EST_LABELS[inv.estado]||inv.estado}</span>
+        </div>
+      </div>
+      <div class="inv-card__items">${esc(items)}</div>
+      <div class="inv-card__actions">
+        <button class="act-btn act-btn--primary" data-act="view" data-id="${inv.id}">👁 Ver / PDF</button>
+        <button class="act-btn" data-act="edit" data-id="${inv.id}">✏️ Editar</button>
+        ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Marcar pagado</button>`:""}
+        <button class="act-btn act-btn--danger" data-act="delete" data-id="${inv.id}">🗑 Eliminar</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmtDate(ts){ if(!ts) return "—"; const d=new Date(ts); return d.toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }
+
+// Delegación de eventos en lista
+document.getElementById("listWrap").addEventListener("click", async e => {
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+  const id  = btn.dataset.id;
+  const act = btn.dataset.act;
+  const inv = _invoices.find(i => i.id === id);
+  if (!inv) return;
+
+  if (act === "view")   { openPreview(inv); return; }
+  if (act === "edit")   { openEdit(inv);    return; }
+  if (act === "delete") {
+    if (!confirm(`¿Eliminar factura ${`FAC-${String(inv.numero).padStart(4,"0")}`}?`)) return;
+    await deleteInvoice(id);
+    showToast("🗑 Factura eliminada");
+    return;
+  }
+  if (act === "pagar") {
+    await saveInvoice({ ...inv, estado: "pagado" });
+    showToast("✅ Marcada como pagada");
+  }
+});
+
+// Filtros
+document.getElementById("filterBar").addEventListener("click", e => {
+  const btn = e.target.closest("[data-filter]");
+  if (!btn) return;
+  _filter = btn.dataset.filter;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("is-active", b.dataset.filter === _filter));
+  renderList();
+});
+
+/* ═══════════════════════════════════════════════════
+   CREAR / EDITAR
+═══════════════════════════════════════════════════ */
+let _items = []; // items en formulario activo
+
+function newItemRow() { return { descripcion:"", cantidad:1, precioUnitario:0, total:0 }; }
+
+function openEdit(inv) {
+  _editing = inv || null;
+  document.getElementById("editModalTitle").textContent = inv ? `Editar FAC-${String(inv.numero).padStart(4,"0")}` : "Nueva factura";
+  document.getElementById("fCliente").value   = inv?.cliente?.nombre   || "";
+  document.getElementById("fEmpresa").value   = inv?.cliente?.empresa  || "";
+  document.getElementById("fTelefono").value  = inv?.cliente?.telefono || "";
+  document.getElementById("fEmail").value     = inv?.cliente?.email    || "";
+  document.getElementById("fNotas").value     = inv?.notas             || "";
+  document.getElementById("fEstado").value    = inv?.estado            || "pendiente";
+  document.getElementById("fIva").checked     = !!inv?.iva;
+  _items = inv?.items?.length ? inv.items.map(i=>({...i})) : [newItemRow()];
+  renderItems();
+  calcTotals();
+  document.getElementById("editModal").classList.add("is-open");
+  document.getElementById("fCliente").focus();
+}
+
+function closeEdit() { document.getElementById("editModal").classList.remove("is-open"); }
+document.getElementById("editClose").addEventListener("click", closeEdit);
+document.getElementById("editCancel").addEventListener("click", closeEdit);
+
+function renderItems() {
+  const c = document.getElementById("itemsContainer");
+  c.innerHTML = _items.map((it, i) => `
+    <div class="item-row">
+      <input class="inp" style="font-size:13px;padding:7px 8px" placeholder="Ej: Piñata estrella 6 picos" value="${esc(it.descripcion)}" data-fi="${i}" data-f="descripcion" />
+      <input class="inp" style="font-size:13px;padding:7px 6px;text-align:center" type="number" min="1" value="${it.cantidad}" data-fi="${i}" data-f="cantidad" />
+      <input class="inp" style="font-size:13px;padding:7px 8px;text-align:right" type="number" min="0" placeholder="0.00" value="${it.precioUnitario||""}" data-fi="${i}" data-f="precioUnitario" />
+      <div class="item-total">$${Number(it.total||0).toLocaleString("es-MX",{minimumFractionDigits:2})}</div>
+      <button class="btn-del-item" data-di="${i}">✕</button>
+    </div>
+  `).join("");
+}
+
+document.getElementById("itemsContainer").addEventListener("input", e => {
+  const inp = e.target;
+  if (!inp.dataset.fi) return;
+  const i = parseInt(inp.dataset.fi);
+  const f = inp.dataset.f;
+  _items[i][f] = f === "descripcion" ? inp.value : parseFloat(inp.value) || 0;
+  _items[i].total = (_items[i].cantidad || 0) * (_items[i].precioUnitario || 0);
+  renderItems();
+  calcTotals();
+  // re-focus
+  const rows = document.querySelectorAll(".item-row");
+  if (rows[i]) { const tgt = rows[i].querySelector(`[data-f="${f}"]`); tgt?.focus(); }
+});
+
+document.getElementById("itemsContainer").addEventListener("click", e => {
+  const btn = e.target.closest("[data-di]");
+  if (!btn) return;
+  _items.splice(parseInt(btn.dataset.di), 1);
+  if (!_items.length) _items.push(newItemRow());
+  renderItems(); calcTotals();
+});
+
+document.getElementById("btnAddItem").addEventListener("click", () => {
+  _items.push(newItemRow());
+  renderItems(); calcTotals();
+  setTimeout(() => {
+    const rows = document.querySelectorAll(".item-row");
+    rows[rows.length-1]?.querySelector("[data-f='descripcion']")?.focus();
+  }, 50);
+});
+
+document.getElementById("fIva").addEventListener("change", calcTotals);
+
+function calcTotals() {
+  const subtotal = _items.reduce((s, it) => s + (it.total || 0), 0);
+  const iva      = document.getElementById("fIva").checked;
+  const impuesto = iva ? Math.round(subtotal * 0.16 * 100) / 100 : 0;
+  const total    = subtotal + impuesto;
+  const fmt = n => "$" + Number(n).toLocaleString("es-MX",{minimumFractionDigits:2});
+  document.getElementById("tSubtotal").textContent  = fmt(subtotal);
+  document.getElementById("tImpuesto").textContent  = fmt(impuesto);
+  document.getElementById("tTotal").textContent     = fmt(total);
+  document.getElementById("taxRow").style.display   = iva ? "flex" : "none";
+}
+
+document.getElementById("editSave").addEventListener("click", async () => {
+  const nombre = document.getElementById("fCliente").value.trim();
+  if (!nombre) { showToast("⚠️ El nombre del cliente es obligatorio"); document.getElementById("fCliente").focus(); return; }
+
+  const iva       = document.getElementById("fIva").checked;
+  const subtotal  = _items.reduce((s,it) => s + (it.total||0), 0);
+  const impuesto  = iva ? Math.round(subtotal * 0.16 * 100) / 100 : 0;
+  const total     = subtotal + impuesto;
+
+  const inv = {
+    id:     _editing?.id || crypto.randomUUID(),
+    numero: _editing?.numero,
+    estado: document.getElementById("fEstado").value,
+    creada: _editing?.creada || new Date().toISOString(),
+    iva,
+    cliente: {
+      nombre,
+      empresa:  document.getElementById("fEmpresa").value.trim(),
+      telefono: document.getElementById("fTelefono").value.trim(),
+      email:    document.getElementById("fEmail").value.trim(),
+    },
+    items: _items.filter(it => it.descripcion || it.total),
+    subtotal, impuesto, total,
+    notas: document.getElementById("fNotas").value.trim(),
+  };
+
+  const btn = document.getElementById("editSave");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  const ok = await saveInvoice(inv);
+  btn.disabled = false; btn.innerHTML = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Guardar factura`;
+  if (ok) { closeEdit(); showToast("✅ Factura guardada"); }
+});
+
+/* ═══════════════════════════════════════════════════
+   PREVIEW / PDF
+═══════════════════════════════════════════════════ */
+function openPreview(inv) {
+  _preview = inv;
+  const num = `FAC-${String(inv.numero).padStart(4,"0")}`;
+  document.getElementById("previewTitle").textContent = num;
+  document.getElementById("btnTogglePago2").textContent = inv.estado === "pagado" ? "↩ Marcar pendiente" : "✅ Marcar pagado";
+  renderPDFPreview(inv);
+  document.getElementById("previewModal").classList.add("is-open");
+}
+
+function closePreview() { document.getElementById("previewModal").classList.remove("is-open"); }
+document.getElementById("previewClose").addEventListener("click", closePreview);
+
+document.getElementById("btnEdit2").addEventListener("click", () => { closePreview(); openEdit(_preview); });
+
+document.getElementById("btnTogglePago2").addEventListener("click", async () => {
+  const nuevo = _preview.estado === "pagado" ? "pendiente" : "pagado";
+  await saveInvoice({ ..._preview, estado: nuevo });
+  _preview = _invoices.find(i => i.id === _preview.id) || _preview;
+  openPreview(_preview);
+  showToast(nuevo === "pagado" ? "✅ Marcada como pagada" : "↩ Revertida a pendiente");
+});
+
+function renderPDFPreview(inv) {
+  const num   = `FAC-${String(inv.numero).padStart(4,"0")}`;
+  const fecha = fmtDate(inv.creada);
+  const fmt   = n => "$" + Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});
+  const items = inv.items || [];
+
+  document.getElementById("pdfPreview").innerHTML = `
+    <div class="pdf-header">
+      <div class="pdf-header__left">
+        <h2>🪅 Piñatería Laureles</h2>
+        <p id="pdfDireccion">Laureles</p>
+      </div>
+      <div class="pdf-header__right">
+        <div class="fac-title">FACTURA</div>
+        <div class="fac-num">${num}</div>
+      </div>
+    </div>
+    <div class="pdf-meta">
+      <div class="pdf-meta__date">📅 Fecha: ${fecha}</div>
+      <span class="badge badge--${inv.estado}">${EST_LABELS[inv.estado]||inv.estado}</span>
+    </div>
+    <div class="pdf-client">
+      <div class="pdf-client__lbl">Facturar a</div>
+      <div class="pdf-client__name">${esc(inv.cliente?.nombre||"—")}</div>
+      <div class="pdf-client__meta">${[inv.cliente?.empresa, inv.cliente?.email, inv.cliente?.telefono].filter(Boolean).map(esc).join("  ·  ")||"&nbsp;"}</div>
+    </div>
+    <table class="pdf-table">
+      <thead><tr>
+        <th>Descripción / Servicio</th>
+        <th style="text-align:right">Cant.</th>
+        <th style="text-align:right">Precio unit.</th>
+        <th style="text-align:right">Total</th>
+      </tr></thead>
+      <tbody>
+        ${items.length ? items.map(it=>`<tr>
+          <td>${esc(it.descripcion||"—")}</td>
+          <td>${it.cantidad||1}</td>
+          <td>${fmt(it.precioUnitario)}</td>
+          <td>${fmt(it.total)}</td>
+        </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--text-soft);">Sin artículos</td></tr>`}
+      </tbody>
+    </table>
+    <div class="pdf-totals">
+      <div class="pdf-totals-inner">
+        <div class="pdf-totals-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
+        ${inv.impuesto>0?`<div class="pdf-totals-row"><span>IVA (16%)</span><span>${fmt(inv.impuesto)}</span></div>`:""}
+        <div class="pdf-totals-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
+      </div>
+    </div>
+    ${inv.notas?`<div style="margin-top:16px;padding:12px 14px;background:#fafafa;border-radius:10px;border:1.5px solid var(--border)"><div style="font-size:11px;font-weight:800;color:var(--text-soft);text-transform:uppercase;margin-bottom:4px">Notas</div><div style="font-size:13px;color:var(--text)">${esc(inv.notas)}</div></div>`:""}
+    <div class="pdf-footer">Piñatería Laureles · ¡Gracias por su preferencia! 🪅</div>
+  `;
+
+  // Rellenar dirección de app_config
+  if (_sb) {
+    _sb.from("app_config").select("direccion").eq("id","default").maybeSingle().then(({data}) => {
+      const el = document.getElementById("pdfDireccion");
+      if (el && data?.direccion) el.textContent = data.direccion;
+    });
+  }
+}
+
+/* ── PDF con jsPDF ── */
+function buildJsPDF(inv) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ format: "a4", unit: "mm" });
+  const W = 210, margin = 18;
+  let y = 0;
+
+  const pink   = [236, 72, 153];
+  const purple = [168, 85, 247];
+  const dark   = [17, 24, 39];
+  const soft   = [107, 114, 128];
+  const light  = [249, 250, 251];
+  const fmt = n => "$" + Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});
+
+  // ── Header gradient bar ──
+  doc.setFillColor(...pink);
+  doc.rect(0, 0, W/2, 38, "F");
+  doc.setFillColor(...purple);
+  doc.rect(W/2, 0, W/2, 38, "F");
+
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(16);
+  doc.text("PIÑATERÍA LAURELES", margin, 16);
+  doc.setFontSize(9); doc.setFont("helvetica","normal");
+  doc.text("Piñatas de calidad para tus fiestas", margin, 24);
+
+  doc.setFontSize(26); doc.setFont("helvetica","bold");
+  doc.text("FACTURA", W - margin, 17, {align:"right"});
+  doc.setFontSize(11); doc.setFont("helvetica","normal");
+  const num = `FAC-${String(inv.numero).padStart(4,"0")}`;
+  doc.text(num, W - margin, 26, {align:"right"});
+
+  y = 48;
+
+  // ── Meta row ──
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...soft);
+  doc.text(`Fecha: ${fmtDate(inv.creada)}`, margin, y);
+  const estadoText = inv.estado === "pagado" ? "PAGADO" : inv.estado === "cancelado" ? "CANCELADO" : "PENDIENTE";
+  const estadoColor = inv.estado === "pagado" ? [22,163,74] : inv.estado === "cancelado" ? [100,116,139] : [217,119,6];
+  doc.setFillColor(...estadoColor);
+  const bw = 32, bh = 8;
+  doc.roundedRect(W - margin - bw, y - 6, bw, bh, 2, 2, "F");
+  doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont("helvetica","bold");
+  doc.text(estadoText, W - margin - bw/2, y - 0.5, {align:"center"});
+
+  y += 12;
+
+  // ── Client box ──
+  doc.setFillColor(...light);
+  doc.setDrawColor(229,231,235);
+  doc.roundedRect(margin, y, W - margin*2, 24, 3, 3, "FD");
+  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(...soft);
+  doc.text("FACTURAR A:", margin + 5, y + 7);
+  doc.setFontSize(12); doc.setFont("helvetica","bold"); doc.setTextColor(...dark);
+  doc.text(inv.cliente?.nombre || "—", margin + 5, y + 15);
+  const meta = [inv.cliente?.empresa, inv.cliente?.email, inv.cliente?.telefono].filter(Boolean).join("  ·  ");
+  if (meta) { doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...soft); doc.text(meta, margin + 5, y + 21); }
+
+  y += 32;
+
+  // ── Table header ──
+  const colW = [W - margin*2 - 60 - 46 - 42, 22, 38, 42];
+  const colX = [margin, margin+colW[0], margin+colW[0]+22, margin+colW[0]+22+38];
+
+  // Gradient header
+  doc.setFillColor(...pink); doc.rect(margin, y, (W-margin*2)/2, 9, "F");
+  doc.setFillColor(...purple); doc.rect(margin+(W-margin*2)/2, y, (W-margin*2)/2, 9, "F");
+
+  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.text("DESCRIPCIÓN / SERVICIO", colX[0]+3, y+6);
+  doc.text("CANT", colX[1]+colW[0]-35+22, y+6, {align:"right"});
+  doc.text("PRECIO UNIT.", colX[2]+38, y+6, {align:"right"});
+  doc.text("TOTAL", W-margin, y+6, {align:"right"});
+
+  y += 9;
+
+  // ── Rows ──
+  const items = inv.items || [];
+  items.forEach((it, i) => {
+    if (i % 2 === 1) { doc.setFillColor(...light); doc.rect(margin, y, W-margin*2, 9, "F"); }
+    doc.setTextColor(...dark); doc.setFontSize(9); doc.setFont("helvetica","normal");
+    const descLines = doc.splitTextToSize(it.descripcion||"—", colX[1]-colX[0]-4);
+    doc.text(descLines[0], colX[0]+3, y+6);
+    doc.text(String(it.cantidad||1),  colX[1]+18, y+6, {align:"right"});
+    doc.text(fmt(it.precioUnitario),  W-margin-42, y+6, {align:"right"});
+    doc.setFont("helvetica","bold");
+    doc.text(fmt(it.total),           W-margin,    y+6, {align:"right"});
+    y += 9;
+  });
+
+  doc.setDrawColor(229,231,235); doc.line(margin, y, W-margin, y);
+  y += 10;
+
+  // ── Totals ──
+  const tx = W - margin - 60;
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...soft);
+  doc.text("Subtotal:", tx, y); doc.setTextColor(...dark); doc.setFont("helvetica","bold");
+  doc.text(fmt(inv.subtotal), W-margin, y, {align:"right"});
+  y += 7;
+
+  if (inv.impuesto > 0) {
+    doc.setFont("helvetica","normal"); doc.setTextColor(...soft);
+    doc.text("IVA (16%):", tx, y);
+    doc.setTextColor(...dark); doc.setFont("helvetica","bold");
+    doc.text(fmt(inv.impuesto), W-margin, y, {align:"right"});
+    y += 7;
+  }
+
+  doc.setFillColor(...light);
+  doc.roundedRect(tx-4, y-1, W-margin-tx+4, 10, 2, 2, "F");
+  doc.setFontSize(12); doc.setFont("helvetica","bold"); doc.setTextColor(...dark);
+  doc.text("TOTAL:", tx, y+6);
+  doc.setTextColor(...pink);
+  doc.text(fmt(inv.total), W-margin, y+6, {align:"right"});
+  y += 18;
+
+  // ── Notes ──
+  if (inv.notas) {
+    doc.setFillColor(253,242,248); doc.setDrawColor(251,207,232);
+    doc.roundedRect(margin, y, W-margin*2, 20, 3, 3, "FD");
+    doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(...soft);
+    doc.text("NOTAS:", margin+5, y+7);
+    doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...dark);
+    const lines = doc.splitTextToSize(inv.notas, W-margin*2-10);
+    doc.text(lines.slice(0,2), margin+5, y+14);
+    y += 24;
+  }
+
+  // ── Footer ──
+  const fy = 285;
+  doc.setFillColor(253,242,248); doc.rect(0, fy, W, 12, "F");
+  doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...soft);
+  doc.text("Piñatería Laureles · ¡Gracias por su preferencia! 🪅", W/2, fy+7, {align:"center"});
+
+  return doc;
+}
+
+/* ── Acciones PDF ── */
+document.getElementById("btnDownload").addEventListener("click", () => {
+  if (!_preview) return;
+  const doc  = buildJsPDF(_preview);
+  const name = `Factura-${String(_preview.numero).padStart(4,"0")}-${(_preview.cliente?.nombre||"Cliente").replace(/\s+/g,"_")}.pdf`;
+  doc.save(name);
+  showToast("⬇️ Descargando PDF...");
+});
+
+document.getElementById("btnShare").addEventListener("click", async () => {
+  if (!_preview) return;
+  const doc  = buildJsPDF(_preview);
+  const name = `Factura-${String(_preview.numero).padStart(4,"0")}.pdf`;
+  const blob = doc.output("blob");
+  const file = new File([blob], name, { type: "application/pdf" });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ title: `Factura Piñatería Laureles`, files: [file] });
+    } catch (err) { if (err.name !== "AbortError") doc.save(name); }
+  } else {
+    doc.save(name);
+    showToast("📥 PDF descargado (comparte desde tus archivos)");
+  }
+});
+
+document.getElementById("btnEmail").addEventListener("click", () => {
+  if (!_preview) return;
+  const num  = `FAC-${String(_preview.numero).padStart(4,"0")}`;
+  const subj = encodeURIComponent(`${num} - Piñatería Laureles`);
+  const body = encodeURIComponent(`Hola ${_preview.cliente?.nombre||""},\n\nAdjunto encontrará su factura ${num} por un total de ${("$"+Number(_preview.total||0).toLocaleString("es-MX",{minimumFractionDigits:2}))}.\n\nEstado: ${EST_LABELS[_preview.estado]||_preview.estado}\n\n¡Gracias por su preferencia!\nPiñatería Laureles`);
+  const to   = encodeURIComponent(_preview.cliente?.email || "");
+  window.open(`mailto:${to}?subject=${subj}&body=${body}`);
+});
+
+document.getElementById("btnPrint").addEventListener("click", () => {
+  if (!_preview) return;
+  const content = document.getElementById("pdfPreview").innerHTML;
+  const w = window.open("", "_blank", "width=900,height=700");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><style>
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:'Inter',sans-serif;padding:30px;background:#fff}
+    .pdf-header{background:linear-gradient(135deg,#ec4899,#a855f7);border-radius:12px;padding:22px 24px;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;color:#fff}
+    .pdf-header__left h2{font-size:20px;font-weight:900}.pdf-header__left p{font-size:13px;opacity:.85;margin-top:4px}
+    .pdf-header__right{text-align:right}.fac-title{font-size:28px;font-weight:900;line-height:1}.fac-num{font-size:14px;opacity:.9;margin-top:2px}
+    .pdf-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;font-size:13px;color:#6b7280}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+    .badge--pendiente{background:#fef3c7;color:#92400e;border:1.5px solid #fbbf24}
+    .badge--pagado{background:#dcfce7;color:#166534;border:1.5px solid #86efac}
+    .pdf-client{background:#f9fafb;border-radius:10px;padding:14px 16px;margin-bottom:20px}
+    .pdf-client__lbl{font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .pdf-client__name{font-size:16px;font-weight:800;color:#111827}.pdf-client__meta{font-size:12px;color:#6b7280;margin-top:2px}
+    .pdf-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    .pdf-table thead tr{background:linear-gradient(135deg,#ec4899,#a855f7)}
+    .pdf-table thead th{padding:8px 10px;font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;text-align:left}
+    .pdf-table thead th:not(:first-child){text-align:right}
+    .pdf-table tbody tr:nth-child(even){background:#f9fafb}
+    .pdf-table tbody td{padding:8px 10px;font-size:13px;color:#111827;border-bottom:1px solid #f3f4f6}
+    .pdf-table tbody td:not(:first-child){text-align:right;font-weight:600}
+    .pdf-totals{display:flex;justify-content:flex-end}
+    .pdf-totals-inner{width:220px}
+    .pdf-totals-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+    .pdf-totals-row.grand{border-top:2px solid #e5e7eb;margin-top:6px;padding-top:8px;font-weight:900;font-size:16px;color:#ec4899}
+    .pdf-footer{margin-top:24px;padding-top:14px;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#6b7280}
+  </style></head><body>${content}<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}<\/script></body></html>`);
+  w.document.close();
+});
+
+// Nueva factura btn
+document.getElementById("btnNew").addEventListener("click", () => openEdit(null));
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+initSb();
+checkPin();
+</script>
+</body>
+</html>
