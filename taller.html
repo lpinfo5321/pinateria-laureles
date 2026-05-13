@@ -1459,7 +1459,20 @@ let _coloresPicos  = [];
 let _coloresTambor = [];
 let _temas = [];
 let _precios = { estrella:0, personalizada:0, libre:{nombre:"",precio:0} };
-let _viewMode = { picos:"list", tambor:"list", temas:"list" };
+let _viewMode = (function loadViewMode(){
+  const def = { picos:"list", tambor:"list", temas:"list" };
+  try{
+    const raw = localStorage.getItem("taller_viewMode");
+    if(raw){
+      const saved = JSON.parse(raw);
+      return { ...def, ...saved };
+    }
+  }catch(_){}
+  return def;
+})();
+function saveViewMode(){
+  try{ localStorage.setItem("taller_viewMode", JSON.stringify(_viewMode)); }catch(_){}
+}
 let _factura = {
   marca:"PINATAS",
   subtitulo:"",
@@ -1950,6 +1963,7 @@ document.addEventListener("click", e=>{
   const t=e.target.closest("[data-view-toggle]"); if(!t) return;
   const k=t.dataset.viewToggle;
   _viewMode[k] = _viewMode[k]==="grid" ? "list" : "grid";
+  saveViewMode();
   applyViewMode();
 });
 
