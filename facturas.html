@@ -14,6 +14,7 @@
       --text:#111827; --soft:#6b7280; --border:#e5e7eb; --bg:#fdf8fc; --radius:14px;
     }
     html, body { height:100%; overflow-x:hidden; }
+    html { background:var(--bg); }
     body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); }
 
     /* ───── topbar ───── */
@@ -372,20 +373,36 @@ function toast(msg){const el=document.getElementById("toast");el.textContent=msg
    PIN
 ══════════════════════════════════ */
 let _pin="";
+
+// En modo taller: usar localStorage para que sea instantáneo entre pestañas.
+const PIN_KEY = _tallerMode ? "fac_ok_taller" : "fac_ok";
+const PIN_STORE = _tallerMode ? localStorage : sessionStorage;
+
 async function checkPin(){
+  // Si ya hay PIN guardado previamente, abrir directo sin esperar a Supabase.
+  const cached = PIN_STORE.getItem(PIN_KEY);
+  if(cached){
+    showMain();
+    // verificamos en background que siga siendo el PIN correcto
+    if(_sb){
+      _sb.from("app_config").select("pin").eq("id","default").maybeSingle()
+        .then(({data})=>{ _pin=data?.pin||""; if(_pin && cached!==_pin) { PIN_STORE.removeItem(PIN_KEY); } });
+    }
+    return;
+  }
   if(!_sb){showMain();return;}
   try{const{data}=await _sb.from("app_config").select("pin").eq("id","default").maybeSingle();_pin=data?.pin||"";}catch(_){}
   if(!_pin){showMain();return;}
-  if(sessionStorage.getItem("fac_ok")===_pin){showMain();return;}
   document.getElementById("pinGate").style.display="block";
 }
-async function showMain(){
+
+function showMain(){
   document.getElementById("pinGate").style.display="none";
   if(_tallerMode){
     document.body.classList.add("taller-mode");
-    await loadAll();
-    openEditor(null);
+    openEditor(null);                       // ← INSTANTÁNEO, sin esperar red
     document.getElementById("edBack").innerHTML = "✕";
+    loadAll();                              // datos cargan atrás
   } else {
     document.getElementById("mainApp").style.display="block";
     loadAll();
@@ -393,7 +410,7 @@ async function showMain(){
 }
 document.getElementById("pinBtn").addEventListener("click",tryPin);
 document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
-function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v===_pin){sessionStorage.setItem("fac_ok",_pin);showMain();}else{document.getElementById("pinErr").textContent="PIN incorrecto";document.getElementById("pinInput").value="";}}
+function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v===_pin){PIN_STORE.setItem(PIN_KEY,_pin);showMain();}else{document.getElementById("pinErr").textContent="PIN incorrecto";document.getElementById("pinInput").value="";}}
 
 /* ══════════════════════════════════
    DATA
@@ -414,6 +431,10 @@ async function loadAll(){
     _precios.libre = { nombre:String(pp.libre?.nombre||""), precio:Number(pp.libre?.precio)||0 };
   }
   renderList();
+  // Si el editor está abierto (modo taller), refrescar lista de órdenes
+  if(document.getElementById("editor")?.classList.contains("open")){
+    renderOrdersList();
+  }
 }
 
 function precioParaOrden(o){
@@ -611,6 +632,12 @@ function renderOrdersList(){
   const wrap=document.getElementById("ordersList");
   const list=ordersByTab()[_selPicker]||[];
   if(!list.length){
+    // Si todavía no hay nada cargado (sin _orders y sin _invoices), mostrar carga
+    const cargando = _orders.length===0 && _invoices.length===0 && _sb;
+    if(cargando){
+      wrap.innerHTML=`<div class="pick-empty"><div class="ic">⏳</div>Cargando órdenes...</div>`;
+      return;
+    }
     wrap.innerHTML=`<div class="pick-empty"><div class="ic">📭</div>No hay órdenes ${_selPicker==="terminadas"?"terminadas":_selPicker==="pendientes"?"pendientes":""} disponibles<br><span style="font-size:11px">Puedes agregar piñatas manualmente abajo</span></div>`;
     return;
   }
