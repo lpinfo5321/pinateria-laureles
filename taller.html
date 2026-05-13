@@ -231,6 +231,34 @@
     .precio-libre-name{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;font-weight:600;background:#fafafa;color:var(--text);margin-bottom:8px;outline:none}
     .precio-libre-name:focus{border-color:var(--pink);background:#fff}
 
+    /* Personalización de la factura */
+    .field-wrap{margin-bottom:14px}
+    .field-lbl{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px}
+    .field-inp{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;font-weight:600;background:#fafafa;color:var(--text);outline:none;transition:all .15s}
+    .field-inp:focus{border-color:var(--pink);background:#fff}
+    .field-hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+    .color-preset{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;padding:0;transition:transform .15s,box-shadow .15s}
+    .color-preset:hover{transform:scale(1.1)}
+    .color-preset.is-active{box-shadow:0 0 0 3px var(--pink);transform:scale(1.1)}
+    .color-pick-input{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;padding:0;background:none}
+    .color-pick-input::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
+    .color-pick-input::-webkit-color-swatch{border:none;border-radius:50%}
+    .fac-preview-mini{background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;font-family:inherit}
+    .fpm-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-end;color:#fff}
+    .fpm-head h3{font-size:18px;font-weight:900;letter-spacing:.04em}
+    .fpm-head .fpm-sub{font-size:10px;opacity:.9;margin-top:2px}
+    .fpm-head .fpm-fac{font-size:14px;font-weight:900;text-align:right}
+    .fpm-head .fpm-num{font-size:11px;opacity:.85;text-align:right;margin-top:1px}
+    .fpm-body{padding:12px 16px}
+    .fpm-cliente{background:#f9fafb;border-radius:8px;padding:9px 11px;margin-bottom:10px}
+    .fpm-cli-lbl{font-size:9px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em}
+    .fpm-cli-name{font-size:13px;font-weight:800;color:#111827;margin-top:1px}
+    .fpm-cli-info{font-size:10px;color:#6b7280;margin-top:1px}
+    .fpm-tot{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;color:#fff;font-weight:900}
+    .fpm-tot .fpm-tot-lbl{font-size:11px}
+    .fpm-tot .fpm-tot-val{font-size:15px}
+    .fpm-footer{padding:8px;font-size:10px;color:#6b7280;text-align:center;font-style:italic;border-top:1px solid var(--border);margin-top:8px}
+
     /* Filas de color */
     .color-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;transition:border-color 0.15s}
     .color-row.inactive{opacity:0.5}
@@ -322,6 +350,7 @@
       <!-- Tabs -->
       <div class="settings-tabs" id="settingsTabs">
         <button class="set-tab is-active" data-st="precios">💰 Precios</button>
+        <button class="set-tab" data-st="factura">🧾 Factura</button>
         <button class="set-tab" data-st="picos">⭐ Picos</button>
         <button class="set-tab" data-st="tambor">🥁 Tambor</button>
         <button class="set-tab" data-st="figuras">🖼️ Figuras</button>
@@ -360,6 +389,65 @@
               <input type="number" id="precioLibrePrecio" min="0" step="1" placeholder="0" inputmode="decimal" />
             </div>
           </div>
+        </div>
+
+        <!-- ═══ FACTURA ═══ -->
+        <div class="set-pane" data-pane="factura">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">🧾</span> Personalización de la factura (PDF)
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Personaliza cómo se ve la factura PDF que se manda a Laureles. Los cambios aplican a todas las facturas nuevas.</p>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Nombre principal (cabecera del PDF)</label>
+            <input type="text" id="facMarca" class="field-inp" placeholder="PINATAS" maxlength="30" />
+            <div class="field-hint">Lo que aparece en grande arriba de la factura</div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Subtítulo (opcional)</label>
+            <input type="text" id="facSubtitulo" class="field-inp" placeholder="Ej: Piñatas artesanales" maxlength="50" />
+            <div class="field-hint">Texto pequeño debajo del nombre, puede quedar vacío</div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Nombre del cliente (a quién se factura)</label>
+            <input type="text" id="facCliente" class="field-inp" placeholder="PINATAS" maxlength="40" />
+            <div class="field-hint">Aparece en la sección "Cliente" del PDF. Default: PINATAS</div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Información de contacto (opcional)</label>
+            <input type="text" id="facContacto" class="field-inp" placeholder="Tel: 33 1234 5678" maxlength="60" />
+            <div class="field-hint">Aparece junto al cliente. Ej: tu teléfono o nombre</div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Pie de página</label>
+            <input type="text" id="facPiePagina" class="field-inp" placeholder="Gracias por su preferencia" maxlength="80" />
+            <div class="field-hint">Mensaje al final del PDF</div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-lbl">Color principal del PDF</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="facColorRow">
+              <button type="button" class="color-preset" data-col="#ec4899" style="background:#ec4899" title="Rosa"></button>
+              <button type="button" class="color-preset" data-col="#a855f7" style="background:#a855f7" title="Morado"></button>
+              <button type="button" class="color-preset" data-col="#3b82f6" style="background:#3b82f6" title="Azul"></button>
+              <button type="button" class="color-preset" data-col="#16a34a" style="background:#16a34a" title="Verde"></button>
+              <button type="button" class="color-preset" data-col="#ea580c" style="background:#ea580c" title="Naranja"></button>
+              <button type="button" class="color-preset" data-col="#dc2626" style="background:#dc2626" title="Rojo"></button>
+              <button type="button" class="color-preset" data-col="#111827" style="background:#111827" title="Negro"></button>
+              <input type="color" id="facColor" class="color-pick-input" value="#ec4899" title="Otro color" />
+            </div>
+            <div class="field-hint">Color del encabezado, total y acentos del PDF</div>
+          </div>
+
+          <!-- Vista previa mini -->
+          <div class="settings-section-title" style="margin-top:18px">
+            <span style="font-size:16px">👁️</span> Vista previa
+          </div>
+          <div id="facPreviewMini" class="fac-preview-mini"></div>
         </div>
 
         <!-- ═══ PICOS ═══ -->
@@ -1356,6 +1444,14 @@ let _coloresTambor = [];
 let _temas = [];
 let _precios = { estrella:0, personalizada:0, libre:{nombre:"",precio:0} };
 let _viewMode = { picos:"list", tambor:"list", temas:"list" };
+let _factura = {
+  marca:"PINATAS",
+  subtitulo:"",
+  cliente:"PINATAS",
+  contacto:"",
+  piePagina:"Gracias por su preferencia",
+  color:"#ec4899"
+};
 
 const BASE_TEMAS = [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
@@ -1421,6 +1517,19 @@ async function pullColores(){
       };
     }
 
+    // Factura (personalización del PDF)
+    if(data?.colores && !Array.isArray(data.colores) && data.colores.factura){
+      const ff = data.colores.factura;
+      _factura = {
+        marca:     String(ff.marca||"PINATAS"),
+        subtitulo: String(ff.subtitulo||""),
+        cliente:   String(ff.cliente||"PINATAS"),
+        contacto:  String(ff.contacto||""),
+        piePagina: String(ff.piePagina||"Gracias por su preferencia"),
+        color:     String(ff.color||"#ec4899")
+      };
+    }
+
     // Si no había nada guardado, sembrar y guardar
     const eraVacio = !data?.colores_picos?.length && !(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length);
     if(eraVacio) _saveColoresInternal();
@@ -1434,7 +1543,7 @@ async function pullColores(){
 }
 
 function _buildColoresPayload(){
-  return {picos:_coloresPicos, tambor:_coloresTambor, temas:_temas, precios:_precios};
+  return {picos:_coloresPicos, tambor:_coloresTambor, temas:_temas, precios:_precios, factura:_factura};
 }
 
 async function _saveColoresInternal(){
@@ -1463,6 +1572,84 @@ function collectPreciosFromDOM(){
   };
 }
 
+function collectFacturaFromDOM(){
+  const m=document.getElementById("facMarca");
+  const s=document.getElementById("facSubtitulo");
+  const c=document.getElementById("facCliente");
+  const t=document.getElementById("facContacto");
+  const p=document.getElementById("facPiePagina");
+  const k=document.getElementById("facColor");
+  if(m) _factura.marca     = m.value.trim() || "PINATAS";
+  if(s) _factura.subtitulo = s.value.trim();
+  if(c) _factura.cliente   = c.value.trim() || "PINATAS";
+  if(t) _factura.contacto  = t.value.trim();
+  if(p) _factura.piePagina = p.value.trim() || "Gracias por su preferencia";
+  if(k) _factura.color     = k.value || "#ec4899";
+}
+
+function loadFacturaToDOM(){
+  const m=document.getElementById("facMarca");
+  const s=document.getElementById("facSubtitulo");
+  const c=document.getElementById("facCliente");
+  const t=document.getElementById("facContacto");
+  const p=document.getElementById("facPiePagina");
+  const k=document.getElementById("facColor");
+  if(m) m.value=_factura.marca;
+  if(s) s.value=_factura.subtitulo;
+  if(c) c.value=_factura.cliente;
+  if(t) t.value=_factura.contacto;
+  if(p) p.value=_factura.piePagina;
+  if(k) k.value=_factura.color;
+  // marcar preset activo
+  document.querySelectorAll(".color-preset").forEach(b=>{
+    b.classList.toggle("is-active", b.dataset.col?.toLowerCase()===(_factura.color||"").toLowerCase());
+  });
+  renderFacPreview();
+}
+
+function renderFacPreview(){
+  const wrap=document.getElementById("facPreviewMini");
+  if(!wrap) return;
+  // Mezcla color principal con segundo color (un poco más oscuro)
+  const main = _factura.color || "#ec4899";
+  const second = shadeColor(main, -18);
+  wrap.innerHTML = `
+    <div class="fpm-head" style="background:linear-gradient(135deg,${main},${second})">
+      <div>
+        <h3>${escapeHtml(_factura.marca||"PINATAS")}</h3>
+        ${_factura.subtitulo?`<div class="fpm-sub">${escapeHtml(_factura.subtitulo)}</div>`:""}
+      </div>
+      <div>
+        <div class="fpm-fac">FACTURA</div>
+        <div class="fpm-num">FAC-0001</div>
+      </div>
+    </div>
+    <div class="fpm-body">
+      <div class="fpm-cliente">
+        <div class="fpm-cli-lbl">Cliente</div>
+        <div class="fpm-cli-name">${escapeHtml(_factura.cliente||"PINATAS")}</div>
+        ${_factura.contacto?`<div class="fpm-cli-info">${escapeHtml(_factura.contacto)}</div>`:""}
+      </div>
+      <div class="fpm-tot" style="background:linear-gradient(135deg,${main},${second})">
+        <span class="fpm-tot-lbl">TOTAL</span>
+        <span class="fpm-tot-val">$1,250.00</span>
+      </div>
+      <div class="fpm-footer">${escapeHtml(_factura.piePagina||"")}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function shadeColor(hex, percent){
+  const h=hex.replace("#","");
+  const f=parseInt(h,16);
+  const r=Math.max(0,Math.min(255,(f>>16)+Math.round(255*percent/100)));
+  const g=Math.max(0,Math.min(255,((f>>8)&0xff)+Math.round(255*percent/100)));
+  const b=Math.max(0,Math.min(255,(f&0xff)+Math.round(255*percent/100)));
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
 async function saveColores(){
   const btn = document.getElementById("btnSaveColors");
   if(!_sb){ showToast("Sin conexión"); return; }
@@ -1472,7 +1659,8 @@ async function saveColores(){
   collectNamesFromDOM("tambor");
   collectTemasFromDOM();
   collectPreciosFromDOM();
-  console.log("Guardando — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length, "temas:", _temas.length, "precios:", _precios);
+  collectFacturaFromDOM();
+  console.log("Guardando — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length, "temas:", _temas.length, "precios:", _precios, "factura:", _factura);
 
   const payload = {
     id:"default",
@@ -1705,6 +1893,7 @@ function openSettings(){
   renderColorSection("tambor");
   renderTemaSection();
   loadPreciosToDOM();
+  loadFacturaToDOM();
   applyViewMode();
   switchSettingsTab("precios");
 }
@@ -1728,6 +1917,29 @@ document.addEventListener("click", e=>{
   const k=t.dataset.viewToggle;
   _viewMode[k] = _viewMode[k]==="grid" ? "list" : "grid";
   applyViewMode();
+});
+
+// Color presets para personalizar factura
+document.getElementById("facColorRow")?.addEventListener("click", e=>{
+  const b=e.target.closest(".color-preset"); if(!b) return;
+  const col=b.dataset.col;
+  document.getElementById("facColor").value = col;
+  _factura.color = col;
+  document.querySelectorAll(".color-preset").forEach(x=>x.classList.toggle("is-active",x===b));
+  renderFacPreview();
+});
+
+// Cambios en vivo en cualquier campo de factura → actualizar preview mini
+["facMarca","facSubtitulo","facCliente","facContacto","facPiePagina","facColor"].forEach(id=>{
+  document.getElementById(id)?.addEventListener("input",()=>{
+    collectFacturaFromDOM();
+    if(id==="facColor"){
+      document.querySelectorAll(".color-preset").forEach(b=>{
+        b.classList.toggle("is-active", b.dataset.col?.toLowerCase()===_factura.color.toLowerCase());
+      });
+    }
+    renderFacPreview();
+  });
 });
 
 /* ── Instalación PWA ── */
