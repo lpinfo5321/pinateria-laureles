@@ -162,8 +162,43 @@
     .settings-head{padding:20px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
     .settings-head h2{font-family:'Fraunces',serif;font-size:20px;font-weight:900;letter-spacing:-0.02em}
     .settings-close{border:0;background:rgba(0,0,0,0.06);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:grid;place-items:center}
-    .settings-body{flex:1;overflow-y:auto;padding:20px}
+    .settings-body{flex:1;overflow-y:auto;padding:18px}
     .settings-section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+    /* Tabs de ajustes */
+    .settings-tabs{display:flex;gap:4px;padding:8px 12px 0;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .settings-tabs::-webkit-scrollbar{display:none}
+    .set-tab{flex:1;min-width:max-content;padding:10px 12px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s}
+    .set-tab.is-active{color:var(--pink);border-bottom-color:var(--pink)}
+    .set-pane{display:none}
+    .set-pane.is-active{display:block}
+
+    /* Toggle 1col/2col */
+    .view-toggle{margin-left:auto;border:1.5px solid var(--border);background:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;display:grid;place-items:center;color:var(--muted);transition:all .15s}
+    .view-toggle:hover{border-color:var(--pink);color:var(--pink)}
+    .view-toggle.is-grid{background:linear-gradient(135deg,var(--pink),var(--magenta));border-color:transparent;color:#fff}
+
+    /* Grid 2 columnas opcional */
+    .color-grid.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .color-grid.cols-2 .color-row{margin-bottom:0;flex-direction:column;align-items:stretch;padding:10px;gap:8px}
+    .color-grid.cols-2 .color-row .color-swatch-btn{width:40px;height:40px;margin:0 auto}
+    .color-grid.cols-2 .color-row .color-inputs{width:100%}
+    .color-grid.cols-2 .color-row .color-hex-row{flex-wrap:wrap}
+    .color-grid.cols-2 .color-row > .color-toggle-btn,
+    .color-grid.cols-2 .color-row > .color-delete-btn{align-self:flex-end}
+
+    /* Precio card */
+    .precio-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;transition:border-color .15s}
+    .precio-card:focus-within{border-color:var(--pink)}
+    .precio-card--libre{background:linear-gradient(135deg,#fdf2f8,#f5f3ff);border-color:#e9d5ff}
+    .precio-card__head{font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .precio-card__emo{font-size:18px}
+    .precio-card__inp{display:flex;align-items:center;gap:8px;background:#fafafa;border:1.5px solid var(--border);border-radius:10px;padding:0 12px;transition:all .15s}
+    .precio-card__inp:focus-within{border-color:var(--pink);background:#fff}
+    .precio-card__cur{font-size:18px;font-weight:900;color:var(--pink)}
+    .precio-card__inp input{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:18px;font-weight:800;padding:11px 0;color:var(--text);min-width:0;width:100%}
+    .precio-libre-name{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;font-weight:600;background:#fafafa;color:var(--text);margin-bottom:8px;outline:none}
+    .precio-libre-name:focus{border-color:var(--pink);background:#fff}
 
     /* Filas de color */
     .color-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;transition:border-color 0.15s}
@@ -252,37 +287,90 @@
         <h2>Ajustes</h2>
         <button class="settings-close" id="settingsClose">✕</button>
       </div>
+
+      <!-- Tabs -->
+      <div class="settings-tabs" id="settingsTabs">
+        <button class="set-tab is-active" data-st="precios">💰 Precios</button>
+        <button class="set-tab" data-st="picos">⭐ Picos</button>
+        <button class="set-tab" data-st="tambor">🥁 Tambor</button>
+        <button class="set-tab" data-st="figuras">🖼️ Figuras</button>
+      </div>
+
       <div class="settings-body">
 
-        <!-- PICOS -->
-        <div class="settings-section-title" style="margin-top:4px">
-          <span style="font-size:16px">⭐</span> Colores para los picos
+        <!-- ═══ PRECIOS ═══ -->
+        <div class="set-pane is-active" data-pane="precios">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">💰</span> Precios por defecto
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Precios que se rellenarán automáticamente al hacer una factura. Puedes cambiarlos en cualquier momento o editar el precio en la factura si una piñata requiere más trabajo.</p>
+
+          <div class="precio-card">
+            <div class="precio-card__head"><span class="precio-card__emo">⭐</span>Piñata estrella</div>
+            <div class="precio-card__inp">
+              <span class="precio-card__cur">$</span>
+              <input type="number" id="precioEstrella" min="0" step="1" placeholder="0" inputmode="decimal" />
+            </div>
+          </div>
+
+          <div class="precio-card">
+            <div class="precio-card__head"><span class="precio-card__emo">🎨</span>Piñata personalizada</div>
+            <div class="precio-card__inp">
+              <span class="precio-card__cur">$</span>
+              <input type="number" id="precioPerso" min="0" step="1" placeholder="0" inputmode="decimal" />
+            </div>
+          </div>
+
+          <div class="precio-card precio-card--libre">
+            <div class="precio-card__head"><span class="precio-card__emo">✨</span>Piñata libre (la que tú elijas)</div>
+            <input type="text" id="precioLibreNombre" class="precio-libre-name" placeholder="Ej: Piñata XL doble cara, número 3D..." />
+            <div class="precio-card__inp">
+              <span class="precio-card__cur">$</span>
+              <input type="number" id="precioLibrePrecio" min="0" step="1" placeholder="0" inputmode="decimal" />
+            </div>
+          </div>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores que el cliente puede elegir para los 6 picos de la estrella.</p>
-        <div id="coloresList_picos"></div>
-        <button class="btn-add-color" id="btnAddColorPicos">+ Agregar color de picos</button>
 
-        <div style="height:1px;background:var(--border);margin:20px 0"></div>
-
-        <!-- TAMBOR -->
-        <div class="settings-section-title">
-          <span style="font-size:16px">🥁</span> Colores para el tambor
+        <!-- ═══ PICOS ═══ -->
+        <div class="set-pane" data-pane="picos">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">⭐</span> Colores para los picos
+            <button class="view-toggle" data-view-toggle="picos" title="Cambiar vista">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>
+            </button>
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores que el cliente puede elegir para los 6 picos de la estrella.</p>
+          <div id="coloresList_picos" class="color-grid"></div>
+          <button class="btn-add-color" id="btnAddColorPicos">+ Agregar color de picos</button>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores del cuerpo central de la piñata (máximo 2 al pedir).</p>
-        <div id="coloresList_tambor"></div>
-        <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
 
-        <div style="height:1px;background:var(--border);margin:20px 0"></div>
-
-        <!-- FIGURAS -->
-        <div class="settings-section-title">
-          <span style="font-size:16px">🖼️</span> Figuras / Personajes disponibles
+        <!-- ═══ TAMBOR ═══ -->
+        <div class="set-pane" data-pane="tambor">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">🥁</span> Colores para el tambor
+            <button class="view-toggle" data-view-toggle="tambor" title="Cambiar vista">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>
+            </button>
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Colores del cuerpo central de la piñata (máximo 2 al pedir).</p>
+          <div id="coloresList_tambor" class="color-grid"></div>
+          <button class="btn-add-color" id="btnAddColorTambor">+ Agregar color de tambor</button>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Las figuras activas aparecerán como opciones al pedir una piñata estrella con imagen.</p>
-        <div id="temasList"></div>
-        <button class="btn-add-color" id="btnAddTema">+ Agregar figura</button>
 
-        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar todo</button>
+        <!-- ═══ FIGURAS ═══ -->
+        <div class="set-pane" data-pane="figuras">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">🖼️</span> Figuras / Personajes
+            <button class="view-toggle" data-view-toggle="temas" title="Cambiar vista">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>
+            </button>
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Las figuras activas aparecerán como opciones al pedir una piñata estrella con imagen.</p>
+          <div id="temasList" class="color-grid"></div>
+          <button class="btn-add-color" id="btnAddTema">+ Agregar figura</button>
+        </div>
+
+        <button class="btn-save-colors" id="btnSaveColors" style="margin-top:20px">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -1235,6 +1323,8 @@ let _colores = [];       // legado (colores genéricos)
 let _coloresPicos  = [];
 let _coloresTambor = [];
 let _temas = [];
+let _precios = { estrella:0, personalizada:0, libre:{nombre:"",precio:0} };
+let _viewMode = { picos:"list", tambor:"list", temas:"list" };
 
 const BASE_TEMAS = [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
@@ -1290,6 +1380,16 @@ async function pullColores(){
       _temas = BASE_TEMAS.map(t=>({...t}));
     }
 
+    // Precios
+    if(data?.colores && !Array.isArray(data.colores) && data.colores.precios){
+      const pp = data.colores.precios;
+      _precios = {
+        estrella: Number(pp.estrella)||0,
+        personalizada: Number(pp.personalizada)||0,
+        libre: { nombre: String(pp.libre?.nombre||""), precio: Number(pp.libre?.precio)||0 }
+      };
+    }
+
     // Si no había nada guardado, sembrar y guardar
     const eraVacio = !data?.colores_picos?.length && !(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length);
     if(eraVacio) _saveColoresInternal();
@@ -1302,10 +1402,13 @@ async function pullColores(){
   }
 }
 
-// Guarda internamente sin feedback visual (para semilla inicial)
+function _buildColoresPayload(){
+  return {picos:_coloresPicos, tambor:_coloresTambor, temas:_temas, precios:_precios};
+}
+
 async function _saveColoresInternal(){
   if(!_sb) return;
-  const payload = {id:"default", colores:{picos:_coloresPicos, tambor:_coloresTambor, temas:_temas}};
+  const payload = {id:"default", colores:_buildColoresPayload()};
   let {error} = await _sb.from("app_config").upsert(payload);
   if(error){
     await _sb.from("app_config").upsert({
@@ -1316,6 +1419,19 @@ async function _saveColoresInternal(){
   }
 }
 
+function collectPreciosFromDOM(){
+  const ne=document.getElementById("precioEstrella");
+  const np=document.getElementById("precioPerso");
+  const lnm=document.getElementById("precioLibreNombre");
+  const lpr=document.getElementById("precioLibrePrecio");
+  if(ne) _precios.estrella      = parseFloat(ne.value)||0;
+  if(np) _precios.personalizada = parseFloat(np.value)||0;
+  _precios.libre = {
+    nombre: lnm ? lnm.value.trim() : (_precios.libre?.nombre||""),
+    precio: lpr ? (parseFloat(lpr.value)||0) : (_precios.libre?.precio||0)
+  };
+}
+
 async function saveColores(){
   const btn = document.getElementById("btnSaveColors");
   if(!_sb){ showToast("Sin conexión"); return; }
@@ -1324,12 +1440,12 @@ async function saveColores(){
   collectNamesFromDOM("picos");
   collectNamesFromDOM("tambor");
   collectTemasFromDOM();
-  console.log("Guardando — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length, "temas:", _temas.length);
+  collectPreciosFromDOM();
+  console.log("Guardando — picos:", _coloresPicos.length, "tambor:", _coloresTambor.length, "temas:", _temas.length, "precios:", _precios);
 
-  // Intentar guardar en todas las columnas disponibles
   const payload = {
     id:"default",
-    colores: {picos:_coloresPicos, tambor:_coloresTambor, temas:_temas},
+    colores: _buildColoresPayload(),
     colores_picos: _coloresPicos,
     colores_tambor: _coloresTambor
   };
@@ -1338,22 +1454,20 @@ async function saveColores(){
 
   if(error){
     console.warn("Fallo con 3 columnas, intentando solo 'colores':", error.message);
-    // Fallback: solo columna colores (siempre existe)
     ({error} = await _sb.from("app_config").upsert({
       id:"default",
-      colores:{picos:_coloresPicos, tambor:_coloresTambor}
+      colores: _buildColoresPayload()
     }));
   }
 
-  btn.disabled = false; btn.textContent = "Guardar colores";
+  btn.disabled = false; btn.textContent = "Guardar cambios";
 
   if(error){
-    console.error("Error guardando colores:", error);
+    console.error("Error guardando:", error);
     showToast("❌ Error al guardar: "+error.message);
     return;
   }
-  showToast("✅ Colores guardados correctamente");
-  console.log("Colores guardados OK");
+  showToast("✅ Cambios guardados");
 }
 
 let _cpSection = "picos"; // sección activa del picker
@@ -1531,11 +1645,41 @@ function addNewTema(){
   },80);
 }
 
+function loadPreciosToDOM(){
+  const ne=document.getElementById("precioEstrella");
+  const np=document.getElementById("precioPerso");
+  const lnm=document.getElementById("precioLibreNombre");
+  const lpr=document.getElementById("precioLibrePrecio");
+  if(ne) ne.value=_precios.estrella||"";
+  if(np) np.value=_precios.personalizada||"";
+  if(lnm) lnm.value=_precios.libre?.nombre||"";
+  if(lpr) lpr.value=_precios.libre?.precio||"";
+}
+
+function applyViewMode(){
+  ["picos","tambor","temas"].forEach(k=>{
+    const id = k==="temas" ? "temasList" : `coloresList_${k}`;
+    const el = document.getElementById(id);
+    const btn = document.querySelector(`[data-view-toggle="${k}"]`);
+    if(!el) return;
+    el.classList.toggle("cols-2", _viewMode[k]==="grid");
+    if(btn) btn.classList.toggle("is-grid", _viewMode[k]==="grid");
+  });
+}
+
+function switchSettingsTab(name){
+  document.querySelectorAll(".set-tab").forEach(t=>t.classList.toggle("is-active", t.dataset.st===name));
+  document.querySelectorAll(".set-pane").forEach(p=>p.classList.toggle("is-active", p.dataset.pane===name));
+}
+
 function openSettings(){
   document.getElementById("settingsModal").style.display="block";
   renderColorSection("picos");
   renderColorSection("tambor");
   renderTemaSection();
+  loadPreciosToDOM();
+  applyViewMode();
+  switchSettingsTab("precios");
 }
 function closeSettings(){ document.getElementById("settingsModal").style.display="none"; closeColorPicker(); }
 
@@ -1546,6 +1690,18 @@ document.getElementById("btnAddColorPicos").addEventListener("click",()=>addNewC
 document.getElementById("btnAddColorTambor").addEventListener("click",()=>addNewColor("tambor"));
 document.getElementById("btnAddTema").addEventListener("click", addNewTema);
 document.getElementById("btnSaveColors").addEventListener("click", saveColores);
+
+document.getElementById("settingsTabs").addEventListener("click", e=>{
+  const t=e.target.closest("[data-st]"); if(!t) return;
+  switchSettingsTab(t.dataset.st);
+});
+
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-view-toggle]"); if(!t) return;
+  const k=t.dataset.viewToggle;
+  _viewMode[k] = _viewMode[k]==="grid" ? "list" : "grid";
+  applyViewMode();
+});
 
 /* ── Instalación PWA ── */
 let _deferredInstall = null;

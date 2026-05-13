@@ -263,20 +263,21 @@
 
       <div class="sec-h" id="manSecTitle" style="display:none">Piñatas extra (manual)</div>
       <div id="manualList" class="manual-list"></div>
-      <button class="btn-add" id="btnAddManual">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Agregar piñata suelta
-      </button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn-add" id="btnAddEstrella" style="flex:1;min-width:130px">+ Piñata estrella</button>
+        <button class="btn-add" id="btnAddPerso" style="flex:1;min-width:130px">+ Personalizada</button>
+        <button class="btn-add" id="btnAddLibre" style="flex:1;min-width:130px" data-libre>+ Libre</button>
+      </div>
     </div>
 
-    <!-- ──── Step 2: Cliente ──── -->
+    <!-- ──── Step 2: Cliente (mínimo) ──── -->
     <div class="ed-step" data-step="1">
       <div class="field"><label class="lbl">Nombre del cliente *</label><input class="inp" id="fCliente" placeholder="Ej: María Pérez" autocomplete="off" /></div>
-      <div class="field"><label class="lbl">Teléfono</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
-      <div class="field"><label class="lbl">Correo (para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
-      <div class="field"><label class="lbl">Empresa (opcional)</label><input class="inp" id="fEmpresa" placeholder="Razón social" autocomplete="off" /></div>
+      <div class="field"><label class="lbl">Teléfono (opcional)</label><input class="inp" id="fTelefono" type="tel" inputmode="tel" placeholder="33 1234 5678" autocomplete="off" /></div>
+      <div class="field"><label class="lbl">Correo (opcional, para enviar PDF)</label><input class="inp" id="fEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com" autocomplete="off" /></div>
+      <input type="hidden" id="fEmpresa" value="" />
 
-      <div class="sec-h">Detalles</div>
+      <div class="sec-h">Detalles de la factura</div>
       <div class="field"><label class="lbl">Estado</label>
         <select class="inp" id="fEstado">
           <option value="pendiente">⏳ Pendiente de pago</option>
@@ -288,7 +289,7 @@
         <input type="checkbox" id="fIva" />
         <div><div style="font-weight:700">Aplicar IVA (16%)</div><div style="font-size:11px;color:var(--soft);font-weight:500">Agrega impuesto al total</div></div>
       </label>
-      <div class="field"><label class="lbl">Notas (opcional)</label><textarea class="inp" id="fNotas" rows="2" placeholder="Detalles de pago, observaciones…"></textarea></div>
+      <div class="field"><label class="lbl">Notas (opcional)</label><textarea class="inp" id="fNotas" rows="2" placeholder="Observaciones, condiciones, etc…"></textarea></div>
     </div>
 
   </div>
@@ -329,7 +330,7 @@
 </div>
 
 <!-- Toast -->
-<div id="toast" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw"></div>
+<div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -344,6 +345,7 @@ let _selPicker="terminadas";   // tab activo del selector
 let _curStep=0;                 // 0=piñatas, 1=cliente
 let _selOrders=new Map();       // id -> precio
 let _manuals=[];                // [{desc,cantidad,precio}]
+let _precios={estrella:0,personalizada:0,libre:{nombre:"",precio:0}};
 
 /* ══════════════════════════════════
    HELPERS
@@ -354,7 +356,7 @@ function fmtDate(ts){if(!ts) return "—";const d=new Date(ts);return d.toLocale
 const LABELS={pendiente:"⏳ Pendiente",pagado:"✅ Pagado",cancelado:"❌ Cancelado"};
 
 let _tt;
-function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.style.transform="translateX(-50%) translateY(0)";clearTimeout(_tt);_tt=setTimeout(()=>el.style.transform="translateX(-50%) translateY(80px)",2600);}
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.style.bottom="100px";el.style.opacity="1";clearTimeout(_tt);_tt=setTimeout(()=>{el.style.bottom="-100px";el.style.opacity="0";},2600);}
 
 /* ══════════════════════════════════
    PIN
@@ -377,13 +379,26 @@ function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v=
 ══════════════════════════════════ */
 async function loadAll(){
   if(!_sb){renderList();return;}
-  const[invRes,ordRes]=await Promise.all([
+  const[invRes,ordRes,cfgRes]=await Promise.all([
     _sb.from("invoices").select("*").order("numero",{ascending:false}),
-    _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false})
+    _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false}),
+    _sb.from("app_config").select("colores").eq("id","default").maybeSingle()
   ]);
   _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
+  const pp=cfgRes.data?.colores?.precios;
+  if(pp){
+    _precios.estrella      = Number(pp.estrella)||0;
+    _precios.personalizada = Number(pp.personalizada)||0;
+    _precios.libre = { nombre:String(pp.libre?.nombre||""), precio:Number(pp.libre?.precio)||0 };
+  }
   renderList();
+}
+
+function precioParaOrden(o){
+  if(o.tipo==="estrella")      return _precios.estrella||0;
+  if(o.tipo==="personalizada") return _precios.personalizada||0;
+  return 0;
 }
 
 async function saveInvoice(inv){
@@ -597,14 +612,11 @@ document.getElementById("ordersList").addEventListener("click",e=>{
   const card=e.target.closest("[data-oid]");if(!card)return;
   const oid=card.dataset.oid;
   if(_selOrders.has(oid)) _selOrders.delete(oid);
-  else _selOrders.set(oid,0);
-  renderOrdersList(); recalcTotals();
-  if(_selOrders.has(oid)){
-    setTimeout(()=>{
-      const inp=document.querySelector(`[data-price="${oid}"]`);
-      if(inp){ inp.focus(); inp.select(); }
-    },50);
+  else {
+    const o=_orders.find(x=>x.id===oid);
+    _selOrders.set(oid, precioParaOrden(o));
   }
+  renderOrdersList(); recalcTotals();
 });
 document.getElementById("ordersList").addEventListener("input",e=>{
   if(!e.target.dataset.price)return;
@@ -649,14 +661,17 @@ document.getElementById("manualList").addEventListener("click",e=>{
   _manuals.splice(parseInt(b.dataset.mdel),1);
   renderManuals();recalcTotals();
 });
-document.getElementById("btnAddManual").addEventListener("click",()=>{
-  _manuals.push({desc:"",cantidad:1,precio:0});
+function addManualOf(tipo){
+  let desc="", precio=0;
+  if(tipo==="estrella"){ desc="Piñata estrella"; precio=_precios.estrella||0; }
+  else if(tipo==="personalizada"){ desc="Piñata personalizada"; precio=_precios.personalizada||0; }
+  else if(tipo==="libre"){ desc=_precios.libre?.nombre||"Piñata"; precio=_precios.libre?.precio||0; }
+  _manuals.push({desc,cantidad:1,precio});
   renderManuals();recalcTotals();
-  setTimeout(()=>{
-    const inps=document.querySelectorAll("[data-mf='desc']");
-    inps[inps.length-1]?.focus();
-  },50);
-});
+}
+document.getElementById("btnAddEstrella").addEventListener("click",()=>addManualOf("estrella"));
+document.getElementById("btnAddPerso").addEventListener("click",   ()=>addManualOf("personalizada"));
+document.getElementById("btnAddLibre").addEventListener("click",   ()=>addManualOf("libre"));
 
 document.getElementById("fIva").addEventListener("change",recalcTotals);
 
@@ -747,29 +762,29 @@ document.getElementById("btnTogglePago").addEventListener("click",async()=>{
 function renderPreview(inv){
   const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
   const items=inv.items||[];
+  const subInfo=[inv.cliente?.telefono,inv.cliente?.email].filter(Boolean).map(esc).join(" · ");
   document.getElementById("pdfPreview").innerHTML=`
     <div class="pdf-head">
-      <div><h2>🪅 Piñatería Laureles</h2><p id="previewDir">Laureles</p></div>
+      <div><h2>🪅 Piñatas Laureles</h2><p>${fmtDate(inv.creada)}</p></div>
       <div class="pdf-head-right"><div class="fac">FACTURA</div><div class="num">${num}</div></div>
     </div>
     <div class="pdf-body">
-      <div class="pdf-meta">
-        <span>📅 ${fmtDate(inv.creada)}</span>
+      <div class="pdf-client" style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="pdf-client-lbl">Cliente</div>
+          <div class="pdf-client-name">${esc(inv.cliente?.nombre||"—")}</div>
+          ${subInfo?`<div class="pdf-client-sub">${subInfo}</div>`:""}
+        </div>
         <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
-      </div>
-      <div class="pdf-client">
-        <div class="pdf-client-lbl">Facturar a</div>
-        <div class="pdf-client-name">${esc(inv.cliente?.nombre||"—")}</div>
-        <div class="pdf-client-sub">${[inv.cliente?.empresa,inv.cliente?.email,inv.cliente?.telefono].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</div>
       </div>
       <table class="pdf-table">
         <thead><tr>
-          <th>Descripción</th><th>Cant.</th><th>Precio unit.</th><th>Total</th>
+          <th style="width:48px">Cant.</th><th>Piñata</th><th>Precio</th><th>Total</th>
         </tr></thead>
         <tbody>
           ${items.length?items.map(it=>`<tr>
-            <td>${esc(it.desc||it.descripcion||"—")}</td>
             <td>${it.cantidad||1}</td>
+            <td>${esc(it.desc||it.descripcion||"—")}</td>
             <td>${fmt(it.precio||it.precioUnitario)}</td>
             <td>${fmt(it.total)}</td>
           </tr>`).join(""):`<tr><td colspan="4" style="text-align:center;color:var(--soft)">Sin artículos</td></tr>`}
@@ -781,9 +796,8 @@ function renderPreview(inv){
         <div class="pdf-tot-row grand"><span>TOTAL</span><span>${fmt(inv.total)}</span></div>
       </div></div>
       ${inv.notas?`<div class="pdf-notes"><div class="pdf-notes-lbl">Notas</div>${esc(inv.notas)}</div>`:""}
-      <div class="pdf-footer">Piñatería Laureles · ¡Gracias por su preferencia! 🪅</div>
+      <div class="pdf-footer">¡Gracias por su preferencia! 🪅</div>
     </div>`;
-  if(_sb) _sb.from("app_config").select("direccion").eq("id","default").maybeSingle().then(({data})=>{const el=document.getElementById("previewDir");if(el&&data?.direccion)el.textContent=data.direccion;});
 }
 
 /* ══════════════════════════════════
@@ -795,75 +809,86 @@ function buildPDF(inv){
   const W=210,M=18;let y=0;
   const P=[236,72,153],PU=[168,85,247],DK=[17,24,39],SF=[107,114,128],LT=[249,250,251];
   const fmtN=n=>"$"+Number(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});
+
+  // Header con logo Piñatas
   doc.setFillColor(...P);doc.rect(0,0,W/2,36,"F");
   doc.setFillColor(...PU);doc.rect(W/2,0,W/2,36,"F");
-  doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);
-  doc.text("PIÑATERÍA LAURELES",M,15);
-  doc.setFontSize(8);doc.setFont("helvetica","normal");
-  doc.text("Piñatas de calidad para tus fiestas",M,22);
-  doc.setFontSize(24);doc.setFont("helvetica","bold");
-  doc.text("FACTURA",W-M,16,{align:"right"});
+  doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(20);
+  doc.text("🪅 PIÑATAS LAURELES",M,18);
+  doc.setFontSize(9);doc.setFont("helvetica","normal");
+  doc.text(fmtDate(inv.creada),M,25);
+  doc.setFontSize(22);doc.setFont("helvetica","bold");
+  doc.text("FACTURA",W-M,17,{align:"right"});
   doc.setFontSize(11);
   doc.text(`FAC-${String(inv.numero).padStart(4,"0")}`,W-M,25,{align:"right"});
-  y=46;
-  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
-  doc.text(`Fecha: ${fmtDate(inv.creada)}`,M,y);
-  const ec=inv.estado==="pagado"?[22,163,74]:inv.estado==="cancelado"?[100,116,139]:[217,119,6];
-  doc.setFillColor(...ec);doc.roundedRect(W-M-30,y-5,30,7,2,2,"F");
-  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont("helvetica","bold");
-  doc.text(inv.estado==="pagado"?"PAGADO":inv.estado==="cancelado"?"CANCELADO":"PENDIENTE",W-M-15,y-0.2,{align:"center"});
-  y+=12;
-  doc.setFillColor(...LT);doc.setDrawColor(229,231,235);doc.roundedRect(M,y,W-M*2,22,3,3,"FD");
+  y=48;
+
+  // Cliente mini
+  doc.setFillColor(...LT);doc.setDrawColor(229,231,235);doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
   doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
-  doc.text("FACTURAR A:",M+5,y+6);
-  doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
-  doc.text(inv.cliente?.nombre||"—",M+5,y+13);
-  const meta=[inv.cliente?.empresa,inv.cliente?.email,inv.cliente?.telefono].filter(Boolean).join("  ·  ");
-  if(meta){doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);doc.text(meta,M+5,y+19);}
-  y+=30;
-  doc.setFillColor(...P);doc.rect(M,y,W-M*2,8,"F");
-  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont("helvetica","bold");
-  doc.text("DESCRIPCIÓN",M+3,y+5.5);
-  doc.text("CANT",W-M-90,y+5.5,{align:"right"});
-  doc.text("PRECIO UNIT.",W-M-48,y+5.5,{align:"right"});
-  doc.text("TOTAL",W-M,y+5.5,{align:"right"});
-  y+=8;
+  doc.text("CLIENTE",M+5,y+5);
+  doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
+  doc.text(inv.cliente?.nombre||"—",M+5,y+11);
+  const sub=[inv.cliente?.telefono,inv.cliente?.email].filter(Boolean).join("  ·  ");
+  if(sub){doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);doc.text(sub,W-M-5,y+11,{align:"right"});}
+  // Estado a la derecha
+  const ec=inv.estado==="pagado"?[22,163,74]:inv.estado==="cancelado"?[100,116,139]:[217,119,6];
+  doc.setFillColor(...ec);doc.roundedRect(W-M-30,y+2,28,6,2,2,"F");
+  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont("helvetica","bold");
+  doc.text(inv.estado==="pagado"?"PAGADO":inv.estado==="cancelado"?"CANCELADO":"PENDIENTE",W-M-16,y+6,{align:"center"});
+  y+=24;
+
+  // Tabla simple: Cant | Piñata | Precio | Total
+  doc.setFillColor(...P);doc.rect(M,y,W-M*2,9,"F");
+  doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont("helvetica","bold");
+  doc.text("CANT",M+5,y+6);
+  doc.text("PIÑATA",M+22,y+6);
+  doc.text("PRECIO",W-M-42,y+6,{align:"right"});
+  doc.text("TOTAL",W-M-3,y+6,{align:"right"});
+  y+=9;
   (inv.items||[]).forEach((it,i)=>{
-    if(i%2===1){doc.setFillColor(...LT);doc.rect(M,y,W-M*2,8,"F");}
-    doc.setTextColor(...DK);doc.setFontSize(9);doc.setFont("helvetica","normal");
-    const d=doc.splitTextToSize(it.desc||it.descripcion||"—",W-M*2-95);
-    doc.text(d[0],M+3,y+5.5);
-    doc.text(String(it.cantidad||1),W-M-90,y+5.5,{align:"right"});
-    doc.text(fmtN(it.precio||it.precioUnitario),W-M-48,y+5.5,{align:"right"});
+    if(i%2===1){doc.setFillColor(...LT);doc.rect(M,y,W-M*2,9,"F");}
+    doc.setTextColor(...DK);doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text(String(it.cantidad||1),M+8,y+6.2,{align:"center"});
+    doc.setFontSize(10);doc.setFont("helvetica","normal");
+    const d=doc.splitTextToSize(it.desc||it.descripcion||"—",W-M*2-75);
+    doc.text(d[0],M+22,y+6.2);
+    doc.text(fmtN(it.precio||it.precioUnitario),W-M-42,y+6.2,{align:"right"});
     doc.setFont("helvetica","bold");
-    doc.text(fmtN(it.total),W-M,y+5.5,{align:"right"});
-    y+=8;
+    doc.text(fmtN(it.total),W-M-3,y+6.2,{align:"right"});
+    y+=9;
   });
-  doc.setDrawColor(229,231,235);doc.line(M,y,W-M,y);y+=9;
-  const tx=W-M-56;
-  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
-  doc.text("Subtotal:",tx,y);doc.setTextColor(...DK);doc.setFont("helvetica","bold");
-  doc.text(fmtN(inv.subtotal),W-M,y,{align:"right"});y+=6;
+  doc.setDrawColor(229,231,235);doc.line(M,y,W-M,y);y+=10;
+
+  // Totales (solo TOTAL grande, IVA si aplica)
+  const tx=W-M-70;
   if((inv.impuesto||0)>0){
+    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
+    doc.text("Subtotal:",tx,y);
+    doc.setTextColor(...DK);doc.setFont("helvetica","bold");
+    doc.text(fmtN(inv.subtotal),W-M,y,{align:"right"});y+=6;
     doc.setFont("helvetica","normal");doc.setTextColor(...SF);
     doc.text("IVA (16%):",tx,y);
     doc.setTextColor(...DK);doc.setFont("helvetica","bold");
-    doc.text(fmtN(inv.impuesto),W-M,y,{align:"right"});y+=6;
+    doc.text(fmtN(inv.impuesto),W-M,y,{align:"right"});y+=8;
   }
-  doc.setFillColor(...LT);doc.roundedRect(tx-3,y-1,W-M-tx+3,9,2,2,"F");
-  doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...DK);
-  doc.text("TOTAL:",tx,y+6);doc.setTextColor(...P);doc.text(fmtN(inv.total),W-M,y+6,{align:"right"});y+=16;
+  doc.setFillColor(...P);doc.roundedRect(tx-5,y-2,W-M-tx+5,14,3,3,"F");
+  doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+  doc.text("TOTAL",tx,y+7);
+  doc.setFontSize(18);
+  doc.text(fmtN(inv.total),W-M-3,y+8,{align:"right"});y+=22;
+
+  // Notas
   if(inv.notas){
     doc.setFillColor(253,242,248);doc.setDrawColor(251,207,232);
     doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
     doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...SF);
-    doc.text("NOTAS:",M+5,y+6);
+    doc.text("NOTAS",M+5,y+6);
     doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...DK);
     doc.text(doc.splitTextToSize(inv.notas,W-M*2-10).slice(0,1),M+5,y+12);y+=20;
   }
-  doc.setFillColor(253,242,248);doc.rect(0,283,W,14,"F");
-  doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...SF);
-  doc.text("Piñatería Laureles · ¡Gracias por su preferencia! 🪅",W/2,291,{align:"center"});
+  doc.setFontSize(9);doc.setFont("helvetica","italic");doc.setTextColor(...SF);
+  doc.text("¡Gracias por su preferencia! 🪅",W/2,291,{align:"center"});
   return doc;
 }
 document.getElementById("btnDownload").addEventListener("click",()=>{
