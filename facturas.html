@@ -195,8 +195,6 @@
     body.taller-mode .ed-step[data-step="1"] { display:none !important; }
     body.taller-mode .ed-title-default,
     body:not(.taller-mode) .ed-title-taller { display:none; }
-    .mis-fac-btn { display:none; background:#fdf2f8; border:1.5px solid var(--pink); color:var(--pink); padding:7px 12px; border-radius:10px; font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; align-items:center; gap:5px; flex-shrink:0; }
-    body.taller-mode .mis-fac-btn { display:inline-flex; }
 
     /* PIN */
     .pin-wrap { max-width:320px; margin:60px auto; text-align:center; padding:20px; }
@@ -253,10 +251,6 @@
       <div class="ed-title" id="edTitle">Nueva factura</div>
       <div class="ed-sub" id="edSub">Selecciona piñatas y captura cliente</div>
     </div>
-    <button id="btnMisFacturas" class="mis-fac-btn">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Anteriores
-    </button>
   </div>
 
   <div class="step-tabs">
@@ -338,6 +332,7 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" id="btnEditPrev">✏️ Editar</button>
       <button class="btn btn-ghost" id="btnTogglePago">✅ Pagar</button>
+      <button class="btn" id="btnDeletePrev" style="background:#fff1f2;color:#dc2626;border:1.5px solid #fca5a5">🗑 Eliminar</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost" id="btnPrint">🖨️</button>
       <button class="btn btn-ghost" id="btnEmail">📧</button>
@@ -406,15 +401,14 @@ async function checkPin(){
 
 function showMain(){
   document.getElementById("pinGate").style.display="none";
+  if(_tallerMode) document.body.classList.add("taller-mode");
+  document.getElementById("mainApp").style.display="block";
+  // En modo taller con ?new=1: abrimos editor encima
   if(_tallerMode){
-    document.body.classList.add("taller-mode");
-    openEditor(null);                       // ← INSTANTÁNEO, sin esperar red
+    openEditor(null);
     document.getElementById("edBack").innerHTML = "✕";
-    loadAll();                              // datos cargan atrás
-  } else {
-    document.getElementById("mainApp").style.display="block";
-    loadAll();
   }
+  loadAll();
 }
 document.getElementById("pinBtn").addEventListener("click",tryPin);
 document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
@@ -508,7 +502,16 @@ document.getElementById("listWrap").addEventListener("click",async e=>{
   const inv=_invoices.find(i=>i.id===id);if(!inv)return;
   if(act==="view"){openPreview(inv);return;}
   if(act==="edit"){openEditor(inv);return;}
-  if(act==="del"){if(!confirm("¿Eliminar factura?"))return;await deleteInvoice(id);toast("🗑 Eliminada");return;}
+  if(act==="del"){
+    const tienOrdenes = (inv.ordenIds||[]).length>0;
+    const msg = tienOrdenes
+      ? `¿Eliminar factura FAC-${String(inv.numero).padStart(4,"0")}?\n\nLas ${inv.ordenIds.length} piñata(s) volverán a estar disponibles como órdenes normales.`
+      : `¿Eliminar factura FAC-${String(inv.numero).padStart(4,"0")}?`;
+    if(!confirm(msg))return;
+    await deleteInvoice(id);
+    toast(tienOrdenes ? "🗑 Eliminada · piñatas regresadas" : "🗑 Factura eliminada");
+    return;
+  }
   if(act==="pagar"){await saveInvoice({...inv,estado:"pagado"});toast("✅ Marcada como pagada");}
 });
 document.querySelector(".filter-bar").addEventListener("click",e=>{
@@ -521,24 +524,13 @@ document.querySelector(".filter-bar").addEventListener("click",e=>{
 /* ══════════════════════════════════
    EDITOR — STEPS
 ══════════════════════════════════ */
-document.getElementById("btnNew").addEventListener("click",()=>{
-  if(_tallerMode){ document.getElementById("mainApp").style.display="none"; }
-  openEditor(null);
-});
+document.getElementById("btnNew").addEventListener("click",()=>openEditor(null));
 document.getElementById("edBack").addEventListener("click",()=>{
   if(_curStep===1){gotoStep(0);return;}
   closeEditor();
 });
 
 document.querySelectorAll(".step-tab").forEach(t=>t.addEventListener("click",()=>gotoStep(parseInt(t.dataset.step))));
-
-// Botón "Anteriores" en modo taller: muestra la lista de facturas
-document.getElementById("btnMisFacturas").addEventListener("click", ()=>{
-  document.getElementById("editor").classList.remove("open");
-  document.body.style.overflow="";
-  document.getElementById("mainApp").style.display="block";
-  loadAll();
-});
 
 function gotoStep(s){
   _curStep=s;
@@ -603,14 +595,12 @@ function openEditor(inv){
   document.body.style.overflow="hidden";
 }
 function closeEditor(){
-  if(_tallerMode){
-    // En modo taller: cerrar pestaña o regresar
-    if(window.opener || history.length<=1) { try{ window.close(); }catch(_){} }
-    else history.back();
-    return;
-  }
   document.getElementById("editor").classList.remove("open");
   document.body.style.overflow="";
+  // Quita el ?new=1 de la URL para que ya no auto-abra al refrescar
+  if(_tallerMode && location.search.includes("new=1")){
+    try{ history.replaceState({},"", location.pathname); }catch(_){}
+  }
 }
 
 /* ══════════════════════════════════
@@ -852,9 +842,6 @@ function openPreview(inv){
 function closePreview(){
   document.getElementById("prevOverlay").classList.remove("open");
   document.body.style.overflow="";
-  if(_tallerMode){
-    try{ window.close(); }catch(_){}
-  }
 }
 document.getElementById("prevClose").addEventListener("click",closePreview);
 document.getElementById("btnEditPrev").addEventListener("click",()=>{closePreview();openEditor(_preview);});
@@ -864,6 +851,18 @@ document.getElementById("btnTogglePago").addEventListener("click",async()=>{
   _preview=_invoices.find(i=>i.id===_preview.id)||_preview;
   openPreview(_preview);
   toast(nuevo==="pagado"?"✅ Pagada":"↩ Pendiente");
+});
+
+document.getElementById("btnDeletePrev").addEventListener("click",async()=>{
+  if(!_preview) return;
+  const tienOrdenes = (_preview.ordenIds||[]).length>0;
+  const msg = tienOrdenes
+    ? `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?\n\nLas ${_preview.ordenIds.length} piñata(s) volverán a estar disponibles como órdenes normales.`
+    : `¿Eliminar factura FAC-${String(_preview.numero).padStart(4,"0")}?`;
+  if(!confirm(msg)) return;
+  await deleteInvoice(_preview.id);
+  closePreview();
+  toast(tienOrdenes ? "🗑 Eliminada · piñatas regresadas" : "🗑 Factura eliminada");
 });
 
 function renderPreview(inv){
