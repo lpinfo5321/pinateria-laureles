@@ -1694,7 +1694,7 @@ async function pollAppConfigOnce(){
     _mem.config = {
       whatsappPinatera: data.whatsapp  || "",
       nombreNegocio:    data.nombre    || "Viva Piñata",
-      direccion:        data.direccion || "Laureles",
+      direccion:        data.direccion || "",
       pin:              data.pin       || "",
     };
     applyCloudColors(data.colores || [], data.colores_picos || [], data.colores_tambor || []);
@@ -1743,7 +1743,7 @@ function subscribeToCloudChanges() {
         _mem.config = {
           whatsappPinatera: p.new.whatsapp  || "",
           nombreNegocio:    p.new.nombre    || "Viva Piñata",
-          direccion:        p.new.direccion || "Laureles",
+          direccion:        p.new.direccion || "",
           pin:              p.new.pin       || "",
         };
         applyCloudColors(p.new.colores || [], p.new.colores_picos || [], p.new.colores_tambor || []);
