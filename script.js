@@ -111,6 +111,7 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
       state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "" };
       modal.hidden = true;
       updateCurrentStorePill();
+      refreshDynamicLabels();
       if (typeof onPick === "function") onPick(t);
       if (typeof showToast === "function") showToast(`📍 ${t.nombre} guardada para este dispositivo`);
     });
@@ -146,6 +147,21 @@ function updateCurrentStorePill() {
   if (!dev) { pill.style.display = "none"; return; }
   pill.style.display = "inline-flex";
   pill.innerHTML = `${dev.emoji || "🏬"} ${escapeHTML(dev.nombre)} <span style="opacity:.6">·</span> <span style="font-weight:800">cambiar</span>`;
+}
+
+/** Refresca textos dinámicos de la pantalla de bienvenida y otros lugares
+ *  donde aparecía "Laureles" hardcoded. Usa la tienda del dispositivo,
+ *  o cae al config.direccion / config.nombreNegocio si no hay device tienda. */
+function refreshDynamicLabels() {
+  const cfg = getConfig() || {};
+  const dev = getDeviceTienda();
+  const tiendaNombre = (dev && dev.nombre) || cfg.direccion || cfg.nombreNegocio || "tu tienda";
+
+  const eyebrow = document.getElementById("welcomeEyebrow");
+  if (eyebrow) eyebrow.textContent = `Hechas a mano · ${tiendaNombre}`;
+
+  const pickup = document.getElementById("welcomePickup");
+  if (pickup) pickup.textContent = `Recogida en ${tiendaNombre}`;
 }
 
 /* ============================================================
@@ -419,6 +435,9 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
 
   // Si ya llegaron las tiendas y nunca preguntamos en este dispositivo, preguntar ahora
   maybeAskDeviceStore();
+
+  // Actualizar etiquetas dinámicas (welcome, etc.)
+  refreshDynamicLabels();
 
   // Re-renderizar si está en pantalla estrella o en el paso de fecha/tienda
   if (state && state.step === "estrella") {
@@ -3019,6 +3038,7 @@ function saveConfigFromModal() {
   closeAllModals();
   showToast("✅ Configuración guardada");
   renderAdmin();
+  refreshDynamicLabels();
 }
 
 function validatePin() {
@@ -3555,6 +3575,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   updateCurrentStorePill();
+  refreshDynamicLabels();
   $("#btnExitAdmin").addEventListener("click", () => {
     state.history = [];
     goTo("welcome", { pushHistory: false });
