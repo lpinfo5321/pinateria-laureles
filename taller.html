@@ -18,7 +18,7 @@
     // Si se abre con file:// redirige los links de la barra superior a Vercel.
     if(location.protocol==='file:'){
       window.addEventListener('DOMContentLoaded',()=>{
-        const BASE='https://pinateria-laureles.vercel.app';
+        const BASE='https://ordervivapinata.vercel.app';
         document.querySelectorAll('a[href^="/"]').forEach(a=>{ a.href = BASE + a.getAttribute('href'); });
       });
     }
