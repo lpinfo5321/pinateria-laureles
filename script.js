@@ -178,7 +178,9 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
         <span class="device-store-btn__name">${escapeHTML(t.nombre)}</span>
         <span class="device-store-btn__dir-wrap">
           ${t.direccion ? `<span class="device-store-btn__dir">${escapeHTML(t.direccion)}</span>` : `<span class="device-store-btn__dir">Recoger aquí</span>`}
-          ${t.pin && String(t.pin).trim() !== "" ? `<span class="device-store-btn__pin">🔐 PIN</span>` : ``}
+          ${t.pin && String(t.pin).trim() !== ""
+            ? `<span class="device-store-btn__pin">🔐 PIN requerido</span>`
+            : `<span class="device-store-btn__pin device-store-btn__pin--none">Sin PIN</span>`}
         </span>
       </span>
       <svg class="device-store-btn__arrow" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -3122,7 +3124,6 @@ function openConfigModal() {
   $("#cfgWhatsapp").value = cfg.whatsappPinatera || "";
   $("#cfgNombre").value = tienda?.nombre || cfg.nombreNegocio || "";
   $("#cfgDireccion").value = tienda?.direccion || "";
-  $("#cfgPin").value = cfg.pin || "";
   updateNotifStatusUI();
   openModal("#configModal");
 }
@@ -3139,7 +3140,7 @@ function saveConfigFromModal() {
     // Estos dos ya NO se editan aquí: cada tienda tiene su propio perfil.
     nombreNegocio: prev.nombreNegocio || "Viva Piñata",
     direccion: prev.direccion || "",
-    pin: $("#cfgPin").value.trim(),
+    pin: prev.pin || "",
   });
   closeAllModals();
   showToast("✅ Configuración guardada");

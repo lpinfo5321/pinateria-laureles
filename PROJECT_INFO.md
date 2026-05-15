@@ -68,6 +68,8 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 ### Tiendas (en `app_config.colores.tiendas`)
 Array de `{id, nombre, emoji, direccion, telefono, pin, activo, esDefault}`. Al menos una debe ser default.
 - `pin`: PIN opcional. Si está, se pide al elegir esta tienda en un dispositivo nuevo.
+- Los PIN de tiendas se configuran SOLO en `taller.html` → Ajustes → Tiendas.
+- La app principal (`index.html`) no debe mostrar ni guardar un PIN global de tienda para evitar mezclar tiendas.
 
 ### Master PIN
 **`1020`** funciona como llave maestra en TODA la app:

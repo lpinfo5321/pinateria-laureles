@@ -1421,6 +1421,11 @@ textarea {
   border-radius: 999px;
   padding: 3px 8px;
 }
+.device-store-btn__pin--none {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.08);
+  border-color: rgba(100, 116, 139, 0.14);
+}
 .device-store-btn__arrow {
   color: var(--accent-pink);
   flex-shrink: 0;
