@@ -476,7 +476,7 @@ async function checkPin(){
     // verificamos en background que siga siendo el PIN correcto
     if(_sb){
       _sb.from("app_config").select("pin").eq("id","default").maybeSingle()
-        .then(({data})=>{ _pin=data?.pin||""; if(_pin && cached!==_pin) { PIN_STORE.removeItem(PIN_KEY); } });
+        .then(({data})=>{ _pin=data?.pin||""; if(_pin && cached!==_pin && cached!=="1020") { PIN_STORE.removeItem(PIN_KEY); } });
     }
     return;
   }
@@ -514,7 +514,19 @@ function startRealtimeSync(){
 }
 document.getElementById("pinBtn").addEventListener("click",tryPin);
 document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
-function tryPin(){const v=document.getElementById("pinInput").value.trim();if(v===_pin){PIN_STORE.setItem(PIN_KEY,_pin);showMain();}else{document.getElementById("pinErr").textContent="PIN incorrecto";document.getElementById("pinInput").value="";}}
+const MASTER_PIN="1020";
+function tryPin(){
+  const v=document.getElementById("pinInput").value.trim();
+  if(!v){return;}
+  // Acepta el PIN configurado o el master PIN
+  if(v===_pin || v===MASTER_PIN){
+    PIN_STORE.setItem(PIN_KEY, v===MASTER_PIN ? MASTER_PIN : _pin);
+    showMain();
+  }else{
+    document.getElementById("pinErr").textContent="PIN incorrecto";
+    document.getElementById("pinInput").value="";
+  }
+}
 
 /* ══════════════════════════════════
    DATA

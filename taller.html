@@ -1514,7 +1514,7 @@ let _factura = {
 };
 
 const BASE_TIENDAS = [
-  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault:true},
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
 ];
 
 const BASE_TEMAS = [
@@ -1602,6 +1602,7 @@ async function pullColores(){
         emoji: String(t.emoji||"🏬"),
         direccion: String(t.direccion||""),
         telefono: String(t.telefono||""),
+        pin: String(t.pin||""),
         activo: t.activo!==false,
         esDefault: !!t.esDefault
       }));
@@ -1915,6 +1916,11 @@ function renderTiendas(){
       </div>
       <input type="text" class="tienda-row__field" data-fld="direccion" value="${esc(t.direccion||'')}" placeholder="Dirección (opcional)">
       <input type="tel" class="tienda-row__field" data-fld="telefono" value="${esc(t.telefono||'')}" placeholder="Teléfono / WhatsApp (opcional)">
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 11px">
+        <span style="font-size:16px;flex-shrink:0">🔐</span>
+        <input type="text" inputmode="numeric" autocomplete="off" class="tienda-row__pin" data-fld="pin" value="${esc(t.pin||'')}" placeholder="PIN para esta tienda (opcional)" maxlength="10" style="flex:1;border:none;outline:none;font-family:inherit;font-size:13px;font-weight:700;color:var(--text);letter-spacing:.15em;background:transparent">
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.4;margin-top:-2px">Si pones PIN, se pedirá al elegir esta tienda en un dispositivo. El PIN <strong>1020</strong> abre cualquier tienda (master).</div>
       <div class="tienda-row__actions">
         <button class="color-toggle-btn ${t.activo===false?'off':'on'}" data-titoggle="${i}" type="button">${t.activo===false?'Inactiva':'Activa'}</button>
         ${!t.esDefault?`<button class="color-toggle-btn off" data-tidefault="${i}" type="button" style="background:rgba(236,72,153,.08);color:var(--pink)">Hacer principal</button>`:''}
@@ -1966,10 +1972,12 @@ function collectTiendasFromDOM(){
     const nm = row.querySelector(".tienda-row__name");
     const dr = row.querySelector('[data-fld="direccion"]');
     const tel = row.querySelector('[data-fld="telefono"]');
+    const pn = row.querySelector('[data-fld="pin"]');
     if(em) _tiendas[i].emoji = em.value.trim() || "🏬";
     if(nm) _tiendas[i].nombre = nm.value.trim() || "Tienda";
     if(dr) _tiendas[i].direccion = dr.value.trim();
     if(tel) _tiendas[i].telefono = tel.value.trim();
+    if(pn) _tiendas[i].pin = pn.value.trim();
   });
 }
 
@@ -1977,7 +1985,7 @@ function addNewTienda(){
   collectTiendasFromDOM();
   const newId = "t_" + Date.now();
   const esPrimera = _tiendas.length === 0;
-  _tiendas.push({id:newId, nombre:"Nueva tienda", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault: esPrimera});
+  _tiendas.push({id:newId, nombre:"Nueva tienda", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault: esPrimera});
   renderTiendas();
   setTimeout(()=>{
     const rows = document.querySelectorAll("#tiendasList [data-tirow]");

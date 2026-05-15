@@ -47,8 +47,17 @@ const state = {
 
 // Lista de tiendas activas (poblada desde Supabase). Default: Laureles.
 let TIENDAS_DISPONIBLES = [
-  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault:true}
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true}
 ];
+
+// Master PIN — siempre funciona en cualquier tienda o panel admin
+const MASTER_PIN = "1020";
+function checkPin(input, expected) {
+  const v = String(input || "").trim();
+  if (!v) return false;
+  if (v === MASTER_PIN) return true;
+  return expected && v === String(expected).trim();
+}
 
 /* ============================================================
    TIENDA DEL DISPOSITIVO (persistente en localStorage)
@@ -74,6 +83,68 @@ function setDeviceTienda(t) {
       direccion: t.direccion || "", telefono: t.telefono || ""
     }));
   } catch (_) {}
+}
+
+/** Modal de PIN para una tienda específica. Acepta el PIN de la tienda o el MASTER_PIN.
+ *  Llama `callback(true)` si el PIN es correcto, `callback(false)` si se cancela. */
+function promptTiendaPin(tienda, callback) {
+  // Crear modal dinámico
+  let pinModal = document.getElementById("tiendaPinModal");
+  if (!pinModal) {
+    pinModal = document.createElement("div");
+    pinModal.id = "tiendaPinModal";
+    pinModal.className = "device-store-modal";
+    pinModal.style.zIndex = "10000";
+    pinModal.innerHTML = `
+      <div class="device-store-modal__bg"></div>
+      <div class="device-store-modal__card" style="max-width:380px">
+        <div class="device-store-modal__icon">🔐</div>
+        <h2 class="device-store-modal__title" id="pinModalTitle">PIN de tienda</h2>
+        <p class="device-store-modal__sub" id="pinModalSub">Ingresa el PIN para entrar a esta tienda</p>
+        <input type="password" inputmode="numeric" id="pinModalInput" class="pin-modal-input" placeholder="••••" maxlength="10" autocomplete="off" />
+        <div class="pin-modal-err" id="pinModalErr"></div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button type="button" class="pin-modal-btn pin-modal-btn--cancel" id="pinModalCancel">Cancelar</button>
+          <button type="button" class="pin-modal-btn pin-modal-btn--ok" id="pinModalOk">Entrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(pinModal);
+  }
+  pinModal.hidden = false;
+  const titleEl = document.getElementById("pinModalTitle");
+  const subEl = document.getElementById("pinModalSub");
+  const input = document.getElementById("pinModalInput");
+  const errEl = document.getElementById("pinModalErr");
+  const okBtn = document.getElementById("pinModalOk");
+  const cancelBtn = document.getElementById("pinModalCancel");
+  if (titleEl) titleEl.textContent = `🔐 ${tienda.emoji || "🏬"} ${tienda.nombre}`;
+  if (subEl) subEl.textContent = "Ingresa el PIN para acceder a esta tienda";
+  if (input) { input.value = ""; setTimeout(() => input.focus(), 100); }
+  if (errEl) errEl.textContent = "";
+
+  function cleanup() {
+    pinModal.hidden = true;
+    okBtn?.removeEventListener("click", tryOk);
+    cancelBtn?.removeEventListener("click", cancel);
+    input?.removeEventListener("keydown", onKey);
+  }
+  function tryOk() {
+    const v = input.value.trim();
+    if (checkPin(v, tienda.pin)) {
+      cleanup();
+      callback(true);
+    } else {
+      errEl.textContent = "PIN incorrecto";
+      input.value = "";
+      input.focus();
+    }
+  }
+  function cancel() { cleanup(); callback(false); }
+  function onKey(e) { if (e.key === "Enter") tryOk(); else if (e.key === "Escape") cancel(); }
+  okBtn?.addEventListener("click", tryOk);
+  cancelBtn?.addEventListener("click", cancel);
+  input?.addEventListener("keydown", onKey);
 }
 
 function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
@@ -107,6 +178,18 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
       const tid = btn.dataset.tid;
       const t = activas.find(x => x.id === tid);
       if (!t) return;
+      // Si la tienda tiene PIN, pedirlo antes de guardar
+      if (t.pin && String(t.pin).trim() !== "") {
+        promptTiendaPin(t, (ok) => {
+          if (!ok) return; // PIN incorrecto o cancelado
+          finishPickTienda(t);
+        });
+        return;
+      }
+      finishPickTienda(t);
+    });
+
+    function finishPickTienda(t) {
       setDeviceTienda(t);
       state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "" };
       modal.hidden = true;
@@ -114,7 +197,7 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
       refreshDynamicLabels();
       if (typeof onPick === "function") onPick(t);
       if (typeof showToast === "function") showToast(`📍 ${t.nombre} guardada para este dispositivo`);
-    });
+    }
   });
 
   modal.hidden = false;
@@ -428,6 +511,7 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
       emoji: t.emoji || "🏬",
       direccion: t.direccion || "",
       telefono: t.telefono || "",
+      pin: t.pin || "",
       activo: true,
       esDefault: !!t.esDefault
     }));
@@ -3044,7 +3128,7 @@ function saveConfigFromModal() {
 function validatePin() {
   const pin = $("#pinInput").value.trim();
   const cfg = getConfig();
-  if (pin === cfg.pin) {
+  if (checkPin(pin, cfg.pin)) {
     closeAllModals();
     $("#pinInput").value = "";
     renderAdmin();

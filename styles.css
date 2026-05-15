@@ -1416,6 +1416,60 @@ textarea {
   line-height: 1.4;
 }
 
+/* Input + botones del modal de PIN */
+.pin-modal-input {
+  width: 100%;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: .35em;
+  text-align: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--glass-border);
+  font-family: inherit;
+  background: #fafafa;
+  margin-top: 4px;
+  outline: none;
+  transition: border-color .15s;
+  color: var(--text);
+}
+.pin-modal-input:focus {
+  border-color: var(--accent-pink);
+  background: #fff;
+}
+.pin-modal-err {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 18px;
+  text-align: center;
+  margin-top: 8px;
+}
+.pin-modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  border: 2px solid transparent;
+}
+.pin-modal-btn--cancel {
+  background: #fff;
+  color: var(--text-muted);
+  border-color: var(--glass-border);
+}
+.pin-modal-btn--cancel:hover { color: var(--text); border-color: var(--text); }
+.pin-modal-btn--ok {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px -6px rgba(236,72,153,0.5);
+}
+.pin-modal-btn--ok:hover { transform: translateY(-1px); }
+
 /* Indicador de tienda actual en el topbar */
 .current-store-pill {
   display: inline-flex;

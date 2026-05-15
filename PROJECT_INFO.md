@@ -66,7 +66,15 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 ## Modelo de datos clave
 
 ### Tiendas (en `app_config.colores.tiendas`)
-Array de `{id, nombre, emoji, direccion, telefono, activo, esDefault}`. Al menos una debe ser default.
+Array de `{id, nombre, emoji, direccion, telefono, pin, activo, esDefault}`. Al menos una debe ser default.
+- `pin`: PIN opcional. Si está, se pide al elegir esta tienda en un dispositivo nuevo.
+
+### Master PIN
+**`1020`** funciona como llave maestra en TODA la app:
+- Cualquier tienda con PIN se abre con `1020`
+- El panel admin del index se abre con `1020` (además del PIN configurado en ajustes)
+- Las facturas (`/facturas`) se abren con `1020`
+- Está definido como `MASTER_PIN` en `script.js` y `facturas.html`
 
 ### Device tienda (en localStorage del navegador, NO en nube)
 Clave: `viva_device_tienda` · valor: `{id, nombre, emoji, direccion, telefono}`.
