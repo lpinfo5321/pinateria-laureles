@@ -3124,8 +3124,25 @@ function openConfigModal() {
   $("#cfgWhatsapp").value = cfg.whatsappPinatera || "";
   $("#cfgNombre").value = tienda?.nombre || cfg.nombreNegocio || "";
   $("#cfgDireccion").value = tienda?.direccion || "";
+  $("#cfgPin").value = tienda?.pin || "";
   updateNotifStatusUI();
   openModal("#configModal");
+}
+
+async function updateCloudStoreProfile(updatedStore) {
+  if (!_cloudReady) return;
+  try {
+    const { data } = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
+    const col = data?.colores || {};
+    if (!Array.isArray(col.tiendas)) col.tiendas = [];
+    const idx = col.tiendas.findIndex(t => t.id === updatedStore.id);
+    if (idx >= 0) {
+      col.tiendas[idx] = { ...col.tiendas[idx], ...updatedStore };
+    } else {
+      col.tiendas.push(updatedStore);
+    }
+    await _sb.from("app_config").upsert({ id: "default", colores: col });
+  } catch(e) { console.error("updateCloudStoreProfile:", e); }
 }
 
 function saveConfigFromModal() {
@@ -3135,13 +3152,32 @@ function saveConfigFromModal() {
     showToast("Número de WhatsApp inválido");
     return;
   }
+  
+  // Guardar configuración global
   saveConfig({
     whatsappPinatera: wa,
-    // Estos dos ya NO se editan aquí: cada tienda tiene su propio perfil.
     nombreNegocio: prev.nombreNegocio || "Viva Piñata",
     direccion: prev.direccion || "",
     pin: prev.pin || "",
   });
+
+  // Guardar configuración de la tienda actual
+  const tiendaActual = getCurrentStoreProfile();
+  if (tiendaActual) {
+    const updatedStore = {
+      ...tiendaActual,
+      nombre: $("#cfgNombre").value.trim() || "Tienda",
+      direccion: $("#cfgDireccion").value.trim(),
+      pin: $("#cfgPin").value.trim()
+    };
+    // Actualizar localmente el device store
+    setDeviceTienda(updatedStore);
+    state.tienda = { ...updatedStore };
+    updateCurrentStorePill();
+    // Enviar a la nube
+    updateCloudStoreProfile(updatedStore);
+  }
+
   closeAllModals();
   showToast("✅ Configuración guardada");
   renderAdmin();

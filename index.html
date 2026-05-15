@@ -543,18 +543,17 @@
           <input type="tel" id="cfgWhatsapp" class="input" placeholder="Ej: 573001234567" inputmode="numeric" />
         </div>
         <div class="field">
-          <label class="field__label" for="cfgNombre">Tienda actual de este dispositivo</label>
-          <p class="field__hint">Se toma de la tienda elegida al inicio. Si quieres cambiarla, usa el selector de tienda arriba o ajústala en Taller → Tiendas.</p>
-          <input type="text" id="cfgNombre" class="input" placeholder="Tienda actual" readonly />
+          <label class="field__label" for="cfgNombre">Nombre de la tienda actual</label>
+          <input type="text" id="cfgNombre" class="input" placeholder="Nombre de la tienda" />
         </div>
         <div class="field">
-          <label class="field__label" for="cfgDireccion">Dirección de esta tienda</label>
-          <p class="field__hint">Dato informativo de la tienda actual. Se administra desde Taller → Tiendas.</p>
-          <input type="text" id="cfgDireccion" class="input" placeholder="Dirección de la tienda actual" readonly />
+          <label class="field__label" for="cfgDireccion">Dirección de recogida</label>
+          <input type="text" id="cfgDireccion" class="input" placeholder="Ej: Cra 80 # 45-23, Laureles" />
         </div>
         <div class="field">
-          <label class="field__label">PIN de tiendas</label>
-          <p class="field__hint">Los PIN se configuran por separado en <strong>Taller → Ajustes → Tiendas</strong>. Si una tienda tiene PIN, se pedirá al elegirla al abrir la app.</p>
+          <label class="field__label" for="cfgPin">PIN de esta tienda (opcional)</label>
+          <p class="field__hint">Se pedirá a cualquiera que elija esta tienda en un dispositivo nuevo. El master PIN 1020 también sirve.</p>
+          <input type="text" id="cfgPin" class="input" placeholder="Ej: 1234" inputmode="numeric" maxlength="8" />
         </div>
 
         <div class="field">
