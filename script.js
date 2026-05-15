@@ -51,6 +51,104 @@ let TIENDAS_DISPONIBLES = [
 ];
 
 /* ============================================================
+   TIENDA DEL DISPOSITIVO (persistente en localStorage)
+   La app pregunta una vez por dispositivo en qué tienda se encuentra,
+   para que todas las órdenes salgan de esa tienda automáticamente.
+   ============================================================ */
+const DEVICE_TIENDA_KEY = "viva_device_tienda";
+
+function getDeviceTienda() {
+  try {
+    const raw = localStorage.getItem(DEVICE_TIENDA_KEY);
+    if (!raw) return null;
+    const t = JSON.parse(raw);
+    return t && t.id ? t : null;
+  } catch (_) { return null; }
+}
+
+function setDeviceTienda(t) {
+  try {
+    if (!t) { localStorage.removeItem(DEVICE_TIENDA_KEY); return; }
+    localStorage.setItem(DEVICE_TIENDA_KEY, JSON.stringify({
+      id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬",
+      direccion: t.direccion || "", telefono: t.telefono || ""
+    }));
+  } catch (_) {}
+}
+
+function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
+  const modal = document.getElementById("deviceStoreModal");
+  const list = document.getElementById("deviceStoreList");
+  const hint = document.getElementById("deviceStoreHint");
+  if (!modal || !list) return;
+
+  const activas = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  if (!activas.length) {
+    list.innerHTML = `<div class="device-store-modal__loading">⏳ Cargando tiendas disponibles...</div>`;
+    modal.hidden = false;
+    return;
+  }
+
+  list.innerHTML = activas.map(t => `
+    <button type="button" class="device-store-btn" data-tid="${t.id}">
+      <span class="device-store-btn__emo">${t.emoji || "🏬"}</span>
+      <span class="device-store-btn__body">
+        <span class="device-store-btn__name">${escapeHTML(t.nombre)}</span>
+        ${t.direccion ? `<span class="device-store-btn__dir">${escapeHTML(t.direccion)}</span>` : ""}
+      </span>
+      <svg class="device-store-btn__arrow" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  `).join("");
+
+  if (hint) hint.style.display = "block";
+
+  list.querySelectorAll("[data-tid]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tid = btn.dataset.tid;
+      const t = activas.find(x => x.id === tid);
+      if (!t) return;
+      setDeviceTienda(t);
+      state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "" };
+      modal.hidden = true;
+      updateCurrentStorePill();
+      if (typeof onPick === "function") onPick(t);
+      if (typeof showToast === "function") showToast(`📍 ${t.nombre} guardada para este dispositivo`);
+    });
+  });
+
+  modal.hidden = false;
+}
+
+/** Verifica si necesita preguntar la tienda. Llamar después de cargar tiendas. */
+function maybeAskDeviceStore() {
+  const activas = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  if (!activas.length) return; // sin tiendas configuradas, no preguntar
+  let dev = getDeviceTienda();
+  // Si la tienda guardada ya no existe o está inactiva, resetear
+  if (dev && !activas.some(t => t.id === dev.id)) {
+    setDeviceTienda(null);
+    dev = null;
+  }
+  if (!dev) {
+    showDeviceStoreModal();
+  } else {
+    // Pre-establecer state.tienda con la tienda del dispositivo
+    state.tienda = { ...dev };
+    updateCurrentStorePill();
+  }
+}
+
+/** Pill arriba en admin que muestra y permite cambiar la tienda del dispositivo */
+function updateCurrentStorePill() {
+  const pill = document.getElementById("currentStorePill");
+  if (!pill) return;
+  const dev = getDeviceTienda();
+  if (!dev) { pill.style.display = "none"; return; }
+  pill.style.display = "inline-flex";
+  pill.innerHTML = `${dev.emoji || "🏬"} ${escapeHTML(dev.nombre)} <span style="opacity:.6">·</span> <span style="font-weight:800">cambiar</span>`;
+}
+
+/* ============================================================
    Colores disponibles (el usuario elige la cantidad que quiera)
    ============================================================ */
 const COLORES_BASE = [
@@ -318,6 +416,9 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
       esDefault: !!t.esDefault
     }));
   }
+
+  // Si ya llegaron las tiendas y nunca preguntamos en este dispositivo, preguntar ahora
+  maybeAskDeviceStore();
 
   // Re-renderizar si está en pantalla estrella o en el paso de fecha/tienda
   if (state && state.step === "estrella") {
@@ -754,13 +855,19 @@ function renderTiendasSelector() {
   if (!wrap) return;
   const lista = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
   if (!lista.length) {
-    wrap.innerHTML = `<div class="muted" style="padding:14px;text-align:center;background:var(--glass);border-radius:14px">No hay tiendas configuradas. Pídele a Laureles configurarlas.</div>`;
+    wrap.innerHTML = `<div class="muted" style="padding:14px;text-align:center;background:var(--glass);border-radius:14px">No hay tiendas configuradas. Pídele al taller configurarlas.</div>`;
     return;
   }
-  // Si no hay tienda seleccionada aún, marcar la default o la primera
+
+  // Asegurar state.tienda
+  const dev = getDeviceTienda();
   if (!state.tienda) {
-    const def = lista.find(t => t.esDefault) || lista[0];
-    state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+    if (dev && lista.some(t => t.id === dev.id)) {
+      state.tienda = { ...dev };
+    } else {
+      const def = lista.find(t => t.esDefault) || lista[0];
+      state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+    }
   }
   // Si la tienda guardada ya no existe, resetear
   if (!lista.some(t => t.id === state.tienda.id)) {
@@ -768,6 +875,34 @@ function renderTiendasSelector() {
     state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
   }
 
+  // Si el dispositivo ya tiene una tienda fija, mostrar solo esa con opción de cambiar
+  if (dev && lista.some(t => t.id === dev.id)) {
+    const t = lista.find(x => x.id === dev.id);
+    wrap.innerHTML = `
+      <button type="button" class="pickup-tienda is-active" disabled style="cursor:default">
+        <span class="pickup-tienda__emoji">${t.emoji || "🏬"}</span>
+        <span class="pickup-tienda__body">
+          <span class="pickup-tienda__name">${escapeHTML(t.nombre)}</span>
+          ${t.direccion ? `<span class="pickup-tienda__dir">${escapeHTML(t.direccion)}</span>` : '<span class="pickup-tienda__dir">Recoger aquí</span>'}
+        </span>
+      </button>
+      <button type="button" class="device-store-change-btn" id="btnChangeDeviceStore" style="width:100%;margin-top:8px;padding:9px;border-radius:10px;border:1.5px dashed var(--glass-border);background:transparent;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;font-family:inherit">
+        ¿No es esta tienda? Cambiar
+      </button>
+    `;
+    const changeBtn = document.getElementById("btnChangeDeviceStore");
+    if (changeBtn) changeBtn.addEventListener("click", () => {
+      showDeviceStoreModal({
+        onPick: (newT) => {
+          state.tienda = { id: newT.id, nombre: newT.nombre, emoji: newT.emoji || "🏬", direccion: newT.direccion || "", telefono: newT.telefono || "" };
+          renderTiendasSelector();
+        }
+      });
+    });
+    return;
+  }
+
+  // Si no hay tienda guardada en dispositivo, permitir elegir libremente
   wrap.innerHTML = lista.map(t => `
     <button type="button" class="pickup-tienda ${state.tienda.id === t.id ? "is-active" : ""}" data-tienda-id="${t.id}">
       <span class="pickup-tienda__emoji">${t.emoji || "🏬"}</span>
@@ -1611,7 +1746,7 @@ function buildOrderPayload() {
     tipo: state.tipo,
     recogida: state.fecha ? state.fecha.getTime() : null,
     creadaDate: now.getTime(),
-    tienda: state.tienda ? { ...state.tienda } : null,
+    tienda: state.tienda ? { ...state.tienda } : (getDeviceTienda() || null),
   };
   if (state.tipo === "estrella") {
     syncLegacyColores();
@@ -3406,6 +3541,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Botones admin
   $("#btnAdmin").addEventListener("click", requestAdminAccess);
+
+  // Pill de tienda actual del dispositivo → abre modal para cambiar
+  const storePill = document.getElementById("currentStorePill");
+  if (storePill) {
+    storePill.addEventListener("click", () => {
+      showDeviceStoreModal({
+        onPick: (newT) => {
+          // Si está en pantalla fecha, re-render
+          if (state.step === "fecha") renderTiendasSelector();
+        }
+      });
+    });
+  }
+  updateCurrentStorePill();
   $("#btnExitAdmin").addEventListener("click", () => {
     state.history = [];
     goTo("welcome", { pushHistory: false });

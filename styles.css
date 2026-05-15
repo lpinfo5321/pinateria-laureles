@@ -1285,6 +1285,160 @@ textarea {
 }
 
 /* ============================================
+   Modal de selección de tienda del dispositivo
+============================================ */
+.device-store-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.device-store-modal[hidden] { display: none; }
+.device-store-modal__bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(236,72,153,0.94), rgba(168,85,247,0.94));
+  backdrop-filter: blur(10px);
+}
+.device-store-modal__card {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 24px 24px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.4);
+  animation: deviceModalIn 0.4s cubic-bezier(.22,1,.36,1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes deviceModalIn {
+  from { transform: translateY(40px) scale(0.94); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.device-store-modal__icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 12px 30px -10px rgba(236,72,153,0.55);
+}
+.device-store-modal__title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.device-store-modal__sub {
+  font-size: 14px;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 22px;
+  padding: 0 8px;
+}
+.device-store-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.device-store-modal__loading {
+  text-align: center;
+  padding: 30px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.device-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 2px solid var(--glass-border);
+  border-radius: 16px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+}
+.device-store-btn:hover {
+  border-color: var(--accent-pink);
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -8px rgba(236,72,153,0.3);
+}
+.device-store-btn__emo {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+.device-store-btn__body {
+  flex: 1;
+  min-width: 0;
+}
+.device-store-btn__name {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+.device-store-btn__dir {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.device-store-btn__arrow {
+  color: var(--accent-pink);
+  flex-shrink: 0;
+}
+.device-store-modal__hint {
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 12px;
+  background: var(--glass);
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* Indicador de tienda actual en el topbar */
+.current-store-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: 8px;
+}
+.current-store-pill:hover {
+  background: #fff;
+  border-color: var(--accent-pink);
+  color: var(--accent-pink);
+}
+
+/* ============================================
    Pickup block (selector de tienda)
 ============================================ */
 .pickup-block {
