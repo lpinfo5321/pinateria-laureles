@@ -1388,6 +1388,13 @@ textarea {
   flex: 1;
   min-width: 0;
 }
+.device-store-btn__dir-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
 .device-store-btn__name {
   font-size: 17px;
   font-weight: 800;
@@ -1401,6 +1408,18 @@ textarea {
   font-weight: 600;
   line-height: 1.3;
   word-break: break-word;
+}
+.device-store-btn__pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #db2777;
+  background: rgba(236, 72, 153, 0.10);
+  border: 1px solid rgba(236, 72, 153, 0.18);
+  border-radius: 999px;
+  padding: 3px 8px;
 }
 .device-store-btn__arrow {
   color: var(--accent-pink);

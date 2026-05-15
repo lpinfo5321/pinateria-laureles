@@ -166,7 +166,10 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
       <span class="device-store-btn__emo">${t.emoji || "🏬"}</span>
       <span class="device-store-btn__body">
         <span class="device-store-btn__name">${escapeHTML(t.nombre)}</span>
-        ${t.direccion ? `<span class="device-store-btn__dir">${escapeHTML(t.direccion)}</span>` : ""}
+        <span class="device-store-btn__dir-wrap">
+          ${t.direccion ? `<span class="device-store-btn__dir">${escapeHTML(t.direccion)}</span>` : `<span class="device-store-btn__dir">Recoger aquí</span>`}
+          ${t.pin && String(t.pin).trim() !== "" ? `<span class="device-store-btn__pin">🔐 PIN</span>` : ``}
+        </span>
       </span>
       <svg class="device-store-btn__arrow" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
@@ -3141,15 +3144,10 @@ function validatePin() {
 }
 
 function requestAdminAccess() {
-  const cfg = getConfig();
-  if (cfg.pin) {
-    $("#pinInput").value = "";
-    openModal("#pinModal");
-    setTimeout(() => $("#pinInput").focus(), 100);
-  } else {
-    renderAdmin();
-    goTo("admin");
-  }
+  // El panel admin del index ya NO pide PIN al tocar el ícono.
+  // Los PINs de tienda se piden al inicio, al elegir la tienda en el modal.
+  renderAdmin();
+  goTo("admin");
 }
 
 /* ============================================================
