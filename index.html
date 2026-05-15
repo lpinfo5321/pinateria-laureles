@@ -549,8 +549,8 @@
           <input type="text" id="cfgDireccion" class="input" placeholder="Ej: Cra 80 # 45-23, Laureles" />
         </div>
         <div class="field">
-          <label class="field__label" for="cfgPin">PIN de acceso al panel (opcional)</label>
-          <p class="field__hint">Deja vacío para acceder sin PIN.</p>
+          <label class="field__label" for="cfgPin">PIN global del panel admin (opcional)</label>
+          <p class="field__hint">Este PIN abre el panel de administración en cualquier tienda. No es el PIN individual de una tienda.</p>
           <input type="text" id="cfgPin" class="input" placeholder="Ej: 1234" inputmode="numeric" maxlength="8" />
         </div>
 
@@ -598,8 +598,8 @@
     <div class="modal__content modal__content--sm">
       <div class="modal__body" style="text-align:center;">
         <div class="pin-icon">🔒</div>
-        <h3>Ingresa el PIN</h3>
-        <p class="muted">Acceso al panel de administración</p>
+        <h3>Ingresa el PIN admin</h3>
+        <p class="muted">Acceso al panel global de administración</p>
         <input type="password" id="pinInput" class="input input--pin" inputmode="numeric" maxlength="8" />
         <div class="modal__actions">
           <button class="btn-ghost" id="btnPinCancel">Cancelar</button>

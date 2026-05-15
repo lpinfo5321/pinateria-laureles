@@ -3670,11 +3670,19 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAdminAccess();
   }
 
-  // Actualizar badge cuando cambie storage en otra pestaña (fallback sin nube)
+  // Sincronizar cambios entre pestañas del mismo origen
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY) {
       _mem = loadLocalCache();
       renderAdmin();
+    }
+    if (e.key === DEVICE_TIENDA_KEY) {
+      const dev = getDeviceTienda();
+      state.tienda = dev ? { ...dev } : null;
+      updateCurrentStorePill();
+      refreshDynamicLabels();
+      if (state.step === "fecha") renderTiendasSelector();
+      if (state.step === "admin") renderAdmin();
     }
   });
   renderAdmin();
