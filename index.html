@@ -7,9 +7,11 @@
   <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: dark)" />
   <title>Viva Piñata · Órdenes</title>
 
-  <!-- Favicon normal (sin manifest PWA — la app instalable es /taller) -->
+  <!-- App principal instalable -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="manifest" href="/manifest-orders.webmanifest" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
 
   <!-- SEO básico -->
   <meta name="description" content="Viva Piñata · Toma tus órdenes de piñatas personalizadas." />
@@ -580,6 +582,12 @@
           <button type="button" class="btn-ghost btn-sm" id="btnTestNotif" style="margin-top:8px;">Probar notificación</button>
         </div>
 
+        <div class="field">
+          <label class="field__label">Instalar app</label>
+          <p class="field__hint">Instálala para abrirla más rápido y recibir notificaciones mejor.</p>
+          <button type="button" class="btn-ghost btn-sm" id="btnInstallFromConfig">Instalar app</button>
+        </div>
+
         <div class="modal__actions">
           <button class="btn-ghost" data-close-modal>Cancelar</button>
           <button class="btn-primary" id="btnSaveConfig">Guardar</button>
@@ -650,8 +658,8 @@
         <div class="install-hero">
           <img src="/icon-192.png" alt="" class="install-hero__icon" />
           <div class="install-hero__text">
-            <strong>Piñatería Laureles</strong>
-            <span>Acceso rápido y notificaciones</span>
+            <strong>Viva Piñata</strong>
+            <span>Órdenes rápidas y mejor experiencia</span>
           </div>
         </div>
 

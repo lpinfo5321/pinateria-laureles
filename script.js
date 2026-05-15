@@ -65,6 +65,7 @@ function checkPin(input, expected) {
    para que todas las órdenes salgan de esa tienda automáticamente.
    ============================================================ */
 const DEVICE_TIENDA_KEY = "viva_device_tienda";
+const INSTALL_HIDE_UNTIL_KEY = "vp_install_hide_until";
 
 function getDeviceTienda() {
   try {
@@ -3241,18 +3242,42 @@ function detectPlatform() {
 /* ─── Botón Instalar en topbar ─── */
 function initInstallPrompt() {
   const btnTopbar = document.getElementById("btnInstallTopbar");
+  const btnInstallFromConfig = $("#btnInstallFromConfig");
+  const installModal = $("#installModal");
   const { isStandalone } = detectPlatform();
+
+  function shouldOfferInstall() {
+    if (isStandalone) return false;
+    const hideUntil = Number(localStorage.getItem(INSTALL_HIDE_UNTIL_KEY) || 0);
+    return Date.now() > hideUntil;
+  }
+
+  function dismissInstallFor(days = 7) {
+    try {
+      localStorage.setItem(INSTALL_HIDE_UNTIL_KEY, String(Date.now() + days * 24 * 60 * 60 * 1000));
+    } catch (_) {}
+  }
 
   // Capturar el evento nativo (Chrome/Edge/Android)
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     _deferredInstallPrompt = e;
+    // Si no está instalada y no la ocultó recientemente, ofrecer instalación.
+    if (shouldOfferInstall()) {
+      setTimeout(() => {
+        if (!_deferredInstallPrompt) return;
+        if (document.hidden) return;
+        if ($("#installModal")?.hidden === false) return;
+        openInstallModal();
+      }, 1200);
+    }
   });
 
   window.addEventListener("appinstalled", () => {
     if (btnTopbar) btnTopbar.hidden = true;
     closeAllModals();
     _deferredInstallPrompt = null;
+    try { localStorage.removeItem(INSTALL_HIDE_UNTIL_KEY); } catch (_) {}
     showToast("¡App instalada!");
   });
 
@@ -3260,6 +3285,29 @@ function initInstallPrompt() {
   if (!isStandalone && btnTopbar) {
     btnTopbar.hidden = false;
     btnTopbar.addEventListener("click", openInstallModal);
+  }
+
+  if (btnInstallFromConfig) {
+    btnInstallFromConfig.addEventListener("click", openInstallModal);
+  }
+
+  // Si cierra manualmente el modal, no volver a molestarlo unos días.
+  if (installModal) {
+    installModal.addEventListener("click", (e) => {
+      if (e.target.matches("[data-close-modal]") || e.target.closest("[data-close-modal]")) {
+        dismissInstallFor(7);
+      }
+    });
+  }
+
+  // iOS no dispara beforeinstallprompt. Si no está instalada, mostrar ayuda una vez.
+  const { isIOS } = detectPlatform();
+  if (isIOS && shouldOfferInstall()) {
+    setTimeout(() => {
+      if (document.hidden) return;
+      if ($("#installModal")?.hidden === false) return;
+      openInstallModal();
+    }, 1800);
   }
 }
 
