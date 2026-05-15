@@ -543,12 +543,14 @@
           <input type="tel" id="cfgWhatsapp" class="input" placeholder="Ej: 573001234567" inputmode="numeric" />
         </div>
         <div class="field">
-          <label class="field__label" for="cfgNombre">Nombre del negocio</label>
-          <input type="text" id="cfgNombre" class="input" placeholder="Viva Piñata" />
+          <label class="field__label" for="cfgNombre">Tienda actual de este dispositivo</label>
+          <p class="field__hint">Se toma de la tienda elegida al inicio. Si quieres cambiarla, usa el selector de tienda arriba o ajústala en Taller → Tiendas.</p>
+          <input type="text" id="cfgNombre" class="input" placeholder="Tienda actual" readonly />
         </div>
         <div class="field">
-          <label class="field__label" for="cfgDireccion">Dirección de recogida (opcional)</label>
-          <input type="text" id="cfgDireccion" class="input" placeholder="Ej: Cra 80 # 45-23, Laureles" />
+          <label class="field__label" for="cfgDireccion">Dirección de esta tienda</label>
+          <p class="field__hint">Dato informativo de la tienda actual. Se administra desde Taller → Tiendas.</p>
+          <input type="text" id="cfgDireccion" class="input" placeholder="Dirección de la tienda actual" readonly />
         </div>
         <div class="field">
           <label class="field__label" for="cfgPin">PIN global del panel admin (opcional)</label>

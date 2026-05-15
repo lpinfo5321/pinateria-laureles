@@ -76,6 +76,16 @@ function getDeviceTienda() {
   } catch (_) { return null; }
 }
 
+function getCurrentStoreProfile() {
+  const dev = getDeviceTienda();
+  if (dev && dev.id) return dev;
+  const activas = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  const def = activas.find(t => t.esDefault) || activas[0] || null;
+  return def
+    ? { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" }
+    : null;
+}
+
 function setDeviceTienda(t) {
   try {
     if (!t) { localStorage.removeItem(DEVICE_TIENDA_KEY); return; }
@@ -1261,8 +1271,8 @@ function sendOrder() {
 
 function buildOrderMessage(orden) {
   const cfg = getConfig();
-  const negocio = cfg.nombreNegocio || "Viva Piñata";
-  const direccion = cfg.direccion || "Laureles";
+  const negocio = "Viva Piñata";
+  const direccion = orden.tienda?.direccion || orden.tienda?.nombre || getCurrentStoreProfile()?.direccion || getCurrentStoreProfile()?.nombre || cfg.direccion || "Laureles";
 
   const lines = [];
   lines.push(`*🎉 Nueva orden · ${negocio}*`);
@@ -1897,7 +1907,11 @@ function formatDateLong(ts) {
 }
 
 function renderAdmin() {
-  const ordenes = getOrders();
+  const tiendaActual = getCurrentStoreProfile();
+  const allOrders = getOrders();
+  const ordenes = tiendaActual?.id
+    ? allOrders.filter(o => (o.tienda?.id || null) === tiendaActual.id)
+    : allOrders;
   const list = $("#ordersList");
   const empty = $("#adminEmpty");
   const cfg = getConfig();
@@ -1943,7 +1957,8 @@ function renderAdmin() {
   if (!cfg.whatsappPinatera) {
     sub.innerHTML = `⚠️ Configura tu <strong>WhatsApp</strong> para recibir órdenes`;
   } else {
-    sub.textContent = `${ordenes.length} órden${ordenes.length === 1 ? "" : "es"} en total`;
+    const prefijo = tiendaActual?.nombre ? `${tiendaActual.nombre} · ` : "";
+    sub.textContent = `${prefijo}${ordenes.length} órden${ordenes.length === 1 ? "" : "es"} en total`;
   }
 
   // Aviso si notificaciones no están activadas
@@ -2491,8 +2506,8 @@ function notificarCliente(id) {
   const telefono = (o.cliente?.telefono || "").replace(/\D/g, "");
   if (!telefono) { showToast("Sin teléfono del cliente"); return; }
   const cfg = getConfig();
-  const negocio = cfg.nombreNegocio || "la piñatería";
-  const direccion = cfg.direccion || "Laureles";
+  const negocio = "Viva Piñata";
+  const direccion = o.tienda?.direccion || o.tienda?.nombre || getCurrentStoreProfile()?.direccion || getCurrentStoreProfile()?.nombre || cfg.direccion || "Laureles";
   const fechaStr = formatDateLong(o.recogida);
 
   const lines = [
@@ -2650,8 +2665,8 @@ function printTicket(id) {
   const o = getOrders().find(x => x.id === id);
   if (!o) return;
   const cfg = getConfig();
-  const negocio = escapeHTML(cfg.nombreNegocio || "PIÑATERÍA LAURELES").toUpperCase();
-  const direccion = escapeHTML(cfg.direccion || "Laureles");
+  const negocio = "VIVA PIÑATA";
+  const direccion = escapeHTML(o.tienda?.direccion || o.tienda?.nombre || getCurrentStoreProfile()?.direccion || getCurrentStoreProfile()?.nombre || cfg.direccion || "Laureles");
   const numOrden = String(o.numero).padStart(3, "0");
   const coloresTxt = o.tipo === "estrella"
     ? (o.estrella?.colores || []).map(c => c.nombre).join("  ·  ")
@@ -3103,15 +3118,17 @@ function initModals() {
 
 function openConfigModal() {
   const cfg = getConfig();
+  const tienda = getCurrentStoreProfile();
   $("#cfgWhatsapp").value = cfg.whatsappPinatera || "";
-  $("#cfgNombre").value = cfg.nombreNegocio || "";
-  $("#cfgDireccion").value = cfg.direccion || "";
+  $("#cfgNombre").value = tienda?.nombre || cfg.nombreNegocio || "";
+  $("#cfgDireccion").value = tienda?.direccion || "";
   $("#cfgPin").value = cfg.pin || "";
   updateNotifStatusUI();
   openModal("#configModal");
 }
 
 function saveConfigFromModal() {
+  const prev = getConfig();
   const wa = $("#cfgWhatsapp").value.replace(/\D/g, "");
   if (wa && wa.length < 7) {
     showToast("Número de WhatsApp inválido");
@@ -3119,8 +3136,9 @@ function saveConfigFromModal() {
   }
   saveConfig({
     whatsappPinatera: wa,
-    nombreNegocio: $("#cfgNombre").value.trim(),
-    direccion: $("#cfgDireccion").value.trim(),
+    // Estos dos ya NO se editan aquí: cada tienda tiene su propio perfil.
+    nombreNegocio: prev.nombreNegocio || "Viva Piñata",
+    direccion: prev.direccion || "",
     pin: $("#cfgPin").value.trim(),
   });
   closeAllModals();
