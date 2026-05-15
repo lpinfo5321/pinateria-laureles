@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-  <title>Facturas · Piñatería Laureles</title>
+  <title>Facturas · Viva Piñata</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -26,6 +26,16 @@
     .btn-new { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(236,72,153,.32); white-space:nowrap; }
     .btn-back-home { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:#fff; border:1.5px solid var(--border); color:var(--text); cursor:pointer; text-decoration:none; margin-right:10px; flex-shrink:0; transition:all .15s; }
     .btn-back-home:hover, .btn-back-home:active { background:#fdf2f8; border-color:var(--pink); color:var(--pink); transform:translateX(-2px); }
+
+    /* Selector de tienda en el editor */
+    .ed-tiendas { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-bottom:6px; }
+    .ed-tienda-btn { background:#fff; border:2px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:8px; cursor:pointer; font-family:inherit; text-align:left; transition:all .15s; position:relative; }
+    .ed-tienda-btn:hover, .ed-tienda-btn:active { border-color:var(--pink); }
+    .ed-tienda-btn.is-active { background:linear-gradient(135deg,#fdf2f8,#fff); border-color:var(--pink); box-shadow:0 4px 14px -6px rgba(236,72,153,.4); }
+    .ed-tienda-btn.is-active::after { content:"✓"; position:absolute; top:6px; right:8px; width:18px; height:18px; background:var(--pink); color:#fff; border-radius:50%; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .ed-tienda-btn__emo { font-size:22px; flex-shrink:0; }
+    .ed-tienda-btn__name { font-size:13px; font-weight:800; color:var(--text); line-height:1.2; }
+    .ed-tienda-btn__dir { font-size:10px; color:var(--soft); font-weight:600; margin-top:1px; }
 
     /* Detalle de piñata (modal) */
     .ver-det-btn { background:transparent; border:1.5px solid var(--border); color:var(--soft); font-size:11px; font-weight:700; padding:5px 10px; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all .15s; }
@@ -53,6 +63,15 @@
 
     /* ───── filter ───── */
     .filter-bar { padding:10px 16px; display:flex; gap:6px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+    .tienda-filter { padding:10px 16px 4px; display:flex; gap:6px; background:#fff; border-bottom:1px solid #f3f4f6; overflow-x:auto; align-items:center; flex-wrap:nowrap }
+    .tienda-filter::-webkit-scrollbar { display:none }
+    .tienda-filter__lbl { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); flex-shrink:0; margin-right:4px }
+    .tienda-chip { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:700; color:var(--soft); cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all .15s; font-family:inherit }
+    .tienda-chip:hover { border-color:var(--pink); color:var(--pink) }
+    .tienda-chip.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(236,72,153,.3) }
+    .tienda-chip__emo { font-size:14px }
+    .tienda-chip__cnt { background:rgba(0,0,0,.06); padding:1px 7px; border-radius:999px; font-size:10px; font-weight:800; margin-left:2px }
+    .tienda-chip.is-active .tienda-chip__cnt { background:rgba(255,255,255,.28); color:#fff }
     .filter-bar::-webkit-scrollbar { display:none; }
     .filter-btn { flex-shrink:0; padding:6px 14px; border-radius:999px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; transition:all .18s; }
     .filter-btn.is-active { background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; }
@@ -249,7 +268,7 @@
 <!-- PIN gate -->
 <div id="pinGate" style="display:none">
   <header class="topbar">
-    <div class="topbar__brand"><span class="topbar__emoji">🪅</span><div><div class="topbar__title">Piñatería Laureles</div></div></div>
+    <div class="topbar__brand"><span class="topbar__emoji">🪅</span><div><div class="topbar__title">Viva Piñata</div></div></div>
   </header>
   <div class="pin-wrap">
     <div style="font-size:40px;margin-bottom:10px">🔐</div>
@@ -269,13 +288,16 @@
     </a>
     <div class="topbar__brand">
       <span class="topbar__emoji">🪅</span>
-      <div><div class="topbar__title">Piñatería Laureles</div><div class="topbar__sub">Facturas</div></div>
+      <div><div class="topbar__title">Viva Piñata</div><div class="topbar__sub">Facturas</div></div>
     </div>
     <button class="btn-new" id="btnNew">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nueva
     </button>
   </header>
+
+  <!-- Filtro por tienda -->
+  <div class="tienda-filter" id="tiendaFilterBar"></div>
 
   <div class="filter-bar">
     <button class="filter-btn is-active" data-f="todas">Todas <span class="cnt" id="cTodas">0</span></button>
@@ -316,7 +338,11 @@
 
     <!-- ──── Único paso: Piñatas ──── -->
     <div class="ed-step is-active" data-step="0">
-      <div class="sec-h" style="margin-top:0">Piñatas terminadas disponibles</div>
+      <!-- Selector de tienda destinataria -->
+      <div class="sec-h" style="margin-top:0">¿Para qué tienda es esta factura?</div>
+      <div class="ed-tiendas" id="edTiendasSel"></div>
+
+      <div class="sec-h" style="margin-top:18px">Piñatas terminadas disponibles</div>
       <div class="picker-tabs" id="pickerTabs">
         <button class="pck-tab is-active" data-p="terminadas">✅ Terminadas <span class="cnt" id="pcT">0</span></button>
         <button class="pck-tab" data-p="pendientes">⏳ Pendientes <span class="cnt" id="pcP">0</span></button>
@@ -416,6 +442,8 @@ let _selOrders=new Map();       // id -> precio
 let _manuals=[];                // [{desc,cantidad,precio}]
 let _precios={estrella:0,personalizada:0,libre:{nombre:"",precio:0}};
 let _factura={marca:"PINATAS",subtitulo:"",cliente:"PINATAS",contacto:"",piePagina:"Gracias por su preferencia",color:"#ec4899"};
+let _tiendas=[]; // {id, nombre, emoji, direccion, telefono, activo, esDefault}
+let _filtroTienda="todas"; // id de tienda o "todas"
 const _tallerMode = new URLSearchParams(location.search).get("new")==="1";
 
 /* ══════════════════════════════════
@@ -464,6 +492,25 @@ function showMain(){
   // ?new=1 auto-abre el formulario "nueva" (atajo opcional)
   if(_tallerMode) openEditor(null);
   loadAll();
+  startRealtimeSync();
+}
+
+let _rtStarted=false;
+function startRealtimeSync(){
+  if(_rtStarted) return; _rtStarted=true;
+  // Polling de seguridad: refresca todo cada 8s para detectar cambios de tiendas/facturas/órdenes
+  setInterval(()=>{ if(document.visibilityState==="visible") loadAll(); }, 8000);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") loadAll(); });
+  window.addEventListener("focus", loadAll);
+  // Realtime Supabase (best-effort, no se cae si no está habilitado)
+  if(_sb){
+    try{
+      _sb.channel("facturas-realtime")
+        .on("postgres_changes",{event:"*",schema:"public",table:"invoices"}, loadAll)
+        .on("postgres_changes",{event:"*",schema:"public",table:"app_config"}, loadAll)
+        .subscribe();
+    }catch(e){ console.warn("realtime no disponible:",e); }
+  }
 }
 document.getElementById("pinBtn").addEventListener("click",tryPin);
 document.getElementById("pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryPin();});
@@ -498,6 +545,22 @@ async function loadAll(){
       color:     String(ff.color||"#ec4899")
     };
   }
+  // Tiendas
+  const tt = cfgRes.data?.colores?.tiendas;
+  if (Array.isArray(tt) && tt.length){
+    _tiendas = tt.map(t => ({
+      id: t.id || ("t_"+(t.nombre||"")),
+      nombre: t.nombre || "Tienda",
+      emoji: t.emoji || "🏬",
+      direccion: t.direccion || "",
+      telefono: t.telefono || "",
+      activo: t.activo !== false,
+      esDefault: !!t.esDefault
+    }));
+  } else {
+    _tiendas = [{id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault:true}];
+  }
+  renderTiendaFilter();
   renderList();
   // Si el editor está abierto (modo taller), refrescar lista de órdenes
   if(document.getElementById("editor")?.classList.contains("open")){
@@ -529,20 +592,64 @@ function updateCounts(){
   document.getElementById("cPag").textContent  =_invoices.filter(i=>i.estado==="pagado").length;
   document.getElementById("cCan").textContent  =_invoices.filter(i=>i.estado==="cancelado").length;
 }
+function getInvTiendaId(inv){
+  return inv.tienda?.id || inv.cliente?.tiendaId || null;
+}
+
+function renderTiendaFilter(){
+  const bar = document.getElementById("tiendaFilterBar");
+  if(!bar) return;
+  const activas = _tiendas.filter(t=>t.activo!==false);
+  if(activas.length <= 1){
+    bar.style.display = "none";
+    _filtroTienda = "todas";
+    return;
+  }
+  bar.style.display = "flex";
+  // contadores por tienda
+  const totalTodas = _invoices.length;
+  bar.innerHTML = `
+    <span class="tienda-filter__lbl">Tienda:</span>
+    <button class="tienda-chip ${_filtroTienda==="todas"?"is-active":""}" data-tienda-filtro="todas">
+      <span class="tienda-chip__emo">🏬</span>Todas
+      <span class="tienda-chip__cnt">${totalTodas}</span>
+    </button>
+    ${activas.map(t=>{
+      const cnt = _invoices.filter(i => getInvTiendaId(i)===t.id).length;
+      return `<button class="tienda-chip ${_filtroTienda===t.id?"is-active":""}" data-tienda-filtro="${t.id}">
+        <span class="tienda-chip__emo">${t.emoji||"🏬"}</span>${esc(t.nombre)}
+        <span class="tienda-chip__cnt">${cnt}</span>
+      </button>`;
+    }).join("")}
+  `;
+  bar.querySelectorAll("[data-tienda-filtro]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      _filtroTienda = b.dataset.tiendaFiltro;
+      renderList();
+    });
+  });
+}
+
 function renderList(){
   updateCounts();
+  renderTiendaFilter();
   const wrap=document.getElementById("listWrap");
-  const list=_filter==="todas"?_invoices:_invoices.filter(i=>i.estado===_filter);
+  let list = _filter==="todas" ? _invoices : _invoices.filter(i=>i.estado===_filter);
+  if (_filtroTienda !== "todas"){
+    list = list.filter(i => getInvTiendaId(i) === _filtroTienda);
+  }
   if(!list.length){
-    wrap.innerHTML=`<div class="empty"><div class="empty__icon">🧾</div><h3>${_filter==="todas"?"No hay facturas aún":"Sin facturas aquí"}</h3><p style="margin-top:6px;font-size:13px">Presiona "Nueva" para crear una</p></div>`;return;
+    const tNombre = _filtroTienda==="todas" ? "" : (_tiendas.find(t=>t.id===_filtroTienda)?.nombre || "");
+    wrap.innerHTML=`<div class="empty"><div class="empty__icon">🧾</div><h3>${_filter==="todas"&&_filtroTienda==="todas"?"No hay facturas aún":tNombre?`Sin facturas en ${esc(tNombre)}`:"Sin facturas aquí"}</h3><p style="margin-top:6px;font-size:13px">Presiona "Nueva" para crear una</p></div>`;return;
   }
   wrap.innerHTML=list.map(inv=>{
     const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
     const items=(inv.items||[]).map(it=>it.desc||it.descripcion).filter(Boolean).slice(0,3).join(" · ")||"Sin artículos";
+    const t = inv.tienda;
     return `<div class="inv-card">
       <div class="inv-card__row">
         <div style="min-width:0;flex:1">
-          <div class="inv-card__num">${num}</div>
+          <div class="inv-card__num">${num}${t?` <span style="font-size:11px;font-weight:700;color:var(--soft);margin-left:4px">${t.emoji||"🏬"} ${esc(t.nombre)}</span>`:""}</div>
           <div class="inv-card__client">${esc(inv.cliente?.nombre||"Sin cliente")}</div>
           <div class="inv-card__date">${fmtDate(inv.creada)}${inv.cliente?.empresa?" · "+esc(inv.cliente.empresa):""}</div>
         </div>
@@ -606,10 +713,44 @@ document.getElementById("btnNext").addEventListener("click",async()=>{
   await saveCurrent();
 });
 
+let _edTiendaId=null; // tienda actualmente elegida en el editor
+
+function renderEdTiendas(){
+  const wrap=document.getElementById("edTiendasSel"); if(!wrap) return;
+  const activas=_tiendas.filter(t=>t.activo!==false);
+  if(!activas.length){
+    wrap.innerHTML=`<div class="pick-empty" style="grid-column:1/-1"><div class="ic">🏬</div>No hay tiendas configuradas en Ajustes</div>`;
+    return;
+  }
+  // Si no hay tienda elegida, usar la del editing o la default
+  if(!_edTiendaId){
+    if(_editing?.tienda?.id) _edTiendaId=_editing.tienda.id;
+    else _edTiendaId=(activas.find(t=>t.esDefault)||activas[0]).id;
+  }
+  // Si la tienda guardada no existe, fallback
+  if(!activas.some(t=>t.id===_edTiendaId)) _edTiendaId=(activas.find(t=>t.esDefault)||activas[0]).id;
+  wrap.innerHTML=activas.map(t=>`
+    <button type="button" class="ed-tienda-btn ${_edTiendaId===t.id?"is-active":""}" data-ed-tienda="${t.id}">
+      <span class="ed-tienda-btn__emo">${t.emoji||"🏬"}</span>
+      <div style="min-width:0">
+        <div class="ed-tienda-btn__name">${esc(t.nombre)}</div>
+        ${t.direccion?`<div class="ed-tienda-btn__dir">${esc(t.direccion)}</div>`:""}
+      </div>
+    </button>
+  `).join("");
+  wrap.querySelectorAll("[data-ed-tienda]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      _edTiendaId=b.dataset.edTienda;
+      wrap.querySelectorAll(".ed-tienda-btn").forEach(x=>x.classList.toggle("is-active",x===b));
+    });
+  });
+}
+
 function openEditor(inv){
   _editing=inv||null;
   _selOrders=new Map();
   _manuals=[];
+  _edTiendaId=null;
   if(inv){
     (inv.items||[]).forEach(it=>{
       if(it._orderId) _selOrders.set(it._orderId,it.precio||0);
@@ -628,6 +769,7 @@ function openEditor(inv){
   _selPicker="terminadas";
   document.querySelectorAll(".pck-tab").forEach(t=>t.classList.toggle("is-active",t.dataset.p===_selPicker));
   gotoStep(0);
+  renderEdTiendas();
   renderOrdersList();
   renderManuals();
   recalcTotals();
@@ -926,13 +1068,25 @@ async function saveCurrent(){
   const sub=items.reduce((s,it)=>s+(it.total||0),0);
   const imp=iva?Math.round(sub*0.16*100)/100:0;
   const tot=sub+imp;
+  // Resolver tienda destinataria
+  const tienda = (function(){
+    const t = _tiendas.find(x=>x.id===_edTiendaId && x.activo!==false);
+    if(t) return {id:t.id, nombre:t.nombre, emoji:t.emoji||"🏬", direccion:t.direccion||"", telefono:t.telefono||""};
+    // Fallback a la tienda previa de la factura editada
+    if(_editing?.tienda) return _editing.tienda;
+    // Última opción: primera tienda activa
+    const any = _tiendas.find(x=>x.activo!==false);
+    return any ? {id:any.id, nombre:any.nombre, emoji:any.emoji||"🏬", direccion:any.direccion||"", telefono:any.telefono||""} : null;
+  })();
+
   const inv={
     id:_editing?.id||crypto.randomUUID(),
     numero:_editing?.numero,
     estado:document.getElementById("fEstado").value,
     creada:_editing?.creada||new Date().toISOString(),
     iva,
-    cliente:{nombre,empresa:document.getElementById("fEmpresa").value.trim(),telefono:document.getElementById("fTelefono").value.trim(),email:document.getElementById("fEmail").value.trim()},
+    tienda,
+    cliente:{nombre,empresa:document.getElementById("fEmpresa").value.trim(),telefono:document.getElementById("fTelefono").value.trim(),email:document.getElementById("fEmail").value.trim(),tiendaId:tienda?.id||null},
     items,
     subtotal:sub,impuesto:imp,total:tot,
     notas:document.getElementById("fNotas").value.trim(),
@@ -995,6 +1149,9 @@ function renderPreview(inv){
   const items=inv.items||[];
   const c1 = _factura.color || "#ec4899";
   const c2 = shadeColor(c1, -18);
+  // La tienda destinataria es el cliente real de esta factura
+  const tNombre = inv.tienda?.nombre ? (inv.tienda.emoji||"🏬")+" "+inv.tienda.nombre : (_factura.cliente||"PINATAS");
+  const tInfo = [inv.tienda?.direccion, inv.tienda?.telefono].filter(Boolean).join(" · ") || _factura.contacto || "";
   document.getElementById("pdfPreview").innerHTML=`
     <div class="pdf-head" style="background:linear-gradient(135deg,${c1},${c2})">
       <div>
@@ -1007,9 +1164,9 @@ function renderPreview(inv){
     <div class="pdf-body">
       <div class="pdf-client" style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div class="pdf-client-lbl">Cliente</div>
-          <div class="pdf-client-name">${esc(_factura.cliente||"PINATAS")}</div>
-          ${_factura.contacto?`<div class="pdf-client-sub">${esc(_factura.contacto)}</div>`:""}
+          <div class="pdf-client-lbl">Factura para</div>
+          <div class="pdf-client-name">${esc(tNombre)}</div>
+          ${tInfo?`<div class="pdf-client-sub">${esc(tInfo)}</div>`:""}
         </div>
         <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
       </div>
@@ -1075,17 +1232,19 @@ function buildPDF(inv){
 
   y=52;
 
-  // ──── CLIENTE BOX ────
-  const cliBoxH = _factura.contacto ? 26 : 20;
+  // ──── CLIENTE BOX (tienda destinataria) ────
+  const tNombre = inv.tienda?.nombre || _factura.cliente || "PINATAS";
+  const tInfo = [inv.tienda?.direccion, inv.tienda?.telefono].filter(Boolean).join(" · ") || _factura.contacto || "";
+  const cliBoxH = tInfo ? 26 : 20;
   doc.setFillColor(...LT); doc.setDrawColor(...BR);
   doc.roundedRect(M,y,W-M*2,cliBoxH,4,4,"FD");
   doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(...SF);
-  doc.text("CLIENTE",M+6,y+7);
+  doc.text("FACTURA PARA",M+6,y+7);
   doc.setFontSize(14); doc.setFont("helvetica","bold"); doc.setTextColor(...DK);
-  doc.text(clean(_factura.cliente||"PINATAS"),M+6,y+15);
-  if(_factura.contacto){
+  doc.text(clean(tNombre),M+6,y+15);
+  if(tInfo){
     doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(...SF);
-    doc.text(clean(_factura.contacto),M+6,y+22);
+    doc.text(clean(tInfo),M+6,y+22);
   }
 
   // Estado a la derecha
@@ -1182,15 +1341,15 @@ document.getElementById("btnShare").addEventListener("click",async()=>{
   const blob=buildPDF(_preview).output("blob");
   const file=new File([blob],name,{type:"application/pdf"});
   if(navigator.share&&navigator.canShare?.({files:[file]})){
-    try{await navigator.share({title:"Factura Piñatería Laureles",files:[file]});}
+    try{await navigator.share({title:"Factura Viva Piñata",files:[file]});}
     catch(er){if(er.name!=="AbortError")buildPDF(_preview).save(name);}
   }else{buildPDF(_preview).save(name);toast("📥 PDF descargado");}
 });
 document.getElementById("btnEmail").addEventListener("click",()=>{
   if(!_preview)return;
   const num=`FAC-${String(_preview.numero).padStart(4,"0")}`;
-  const subj=encodeURIComponent(`${num} - Piñatería Laureles`);
-  const body=encodeURIComponent(`Hola ${_preview.cliente?.nombre||""},\n\nAdjunto encontrará su factura ${num} por un total de ${fmt(_preview.total)}.\n\nEstado: ${LABELS[_preview.estado]||_preview.estado}\n\n¡Gracias!\nPiñatería Laureles`);
+  const subj=encodeURIComponent(`${num} - Viva Piñata`);
+  const body=encodeURIComponent(`Hola ${_preview.cliente?.nombre||""},\n\nAdjunto encontrará su factura ${num} por un total de ${fmt(_preview.total)}.\n\nEstado: ${LABELS[_preview.estado]||_preview.estado}\n\n¡Gracias!\nViva Piñata`);
   window.open(`mailto:${encodeURIComponent(_preview.cliente?.email||"")}?subject=${subj}&body=${body}`);
 });
 document.getElementById("btnPrint").addEventListener("click",()=>{

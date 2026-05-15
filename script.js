@@ -36,6 +36,7 @@ const state = {
     descripcion: "",
   },
   fecha: null, // Date
+  tienda: null, // {id, nombre, emoji, direccion, telefono} - dónde recoger
   contacto: {
     nombre: "",
     telefono: "",
@@ -43,6 +44,11 @@ const state = {
     pagado: false,
   },
 };
+
+// Lista de tiendas activas (poblada desde Supabase). Default: Laureles.
+let TIENDAS_DISPONIBLES = [
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault:true}
+];
 
 /* ============================================================
    Colores disponibles (el usuario elige la cantidad que quiera)
@@ -141,7 +147,7 @@ function goTo(screenName, { pushHistory = true } = {}) {
   updateBackButton();
 
   // Inicializadores por pantalla
-  if (screenName === "fecha") initCalendar();
+  if (screenName === "fecha") { initCalendar(); renderTiendasSelector(); }
   if (screenName === "contacto") renderSummary();
   if (screenName === "estrella") startColorCycle();
   else stopColorCycle();
@@ -298,11 +304,29 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
   const activosTemas = temasRaw.filter(t => t.activo !== false);
   TEMAS_DISPONIBLES = activosTemas.length > 0 ? activosTemas : BASE_TEMAS_PC;
 
-  // Re-renderizar si está en pantalla estrella
+  // Tiendas / Sucursales
+  const tiendasRaw = (cloudColores && !Array.isArray(cloudColores)) ? (cloudColores.tiendas || []) : [];
+  const activasTiendas = tiendasRaw.filter(t => t.activo !== false);
+  if (activasTiendas.length > 0) {
+    TIENDAS_DISPONIBLES = activasTiendas.map(t => ({
+      id: t.id || ("t_" + t.nombre),
+      nombre: t.nombre || "Tienda",
+      emoji: t.emoji || "🏬",
+      direccion: t.direccion || "",
+      telefono: t.telefono || "",
+      activo: true,
+      esDefault: !!t.esDefault
+    }));
+  }
+
+  // Re-renderizar si está en pantalla estrella o en el paso de fecha/tienda
   if (state && state.step === "estrella") {
     renderPicosGrid();
     renderTamborGrid();
     renderTemaChips();
+  }
+  if (state && state.step === "fecha") {
+    renderTiendasSelector();
   }
 }
 
@@ -725,6 +749,46 @@ const WEEKDAYS_ES = ["domingo", "lunes", "martes", "miércoles", "jueves", "vier
 let calCursor = new Date();
 calCursor.setDate(1);
 
+function renderTiendasSelector() {
+  const wrap = document.getElementById("pickupTiendas");
+  if (!wrap) return;
+  const lista = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  if (!lista.length) {
+    wrap.innerHTML = `<div class="muted" style="padding:14px;text-align:center;background:var(--glass);border-radius:14px">No hay tiendas configuradas. Pídele a Laureles configurarlas.</div>`;
+    return;
+  }
+  // Si no hay tienda seleccionada aún, marcar la default o la primera
+  if (!state.tienda) {
+    const def = lista.find(t => t.esDefault) || lista[0];
+    state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+  }
+  // Si la tienda guardada ya no existe, resetear
+  if (!lista.some(t => t.id === state.tienda.id)) {
+    const def = lista.find(t => t.esDefault) || lista[0];
+    state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+  }
+
+  wrap.innerHTML = lista.map(t => `
+    <button type="button" class="pickup-tienda ${state.tienda.id === t.id ? "is-active" : ""}" data-tienda-id="${t.id}">
+      <span class="pickup-tienda__emoji">${t.emoji || "🏬"}</span>
+      <span class="pickup-tienda__body">
+        <span class="pickup-tienda__name">${escapeHTML(t.nombre)}</span>
+        ${t.direccion ? `<span class="pickup-tienda__dir">${escapeHTML(t.direccion)}</span>` : '<span class="pickup-tienda__dir">Recoger aquí</span>'}
+      </span>
+    </button>
+  `).join("");
+
+  wrap.querySelectorAll("[data-tienda-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tid = btn.dataset.tiendaId;
+      const t = lista.find(x => x.id === tid);
+      if (!t) return;
+      state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "" };
+      wrap.querySelectorAll(".pickup-tienda").forEach(b => b.classList.toggle("is-active", b === btn));
+    });
+  });
+}
+
 function initCalendar() {
   renderCalendar();
   updateSelectedDate();
@@ -897,7 +961,7 @@ function renderSummary() {
       value: `${capitalize(weekday)} ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}`,
     });
   }
-  rows.push({ label: "Punto", value: "Laureles" });
+  rows.push({ label: "Recoger en", value: state.tienda ? `${state.tienda.emoji||"🏬"} ${state.tienda.nombre}` : "Laureles" });
   if (state.contacto.atendidoPor) rows.push({ label: "Atendido por", value: state.contacto.atendidoPor });
   let pagoLabel;
   if (state.contacto.pagado) pagoLabel = "✅ Pagado";
@@ -955,7 +1019,7 @@ function sendOrder() {
 
 function buildOrderMessage(orden) {
   const cfg = getConfig();
-  const negocio = cfg.nombreNegocio || "Piñatería Laureles";
+  const negocio = cfg.nombreNegocio || "Viva Piñata";
   const direccion = cfg.direccion || "Laureles";
 
   const lines = [];
@@ -1016,6 +1080,7 @@ function resetState() {
   };
   state.personalizada = { imagen: null, imagenNombre: "", descripcion: "" };
   state.fecha = null;
+  state.tienda = null;
   state.contacto = { nombre: "", telefono: "", atendidoPor: "", pagado: false, deposito: false, depositoMonto: 0 };
 
   $("#atendidoPor").value = "";
@@ -1194,7 +1259,7 @@ function defaultStorage() {
   return {
     config: {
       whatsappPinatera: "",
-      nombreNegocio: "Piñatería Laureles",
+      nombreNegocio: "Viva Piñata",
       direccion: "Laureles",
       pin: "",
     },
@@ -1338,7 +1403,7 @@ async function pullAllFromCloud() {
   if (cfg.data) {
     _mem.config = {
       whatsappPinatera: cfg.data.whatsapp  || "",
-      nombreNegocio:    cfg.data.nombre    || "Piñatería Laureles",
+      nombreNegocio:    cfg.data.nombre    || "Viva Piñata",
       direccion:        cfg.data.direccion || "Laureles",
       pin:              cfg.data.pin       || "",
     };
@@ -1374,7 +1439,7 @@ async function pollAppConfigOnce(){
     _cfgLastSig = sig;
     _mem.config = {
       whatsappPinatera: data.whatsapp  || "",
-      nombreNegocio:    data.nombre    || "Piñatería Laureles",
+      nombreNegocio:    data.nombre    || "Viva Piñata",
       direccion:        data.direccion || "Laureles",
       pin:              data.pin       || "",
     };
@@ -1423,7 +1488,7 @@ function subscribeToCloudChanges() {
       if (p.new) {
         _mem.config = {
           whatsappPinatera: p.new.whatsapp  || "",
-          nombreNegocio:    p.new.nombre    || "Piñatería Laureles",
+          nombreNegocio:    p.new.nombre    || "Viva Piñata",
           direccion:        p.new.direccion || "Laureles",
           pin:              p.new.pin       || "",
         };
@@ -1546,6 +1611,7 @@ function buildOrderPayload() {
     tipo: state.tipo,
     recogida: state.fecha ? state.fecha.getTime() : null,
     creadaDate: now.getTime(),
+    tienda: state.tienda ? { ...state.tienda } : null,
   };
   if (state.tipo === "estrella") {
     syncLegacyColores();
@@ -2289,7 +2355,7 @@ function openOrderDetail(id) {
         <div class="detail-section">
           <div class="detail-section__title">Recogida</div>
           <div class="detail-row"><span class="detail-lbl">Fecha</span><span><strong>${formatDateLong(o.recogida)}</strong></span></div>
-          <div class="detail-row"><span class="detail-lbl">Lugar</span><span>${escapeHTML(cfg.direccion || "Laureles")}</span></div>
+          <div class="detail-row"><span class="detail-lbl">Recoger en</span><span>${escapeHTML((o.tienda?.emoji||"🏬")+" "+(o.tienda?.nombre||cfg.direccion||"Laureles"))}${o.tienda?.direccion?`<br><span style="font-size:11px;color:var(--text-muted)">${escapeHTML(o.tienda.direccion)}</span>`:""}</span></div>
           <div class="detail-row"><span class="detail-lbl">Creada</span><span>${formatDateTime(o.creada)}</span></div>
         </div>
 

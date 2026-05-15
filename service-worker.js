@@ -8,7 +8,7 @@
    - Permite mensajería desde la app (showOrderNotification).
    ============================================================ */
 
-const CACHE_VERSION = "pinata-v3.0.6";
+const CACHE_VERSION = "pinata-v3.1.0";
 // Solo cacheamos assets estáticos (iconos y manifest)
 // JS y CSS siempre se sirven frescos desde la red
 const APP_SHELL = [
@@ -120,7 +120,7 @@ self.addEventListener("push", (event) => {
     payload = { title: "Nueva orden", body: event.data ? event.data.text() : "" };
   }
 
-  const title = payload.title || "Piñatería Laureles";
+  const title = payload.title || "Viva Piñata";
   const opts  = {
     body:  payload.body  || "Nueva orden recibida",
     icon:  "/icon-192.png",

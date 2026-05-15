@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: dark)" />
-  <title>Piñatería Laureles · Órdenes</title>
+  <title>Viva Piñata · Órdenes</title>
 
   <!-- Favicon normal (sin manifest PWA — la app instalable es /taller) -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
 
   <!-- SEO básico -->
-  <meta name="description" content="Toma y gestiona órdenes de piñatas en tiempo real · Piñatería Laureles." />
+  <meta name="description" content="Viva Piñata · Toma tus órdenes de piñatas personalizadas." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -49,7 +49,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand__dot"></span>
-      <span class="brand__name">Piñatería Laureles</span>
+      <span class="brand__name">Viva Piñata</span>
     </div>
     <div class="progress" id="progress" aria-hidden="true">
       <span class="progress__fill" id="progressFill"></span>
@@ -378,14 +378,12 @@
         </div>
       </div>
 
-      <div class="pickup-info">
-        <div class="pickup-info__pin">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <div class="pickup-block">
+        <div class="pickup-block__title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ¿Dónde la recoges?
         </div>
-        <div>
-          <strong>Recoger en Laureles</strong>
-          <span>Te enviamos la dirección exacta al confirmar</span>
-        </div>
+        <div class="pickup-tiendas" id="pickupTiendas"></div>
       </div>
 
       <button class="btn-primary btn-lg btn-next" data-next disabled>Continuar
@@ -546,7 +544,7 @@
         </div>
         <div class="field">
           <label class="field__label" for="cfgNombre">Nombre del negocio</label>
-          <input type="text" id="cfgNombre" class="input" placeholder="Piñatería Laureles" />
+          <input type="text" id="cfgNombre" class="input" placeholder="Viva Piñata" />
         </div>
         <div class="field">
           <label class="field__label" for="cfgDireccion">Dirección de recogida (opcional)</label>

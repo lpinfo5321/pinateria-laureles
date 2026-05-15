@@ -1,7 +1,7 @@
 {
-  "name": "Taller · Piñatería Laureles",
+  "name": "Viva Piñata · Taller",
   "short_name": "Taller",
-  "description": "Vista de producción para el taller de Laureles.",
+  "description": "Vista de producción para el taller de Viva Piñata.",
   "id": "/taller",
   "start_url": "/taller",
   "scope": "/",
