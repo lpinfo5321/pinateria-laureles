@@ -430,7 +430,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="supabase-config.js"></script>
-<script defer src="/app-update.js?v=1.0"></script>
+<script defer src="/app-update.js?v=1.1"></script>
 <script>
 /* ══════════════════════════════════
    GLOBALS
@@ -589,16 +589,27 @@ function precioParaOrden(o){
 
 async function saveInvoice(inv){
   if(!_sb){toast("Sin conexión");return false;}
-  const{cliente,items,subtotal,impuesto,total,notas,estado,iva,ordenIds}=inv;
+  const ordenIds = invoiceOrderIds(inv);
+  inv.ordenIds = ordenIds;
+  const{cliente,items,subtotal,impuesto,total,notas,estado,iva}=inv;
   const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}});
   if(error){toast("Error: "+error.message);return false;}
   await syncInvoiceOrderStates(inv);
   await loadAll();return true;
 }
+function invoiceOrderIds(inv){
+  const ids = new Set(Array.isArray(inv?.ordenIds) ? inv.ordenIds : []);
+  (inv?.items||[]).forEach(it => {
+    const oid = it?._orderId || it?.orderId || it?.ordenId;
+    if(oid) ids.add(oid);
+  });
+  return [...ids];
+}
 async function syncInvoiceOrderStates(inv){
   if(inv?.estado === "cancelado") return;
-  if(!_sb || !Array.isArray(inv?.ordenIds) || !inv.ordenIds.length) return;
-  const selected = _orders.filter(o => inv.ordenIds.includes(o.id));
+  const ordenIds = invoiceOrderIds(inv);
+  if(!_sb || !ordenIds.length) return;
+  const selected = _orders.filter(o => ordenIds.includes(o.id));
   const facLabel = inv.numero ? `FAC-${String(inv.numero).padStart(4,"0")}` : "factura";
   await Promise.all(selected.map(async o => {
     if(o.estado === "entregada") return;
@@ -829,7 +840,7 @@ function orderIsAvailable(o){
   // ya en otra factura?
   const usedIds=new Set(_invoices
     .filter(i => i.estado !== "cancelado" && (!_editing || i.id !== _editing.id))
-    .flatMap(i=>i.ordenIds||[]));
+    .flatMap(invoiceOrderIds));
   return !usedIds.has(o.id);
 }
 function ordersByTab(){

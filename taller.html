@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/supabase-config.js"></script>
-  <script defer src="/app-update.js?v=1.0"></script>
+  <script defer src="/app-update.js?v=1.1"></script>
   <script>
     // Si se abre con file:// redirige los links de la barra superior a Vercel.
     if(location.protocol==='file:'){
@@ -659,6 +659,15 @@ let _dudaOrderId = null;
 let _knownIds = new Set(); // IDs ya conocidos al cargar
 let _initialLoad = true;  // Primeras órdenes no generan notificación
 
+function invoiceOrderIds(data){
+  const ids = new Set(Array.isArray(data?.ordenIds) ? data.ordenIds : []);
+  (data?.items||[]).forEach(it => {
+    const oid = it?._orderId || it?.orderId || it?.ordenId;
+    if(oid) ids.add(oid);
+  });
+  return [...ids];
+}
+
 /* ── Supabase ── */
 async function initCloud(){
   const cfg = window.SUPABASE_CONFIG;
@@ -738,7 +747,7 @@ async function pullOrders(){
   if(invRes.error){ console.warn("No se pudieron leer facturas:", invRes.error); }
   _invoicedOrderIds = new Set(
     (invRes.data||[])
-      .flatMap(r => Array.isArray(r.data?.ordenIds) ? r.data.ordenIds : [])
+      .flatMap(r => invoiceOrderIds(r.data))
       .filter(Boolean)
   );
   _orders = (ordRes.data||[]).map(r=>({
