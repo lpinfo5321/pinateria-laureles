@@ -3296,18 +3296,7 @@ async function registerServiceWorker() {
   }
 }
 
-/* Auto-recarga cuando un nuevo SW toma control (excepto primera instalación) */
-(function setupSWAutoReload() {
-  if (!("serviceWorker" in navigator)) return;
-  let firstControl = !navigator.serviceWorker.controller;
-  let reloading = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (firstControl) { firstControl = false; return; }
-    if (reloading) return;
-    reloading = true;
-    window.location.reload();
-  });
-})();
+/* La ventana de actualización se maneja en app-update.js */
 
 async function getReadySW() {
   if (!("serviceWorker" in navigator)) return null;

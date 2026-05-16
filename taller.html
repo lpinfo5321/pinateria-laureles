@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/supabase-config.js"></script>
+  <script defer src="/app-update.js?v=1.0"></script>
   <script>
     // Si se abre con file:// redirige los links de la barra superior a Vercel.
     if(location.protocol==='file:'){
@@ -651,6 +652,7 @@ function showToast(msg){
 
 let _sb = null;
 let _orders = [];
+let _invoicedOrderIds = new Set();
 let _config = {};
 let _filter = "activas";
 let _dudaOrderId = null;
@@ -724,12 +726,22 @@ async function initCloud(){
 
 async function pullOrders(){
   if(!_sb) return;
-  const {data,error} = await _sb
-    .from("orders")
-    .select("id,numero,estado,data,created_at")
-    .order("numero",{ascending:false});
-  if(error){ console.error(error); return; }
-  _orders = (data||[]).map(r=>({
+  const [ordRes, invRes] = await Promise.all([
+    _sb.from("orders")
+      .select("id,numero,estado,data,created_at")
+      .order("numero",{ascending:false}),
+    _sb.from("invoices")
+      .select("estado,data")
+      .neq("estado","cancelado")
+  ]);
+  if(ordRes.error){ console.error(ordRes.error); return; }
+  if(invRes.error){ console.warn("No se pudieron leer facturas:", invRes.error); }
+  _invoicedOrderIds = new Set(
+    (invRes.data||[])
+      .flatMap(r => Array.isArray(r.data?.ordenIds) ? r.data.ordenIds : [])
+      .filter(Boolean)
+  );
+  _orders = (ordRes.data||[]).map(r=>({
     ...r.data, id:r.id, numero:r.numero, estado:r.estado,
     creada: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
   }));
@@ -775,6 +787,7 @@ function subscribeRealtime(){
       }
     })
     .on("postgres_changes",{event:"DELETE",schema:"public",table:"orders"}, ()=>pullOrders())
+    .on("postgres_changes",{event:"*",schema:"public",table:"invoices"}, ()=>pullOrders())
     .subscribe();
 }
 
@@ -917,19 +930,24 @@ async function revertirPendiente(id, btn){
 }
 
 /* ── Render ── */
+function orderVisibleInTaller(o){
+  return o.estado !== "entregada" && !_invoicedOrderIds.has(o.id);
+}
+
 function render(){
   const grid  = document.getElementById("grid");
   const empty = document.getElementById("empty");
+  const visibles = _orders.filter(orderVisibleInTaller);
   document.getElementById("countBadge").textContent = _filter === "activas"
-    ? _orders.filter(o=>o.estado!=="lista"&&o.estado!=="entregada").length
+    ? visibles.filter(o=>o.estado!=="lista").length
     : _filter === "listas"
-      ? _orders.filter(o=>o.estado==="lista").length
-      : _orders.filter(o=>o.estado!=="entregada").length;
+      ? visibles.filter(o=>o.estado==="lista").length
+      : visibles.length;
 
   let list;
-  if(_filter==="activas")      list = _orders.filter(o=>o.estado!=="lista"&&o.estado!=="entregada");
-  else if(_filter==="listas")  list = _orders.filter(o=>o.estado==="lista");
-  else                         list = _orders.filter(o=>o.estado!=="entregada");
+  if(_filter==="activas")      list = visibles.filter(o=>o.estado!=="lista");
+  else if(_filter==="listas")  list = visibles.filter(o=>o.estado==="lista");
+  else                         list = visibles;
 
   if(!list.length){
     grid.innerHTML="";

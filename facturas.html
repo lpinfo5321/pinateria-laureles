@@ -430,6 +430,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="supabase-config.js"></script>
+<script defer src="/app-update.js?v=1.0"></script>
 <script>
 /* ══════════════════════════════════
    GLOBALS
@@ -591,7 +592,31 @@ async function saveInvoice(inv){
   const{cliente,items,subtotal,impuesto,total,notas,estado,iva,ordenIds}=inv;
   const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}});
   if(error){toast("Error: "+error.message);return false;}
+  await syncInvoiceOrderStates(inv);
   await loadAll();return true;
+}
+async function syncInvoiceOrderStates(inv){
+  if(inv?.estado === "cancelado") return;
+  if(!_sb || !Array.isArray(inv?.ordenIds) || !inv.ordenIds.length) return;
+  const selected = _orders.filter(o => inv.ordenIds.includes(o.id));
+  const facLabel = inv.numero ? `FAC-${String(inv.numero).padStart(4,"0")}` : "factura";
+  await Promise.all(selected.map(async o => {
+    if(o.estado === "entregada") return;
+    const data = {
+      ...o,
+      estado: "entregada",
+      historial: [
+        ...(Array.isArray(o.historial) ? o.historial : []),
+        { fecha: Date.now(), accion: `Marcada como entregada en ${facLabel}` }
+      ]
+    };
+    const { error } = await _sb.from("orders").update({
+      estado: "entregada",
+      pagado: !!data.pagado,
+      data
+    }).eq("id", o.id);
+    if(error) console.warn("No se pudo marcar orden como entregada:", error);
+  }));
 }
 async function deleteInvoice(id){if(!_sb)return;await _sb.from("invoices").delete().eq("id",id);await loadAll();}
 
@@ -802,7 +827,9 @@ function closeEditor(){
 ══════════════════════════════════ */
 function orderIsAvailable(o){
   // ya en otra factura?
-  const usedIds=new Set(_invoices.filter(i=>!_editing||i.id!==_editing.id).flatMap(i=>i.ordenIds||[]));
+  const usedIds=new Set(_invoices
+    .filter(i => i.estado !== "cancelado" && (!_editing || i.id !== _editing.id))
+    .flatMap(i=>i.ordenIds||[]));
   return !usedIds.has(o.id);
 }
 function ordersByTab(){
