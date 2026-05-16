@@ -77,12 +77,33 @@ function getDeviceTienda() {
 }
 
 function getCurrentStoreProfile() {
-  const dev = getDeviceTienda();
-  if (dev && dev.id) return dev;
   const activas = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  const dev = getDeviceTienda();
+  if (dev && dev.id) {
+    const cloud = activas.find(t => t.id === dev.id);
+    return {
+      id: dev.id,
+      nombre: dev.nombre || cloud?.nombre || "Tienda",
+      emoji: dev.emoji || cloud?.emoji || "🏬",
+      direccion: dev.direccion ?? cloud?.direccion ?? "",
+      telefono: dev.telefono ?? cloud?.telefono ?? "",
+      pin: dev.pin ?? cloud?.pin ?? "",
+      activo: true,
+      esDefault: !!(cloud?.esDefault)
+    };
+  }
   const def = activas.find(t => t.esDefault) || activas[0] || null;
   return def
-    ? { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" }
+    ? {
+        id: def.id,
+        nombre: def.nombre,
+        emoji: def.emoji || "🏬",
+        direccion: def.direccion || "",
+        telefono: def.telefono || "",
+        pin: def.pin || "",
+        activo: true,
+        esDefault: !!def.esDefault
+      }
     : null;
 }
 
@@ -90,10 +111,24 @@ function setDeviceTienda(t) {
   try {
     if (!t) { localStorage.removeItem(DEVICE_TIENDA_KEY); return; }
     localStorage.setItem(DEVICE_TIENDA_KEY, JSON.stringify({
-      id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬",
-      direccion: t.direccion || "", telefono: t.telefono || ""
+      id: t.id,
+      nombre: t.nombre,
+      emoji: t.emoji || "🏬",
+      direccion: t.direccion || "",
+      telefono: t.telefono || "",
+      pin: t.pin || ""
     }));
   } catch (_) {}
+}
+
+function patchLocalStoreProfile(updatedStore) {
+  if (!updatedStore?.id) return;
+  const idx = TIENDAS_DISPONIBLES.findIndex(t => t.id === updatedStore.id);
+  if (idx >= 0) {
+    TIENDAS_DISPONIBLES[idx] = { ...TIENDAS_DISPONIBLES[idx], ...updatedStore };
+  }
+  setDeviceTienda(updatedStore);
+  state.tienda = { ...updatedStore };
 }
 
 /** Modal de PIN para una tienda específica. Acepta el PIN de la tienda o el MASTER_PIN.
@@ -207,7 +242,7 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
 
     function finishPickTienda(t) {
       setDeviceTienda(t);
-      state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "" };
+      state.tienda = { id: t.id, nombre: t.nombre, emoji: t.emoji || "🏬", direccion: t.direccion || "", telefono: t.telefono || "", pin: t.pin || "" };
       modal.hidden = true;
       updateCurrentStorePill();
       refreshDynamicLabels();
@@ -232,9 +267,11 @@ function maybeAskDeviceStore() {
   if (!dev) {
     showDeviceStoreModal();
   } else {
-    // Pre-establecer state.tienda con la tienda del dispositivo
-    state.tienda = { ...dev };
-    updateCurrentStorePill();
+    const profile = getCurrentStoreProfile();
+    if (profile) {
+      patchLocalStoreProfile(profile);
+      updateCurrentStorePill();
+    }
   }
 }
 
@@ -985,13 +1022,13 @@ function renderTiendasSelector() {
       state.tienda = { ...dev };
     } else {
       const def = lista.find(t => t.esDefault) || lista[0];
-      state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+      state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "", pin: def.pin || "" };
     }
   }
   // Si la tienda guardada ya no existe, resetear
   if (!lista.some(t => t.id === state.tienda.id)) {
     const def = lista.find(t => t.esDefault) || lista[0];
-    state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "" };
+    state.tienda = { id: def.id, nombre: def.nombre, emoji: def.emoji || "🏬", direccion: def.direccion || "", telefono: def.telefono || "", pin: def.pin || "" };
   }
 
   // Si el dispositivo ya tiene una tienda fija, mostrar solo esa con opción de cambiar
@@ -3130,9 +3167,10 @@ function openConfigModal() {
 }
 
 async function updateCloudStoreProfile(updatedStore) {
-  if (!_cloudReady) return;
+  if (!_cloudReady) return true;
   try {
-    const { data } = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
+    const { data, error: readErr } = await _sb.from("app_config").select("colores").eq("id","default").maybeSingle();
+    if (readErr) throw readErr;
     const col = data?.colores || {};
     if (!Array.isArray(col.tiendas)) col.tiendas = [];
     const idx = col.tiendas.findIndex(t => t.id === updatedStore.id);
@@ -3141,11 +3179,16 @@ async function updateCloudStoreProfile(updatedStore) {
     } else {
       col.tiendas.push(updatedStore);
     }
-    await _sb.from("app_config").upsert({ id: "default", colores: col });
-  } catch(e) { console.error("updateCloudStoreProfile:", e); }
+    const { error: writeErr } = await _sb.from("app_config").upsert({ id: "default", colores: col });
+    if (writeErr) throw writeErr;
+    return true;
+  } catch(e) {
+    console.error("updateCloudStoreProfile:", e);
+    return false;
+  }
 }
 
-function saveConfigFromModal() {
+async function saveConfigFromModal() {
   const prev = getConfig();
   const wa = $("#cfgWhatsapp").value.replace(/\D/g, "");
   if (wa && wa.length < 7) {
@@ -3170,12 +3213,12 @@ function saveConfigFromModal() {
       direccion: $("#cfgDireccion").value.trim(),
       pin: $("#cfgPin").value.trim()
     };
-    // Actualizar localmente el device store
-    setDeviceTienda(updatedStore);
-    state.tienda = { ...updatedStore };
+    patchLocalStoreProfile(updatedStore);
     updateCurrentStorePill();
-    // Enviar a la nube
-    updateCloudStoreProfile(updatedStore);
+    const cloudOk = await updateCloudStoreProfile(updatedStore);
+    if (!cloudOk && _cloudReady) {
+      showToast("Guardado en este dispositivo; no se pudo sincronizar con la nube");
+    }
   }
 
   closeAllModals();
