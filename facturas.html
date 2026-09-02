@@ -1456,7 +1456,7 @@ document.getElementById("btnPrint").addEventListener("click",()=>{
 /* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
-function initSb(){const cfg=window.SUPABASE_CONFIG||{};if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
+function initSb(){const cfg=typeof window.getSupabaseConfig==="function"?window.getSupabaseConfig():(window.SUPABASE_CONFIG||{});if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
 initSb();
 checkPin();
 </script>

@@ -94,7 +94,10 @@ DROP POLICY IF EXISTS "invoices_all" ON public.invoices;
 CREATE POLICY "invoices_all"
   ON public.invoices FOR ALL USING (true) WITH CHECK (true);
 
--- ───── Habilitar Realtime ─────
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.app_config;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.invoices;
+-- ───── Habilitar Realtime (idempotente) ─────
+DO $$
+BEGIN
+  BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.orders; EXCEPTION WHEN duplicate_object THEN NULL; END;
+  BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.app_config; EXCEPTION WHEN duplicate_object THEN NULL; END;
+  BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.invoices; EXCEPTION WHEN duplicate_object THEN NULL; END;
+END $$;

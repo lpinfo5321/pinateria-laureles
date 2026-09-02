@@ -1650,7 +1650,9 @@ function addHistory(id, accion, nota) {
    SINCRONIZACIÓN CON SUPABASE (realtime)
    ============================================================ */
 async function initCloud() {
-  const conf = window.SUPABASE_CONFIG || {};
+  const conf = typeof window.getSupabaseConfig === "function"
+    ? window.getSupabaseConfig()
+    : (window.SUPABASE_CONFIG || {});
   if (!conf.url || !conf.anonKey) {
     console.info("ℹ️ Supabase no configurado → modo solo-local");
     updateCloudBadge(false);
@@ -3154,6 +3156,10 @@ function initModals() {
         }
       }
     });
+  }
+  const btnOpenNubeSetup = $("#btnOpenNubeSetup");
+  if (btnOpenNubeSetup && typeof window.openSupabaseSetup === "function") {
+    btnOpenNubeSetup.addEventListener("click", () => window.openSupabaseSetup());
   }
   $("#btnSaveConfig").addEventListener("click", saveConfigFromModal);
   $("#btnClearOrders").addEventListener("click", async () => {

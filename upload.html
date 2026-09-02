@@ -211,10 +211,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
   <script>
-    const SUPABASE_URL     = "https://cmovllgbckjupficttal.supabase.co";
-    const SUPABASE_ANONKEY = "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS";
-    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANONKEY);
+    const _sbConf = typeof window.getSupabaseConfig === "function"
+      ? window.getSupabaseConfig()
+      : { url: "https://cmovllgbckjupficttal.supabase.co", anonKey: "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS" };
+    const _sb = supabase.createClient(_sbConf.url, _sbConf.anonKey);
 
     const params  = new URLSearchParams(location.search);
     const session = params.get("s");
