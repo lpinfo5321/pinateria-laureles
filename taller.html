@@ -738,6 +738,7 @@ async function initCloud(){
     const dot = document.getElementById("dot");
     if (dot) dot.classList.remove("online");
     showToast("La nube no responde. Revisa Supabase (no Vercel).");
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
   }
 }
 

@@ -203,6 +203,24 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
   if (!activas.length) {
     list.innerHTML = `<div class="device-store-modal__loading">⏳ Cargando tiendas disponibles...</div>`;
     modal.hidden = false;
+    setTimeout(() => {
+      if (!list.querySelector(".device-store-btn")) {
+        list.innerHTML = `<div class="device-store-modal__loading">La nube no respondió. Usa la tienda local o pulsa Reintentar arriba.<br><button type="button" class="device-store-btn" data-local="1" style="margin-top:12px"><span class="device-store-btn__emo">🏬</span><span class="device-store-btn__body"><span class="device-store-btn__name">Continuar en este aparato</span></span></button></div>`;
+        const fallback = list.querySelector("[data-local]");
+        if (fallback) {
+          fallback.addEventListener("click", () => {
+            const local = { id: "t-local", nombre: "Esta tienda", emoji: "🏬", direccion: "", telefono: "", pin: "", activo: true, esDefault: true };
+            TIENDAS_DISPONIBLES = [local];
+            setDeviceTienda(local);
+            state.tienda = { ...local };
+            modal.hidden = true;
+            updateCurrentStorePill();
+            refreshDynamicLabels();
+            if (typeof onPick === "function") onPick(local);
+          });
+        }
+      }
+    }, 8000);
     return;
   }
 
@@ -1654,6 +1672,7 @@ async function initCloud() {
     startAppConfigPolling();
     _cloudReady = true;
     updateCloudBadge(true);
+    if (typeof window.hideCloudDownBanner === "function") window.hideCloudDownBanner();
     console.info("☁️ Supabase conectado — realtime activo");
 
     // Reconexión cuando la pestaña/app vuelve al frente (móvil, celular)
@@ -1674,6 +1693,8 @@ async function initCloud() {
     _cloudReady = false;
     updateCloudBadge(false);
     showToast("La nube no responde. La app sigue en modo local.");
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+    applyCloudColors({}, [], []);
   }
 }
 
@@ -3826,6 +3847,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   renderAdmin();
+
+  // Pintar colores/temas locales YA, para no quedarse en "Cargando…" si la nube no responde
+  applyCloudColors({}, [], []);
 
   // Conectar a la nube (si está configurada) — no bloquea la UI
   initCloud().catch(e => console.warn("Cloud init error:", e));

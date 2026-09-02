@@ -40,7 +40,8 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 1. El frontend en `ordervivapinata.vercel.app` puede estar bien (HTML/CSS/JS estáticos).
 2. Los pedidos, tiendas y facturas viven en **Supabase**, no en Vercel. Si el proyecto está pausado o el origen responde **522**, Restore de Vercel no recupera datos.
 3. Entra a [supabase.com](https://supabase.com) → proyecto `cmovllgbckjupficttal` → **Restore / Unpause**.
-4. Usa `https://ordervivapinata.vercel.app` hasta que el dominio `.com` tenga DNS otra vez.
+4. Si Restore lleva **más de 1 hora** en spinner (o 522 persistente), **ya no va a terminar solo**. Abre ticket en https://supabase.com/dashboard/support/new con el Project Ref `cmovllgbckjupficttal` y pide que desbloqueen un restore atascado (COMING_UP / PAUSING).
+5. Usa `https://ordervivapinata.vercel.app` hasta que el dominio `.com` tenga DNS otra vez.
 
 ---
 

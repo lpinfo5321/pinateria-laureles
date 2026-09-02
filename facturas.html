@@ -486,7 +486,9 @@ async function checkPin(){
     const pinQ=_sb.from("app_config").select("pin").eq("id","default").maybeSingle();
     const{data}=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(pinQ):pinQ);
     _pin=data?.pin||"";
-  }catch(_){}
+  }catch(_){
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+  }
   if(!_pin){showMain();return;}
   document.getElementById("pinGate").style.display="block";
 }
@@ -548,6 +550,9 @@ async function loadAll(){
     [invRes,ordRes,cfgRes]=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(boot):boot);
   }catch(e){
     console.warn("Supabase no responde:",e);
+    try{ if(_sb) _sb.removeAllChannels(); }catch(_){}
+    _sb=null;
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
     renderList();
     return;
   }
