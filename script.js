@@ -1646,7 +1646,10 @@ async function initCloud() {
     _sb = window.supabase.createClient(conf.url, conf.anonKey, {
       realtime: { params: { eventsPerSecond: 10 } },
     });
-    await pullAllFromCloud();
+    const pull = typeof window.withCloudTimeout === "function"
+      ? window.withCloudTimeout(pullAllFromCloud())
+      : pullAllFromCloud();
+    await pull;
     subscribeToCloudChanges();
     startAppConfigPolling();
     _cloudReady = true;
@@ -1666,7 +1669,11 @@ async function initCloud() {
     });
   } catch (e) {
     console.warn("Supabase falló, sigo con localStorage:", e);
+    try { if (_sb) _sb.removeAllChannels(); } catch (_) {}
+    _sb = null;
+    _cloudReady = false;
     updateCloudBadge(false);
+    showToast("La nube no responde. La app sigue en modo local.");
   }
 }
 

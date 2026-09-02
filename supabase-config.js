@@ -17,3 +17,19 @@ window.SUPABASE_CONFIG = {
   url:     "https://cmovllgbckjupficttal.supabase.co",
   anonKey: "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS",
 };
+
+// Evita que la UI se quede esperando si el origen de Supabase no responde (p.ej. 522).
+window.CLOUD_FETCH_MS = 10000;
+window.withCloudTimeout = function (promise, ms) {
+  const limit = ms || window.CLOUD_FETCH_MS || 10000;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        const err = new Error("La nube no responde");
+        err.name = "CloudTimeout";
+        reject(err);
+      }, limit);
+    }),
+  ]);
+};

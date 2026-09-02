@@ -482,7 +482,11 @@ async function checkPin(){
     return;
   }
   if(!_sb){showMain();return;}
-  try{const{data}=await _sb.from("app_config").select("pin").eq("id","default").maybeSingle();_pin=data?.pin||"";}catch(_){}
+  try{
+    const pinQ=_sb.from("app_config").select("pin").eq("id","default").maybeSingle();
+    const{data}=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(pinQ):pinQ);
+    _pin=data?.pin||"";
+  }catch(_){}
   if(!_pin){showMain();return;}
   document.getElementById("pinGate").style.display="block";
 }
@@ -534,11 +538,19 @@ function tryPin(){
 ══════════════════════════════════ */
 async function loadAll(){
   if(!_sb){renderList();return;}
-  const[invRes,ordRes,cfgRes]=await Promise.all([
-    _sb.from("invoices").select("*").order("numero",{ascending:false}),
-    _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false}),
-    _sb.from("app_config").select("colores").eq("id","default").maybeSingle()
-  ]);
+  let invRes,ordRes,cfgRes;
+  try{
+    const boot=Promise.all([
+      _sb.from("invoices").select("*").order("numero",{ascending:false}),
+      _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false}),
+      _sb.from("app_config").select("colores").eq("id","default").maybeSingle()
+    ]);
+    [invRes,ordRes,cfgRes]=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(boot):boot);
+  }catch(e){
+    console.warn("Supabase no responde:",e);
+    renderList();
+    return;
+  }
   _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   const pp=cfgRes.data?.colores?.precios;

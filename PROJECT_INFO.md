@@ -19,9 +19,9 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 | Lugar | URL |
 |---|---|
 | **Producción Vercel** | `https://ordervivapinata.vercel.app` |
-| **Dominio personalizado** | `https://ordervivapinata.com` *(en configuración)* |
+| **Dominio personalizado** | `https://ordervivapinata.com` *(DNS NXDOMAIN — no resuelve; no usar hasta reconfigurar)* |
 | **GitHub repo** | `https://github.com/lpinfo5321/pinateria-laureles` (rama `main`) |
-| **URL antigua (puede seguir activa como redirect)** | `https://pinateria-laureles.vercel.app` |
+| **URL antigua** | `https://pinateria-laureles.vercel.app` *(404 DEPLOYMENT_NOT_FOUND)* |
 
 > **Nota sobre la ñ en el dominio:** Los subdominios `.vercel.app` no aceptan la letra ñ ni acentos por restricciones del DNS estándar. El dominio personalizado `.com` sí podría usar ñ pero el usuario optó por `ordervivapinata.com` (sin ñ) para evitar problemas de búsqueda y compartido.
 
@@ -33,6 +33,14 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 - **Project ID:** `prj_05VrzZtzdjaKWpvKhT4Xn5fX3FjE`
 - **Equipo/Org:** `c35c228c` (visible en la URL del dashboard)
 - **Despliegue:** Auto desde GitHub `main` branch
+- **Restore / Instant Rollback:** en Hobby solo guarda deploys ~30 días. Un deploy de mayo no se puede “Restore”. Para volver a publicar hay que **Redeploy** o hacer `git push` a `main`, no restaurar un deployment viejo.
+
+### Si la app “no arranca” y Vercel no la restablece
+
+1. El frontend en `ordervivapinata.vercel.app` puede estar bien (HTML/CSS/JS estáticos).
+2. Los pedidos, tiendas y facturas viven en **Supabase**, no en Vercel. Si el proyecto está pausado o el origen responde **522**, Restore de Vercel no recupera datos.
+3. Entra a [supabase.com](https://supabase.com) → proyecto `cmovllgbckjupficttal` → **Restore / Unpause**.
+4. Usa `https://ordervivapinata.vercel.app` hasta que el dominio `.com` tenga DNS otra vez.
 
 ---
 

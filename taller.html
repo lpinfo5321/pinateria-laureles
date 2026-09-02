@@ -676,7 +676,8 @@ async function initCloud(){
     _sb = supabase.createClient(cfg.url, cfg.anonKey, {
       realtime:{ params:{ eventsPerSecond:10 } }
     });
-    await Promise.all([pullOrders(), pullConfig(), pullColores()]);
+    const boot = Promise.all([pullOrders(), pullConfig(), pullColores()]);
+    await (typeof window.withCloudTimeout === "function" ? window.withCloudTimeout(boot) : boot);
     document.getElementById("dot").classList.add("online");
     subscribeRealtime();
 
@@ -730,7 +731,14 @@ async function initCloud(){
         resyncarApp();
       }
     }, 60_000);
-  } catch(e){ console.warn("Supabase error:",e); }
+  } catch(e){
+    console.warn("Supabase error:",e);
+    try { if (_sb) _sb.removeAllChannels(); } catch(_){}
+    _sb = null;
+    const dot = document.getElementById("dot");
+    if (dot) dot.classList.remove("online");
+    showToast("La nube no responde. Revisa Supabase (no Vercel).");
+  }
 }
 
 async function pullOrders(){
