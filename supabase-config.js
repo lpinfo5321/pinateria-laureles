@@ -1,35 +1,50 @@
 /* ============================================================
    SUPABASE CONFIG
    ------------------------------------------------------------
-   El proyecto viejo (cmovllgbckjupficttal) está apagado (522).
-   Puedes pegar URL + clave de un proyecto NUEVO desde la app:
-   Ajustes → ☁️ Nube, o el botón "Conectar otra nube".
+   El proyecto viejo (cmovllgbckjupficttal) quedó APAGADO (522)
+   y ya NO se usa. Deja url/anonKey vacíos aquí, o pega los de
+   un proyecto NUEVO. También puedes conectarlos desde la app:
+   Configuración / Ajustes → Conectar proyecto nuevo.
    ============================================================ */
 window.SUPABASE_CONFIG = {
-  url:     "https://cmovllgbckjupficttal.supabase.co",
-  anonKey: "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS",
+  url:     "",
+  anonKey: "",
 };
 
+/** Proyectos que nunca deben usarse (apagados / irrecuperables). */
+window.SUPABASE_DEAD_REFS = ["cmovllgbckjupficttal"];
+
 window.SUPABASE_CONFIG_STORAGE_KEY = "viva_supabase_config";
+
+window.isDeadSupabaseUrl = function (url) {
+  const u = String(url || "").toLowerCase();
+  return (window.SUPABASE_DEAD_REFS || []).some((ref) => u.includes(String(ref).toLowerCase()));
+};
 
 window.getSupabaseConfig = function () {
   try {
     const raw = localStorage.getItem(window.SUPABASE_CONFIG_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.url && parsed.anonKey) {
+      if (parsed && parsed.url && parsed.anonKey && !window.isDeadSupabaseUrl(parsed.url)) {
         return {
           url: String(parsed.url).trim().replace(/\/$/, ""),
           anonKey: String(parsed.anonKey).trim(),
         };
       }
+      // Limpia override basura (proyecto muerto o incompleto)
+      if (parsed && window.isDeadSupabaseUrl(parsed.url)) {
+        localStorage.removeItem(window.SUPABASE_CONFIG_STORAGE_KEY);
+      }
     }
   } catch (_) {}
   const base = window.SUPABASE_CONFIG || {};
-  return {
-    url: String(base.url || "").trim().replace(/\/$/, ""),
-    anonKey: String(base.anonKey || "").trim(),
-  };
+  const url = String(base.url || "").trim().replace(/\/$/, "");
+  const anonKey = String(base.anonKey || "").trim();
+  if (!url || !anonKey || window.isDeadSupabaseUrl(url)) {
+    return { url: "", anonKey: "" };
+  }
+  return { url, anonKey };
 };
 
 window.saveSupabaseConfig = function (url, anonKey) {
@@ -37,6 +52,9 @@ window.saveSupabaseConfig = function (url, anonKey) {
     url: String(url || "").trim().replace(/\/$/, ""),
     anonKey: String(anonKey || "").trim(),
   };
+  if (window.isDeadSupabaseUrl(conf.url)) {
+    throw new Error("Ese proyecto viejo está apagado. Usa uno NUEVO de supabase.com.");
+  }
   localStorage.setItem(window.SUPABASE_CONFIG_STORAGE_KEY, JSON.stringify(conf));
   return conf;
 };
@@ -63,6 +81,9 @@ window.withCloudTimeout = function (promise, ms) {
 window.testSupabaseConfig = async function (conf) {
   conf = conf || window.getSupabaseConfig();
   if (!conf.url || !conf.anonKey) throw new Error("Faltan la URL o la clave");
+  if (window.isDeadSupabaseUrl(conf.url)) {
+    throw new Error("Ese proyecto viejo está apagado (522). Crea uno NUEVO en supabase.com.");
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
@@ -76,7 +97,7 @@ window.testSupabaseConfig = async function (conf) {
     });
     const text = await res.text();
     if (res.status === 522 || res.status === 521 || res.status === 523) {
-      throw new Error("Este proyecto está apagado (error " + res.status + "). Crea uno NUEVO en supabase.com; el viejo no enciende.");
+      throw new Error("Este proyecto está apagado (error " + res.status + "). Crea uno NUEVO en supabase.com.");
     }
     if (res.status === 401 || res.status === 403) {
       throw new Error("La clave no es válida. Copia la anon public / publishable key del proyecto nuevo.");
@@ -105,13 +126,22 @@ window.hideCloudDownBanner = function () {
   if (document.body) document.body.style.paddingTop = "";
 };
 
-window.showCloudDownBanner = function () {
-  if (document.getElementById("vpCloudDown")) return;
+window.showCloudDownBanner = function (opts) {
+  opts = opts || {};
+  const missing = !!opts.missing;
+  if (document.getElementById("vpCloudDown")) {
+    const setup = document.getElementById("vpCloudDownSetup");
+    if (setup) setup.onclick = () => window.openSupabaseSetup();
+    return;
+  }
   const bar = document.createElement("div");
   bar.id = "vpCloudDown";
   bar.setAttribute("role", "status");
   bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:2147483645;background:#7f1d1d;color:#fff;padding:10px 12px;font:700 13px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.22)";
-  bar.innerHTML = 'La nube vieja de Supabase está apagada. No se arregla esperando. <button type="button" id="vpCloudDownSetup" style="margin:4px 4px 0;border:0;border-radius:999px;padding:6px 12px;background:#fff;color:#7f1d1d;font-weight:800;cursor:pointer">Conectar proyecto nuevo</button><button type="button" id="vpCloudDownRetry" style="margin:4px 4px 0;border:0;border-radius:999px;padding:6px 12px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);font-weight:800;cursor:pointer">Reintentar</button>';
+  const msg = missing
+    ? "Sin nube conectada. La app funciona en local; para sync entre dispositivos conecta Supabase."
+    : "La nube no responde. La app sigue en modo local.";
+  bar.innerHTML = msg + ' <button type="button" id="vpCloudDownSetup" style="margin:4px 4px 0;border:0;border-radius:999px;padding:6px 12px;background:#fff;color:#7f1d1d;font-weight:800;cursor:pointer">Conectar proyecto nuevo</button><button type="button" id="vpCloudDownRetry" style="margin:4px 4px 0;border:0;border-radius:999px;padding:6px 12px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);font-weight:800;cursor:pointer">Reintentar</button>';
   const mount = () => {
     if (!document.body) return false;
     document.body.prepend(bar);
@@ -140,11 +170,11 @@ window.openSupabaseSetup = function () {
         <h2 style="margin:0;font:900 20px/1.2 Fraunces,Georgia,serif">Conectar Supabase nuevo</h2>
         <button type="button" id="vpSbClose" style="border:0;background:#f3f4f6;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px">✕</button>
       </div>
-      <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#6b7280">El proyecto <code>cmovllgbckjupficttal</code> está apagado (error 522). Restore no lo enciende. Hay que crear un proyecto <strong>nuevo</strong> y pegar aquí sus datos.</p>
+      <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#6b7280">La conexión anterior se eliminó porque el proyecto viejo está apagado. Crea un proyecto <strong>nuevo</strong> (gratis) y pega aquí sus datos.</p>
       <ol style="margin:0 0 14px 18px;padding:0;font-size:13px;line-height:1.55;color:#374151">
         <li>Entra a <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a></li>
         <li>New project → nombre <strong>viva-pinata</strong> → región cercana → Create</li>
-        <li>SQL Editor → New query → pega el archivo <code>supabase-schema.sql</code> → Run</li>
+        <li>SQL Editor → New query → pega el SQL (botón abajo) → Run</li>
         <li>Project Settings → API → copia <strong>Project URL</strong> y <strong>anon public</strong> (o publishable)</li>
       </ol>
       <label style="display:block;font-size:12px;font-weight:800;margin:0 0 6px">Project URL</label>
@@ -163,8 +193,8 @@ window.openSupabaseSetup = function () {
   const urlEl = document.getElementById("vpSbUrl");
   const keyEl = document.getElementById("vpSbKey");
   const msgEl = document.getElementById("vpSbMsg");
-  urlEl.value = current.url && !current.url.includes("cmovllgbckjupficttal") ? current.url : "";
-  keyEl.value = current.url && !current.url.includes("cmovllgbckjupficttal") ? current.anonKey : "";
+  urlEl.value = current.url || "";
+  keyEl.value = current.anonKey || "";
 
   const close = () => { wrap.remove(); };
   document.getElementById("vpSbClose").onclick = close;

@@ -685,7 +685,16 @@ async function initCloud(){
   const cfg = typeof window.getSupabaseConfig === "function"
     ? window.getSupabaseConfig()
     : window.SUPABASE_CONFIG;
-  if(!cfg||!cfg.url||!cfg.anonKey) return;
+  if(!cfg||!cfg.url||!cfg.anonKey){
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner({ missing: true });
+    try {
+      if (!sessionStorage.getItem("vp_sb_setup_shown") && typeof window.openSupabaseSetup === "function") {
+        sessionStorage.setItem("vp_sb_setup_shown", "1");
+        setTimeout(() => window.openSupabaseSetup(), 600);
+      }
+    } catch (_) {}
+    return;
+  }
   try {
     _sb = supabase.createClient(cfg.url, cfg.anonKey, {
       realtime:{ params:{ eventsPerSecond:10 } }

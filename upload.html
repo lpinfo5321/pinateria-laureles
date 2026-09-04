@@ -215,18 +215,25 @@
   <script>
     const _sbConf = typeof window.getSupabaseConfig === "function"
       ? window.getSupabaseConfig()
-      : { url: "https://cmovllgbckjupficttal.supabase.co", anonKey: "sb_publishable_-9ejqS4waywUzvKri27ZsQ_MMIRNlLS" };
-    const _sb = supabase.createClient(_sbConf.url, _sbConf.anonKey);
-
+      : (window.SUPABASE_CONFIG || {});
     const params  = new URLSearchParams(location.search);
     const session = params.get("s");
 
-    if (!session) {
+    if (!_sbConf.url || !_sbConf.anonKey) {
+      document.getElementById("uploadView").innerHTML =
+        `<div class="icon-wrap">☁️</div>
+         <h1>Sin nube conectada</h1>
+         <p class="subtitle">Conecta un proyecto nuevo de Supabase desde la app de la tienda (Configuración → Conectar proyecto nuevo) y vuelve a escanear el QR.</p>`;
+    } else if (!session) {
       document.getElementById("uploadView").innerHTML =
         `<div class="icon-wrap">❌</div>
          <h1>Enlace inválido</h1>
          <p class="subtitle">Escanea el código QR desde la computadora de la tienda para obtener un enlace válido.</p>`;
     }
+
+    const _sb = (_sbConf.url && _sbConf.anonKey)
+      ? supabase.createClient(_sbConf.url, _sbConf.anonKey)
+      : null;
 
     const fileInput  = document.getElementById("fileInput");
     const uploadZone = document.getElementById("uploadZone");
@@ -238,6 +245,10 @@
     const statusMsg  = document.getElementById("statusMsg");
 
     let _imgBase64 = null;
+
+    if (!fileInput || !sendBtn || !_sb || !session) {
+      // Vista de error ya mostrada; no registrar handlers
+    } else {
 
     fileInput.addEventListener("change", () => {
       const file = fileInput.files[0];
@@ -278,7 +289,7 @@
     }
 
     sendBtn.addEventListener("click", async () => {
-      if (!_imgBase64 || !session) return;
+      if (!_imgBase64 || !session || !_sb) return;
       sendBtn.disabled = true;
       sendBtn.textContent = "Enviando...";
       statusMsg.textContent = "";
@@ -306,6 +317,7 @@
         console.error(err);
       }
     });
+    } // end else: handlers only when cloud + session OK
   </script>
 </body>
 </html>

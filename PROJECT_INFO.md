@@ -38,23 +38,24 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 ### Si la app “no arranca” y Vercel no la restablece
 
 1. El frontend en `ordervivapinata.vercel.app` puede estar bien (HTML/CSS/JS estáticos).
-2. Los pedidos, tiendas y facturas viven en **Supabase**, no en Vercel. Si el proyecto está pausado o el origen responde **522**, Restore de Vercel no recupera datos.
-3. Entra a [supabase.com](https://supabase.com) → proyecto `cmovllgbckjupficttal` → **Restore / Unpause**.
-4. Si Restore lleva **más de 1 hora** en spinner (o 522 persistente), **ya no va a terminar solo**. Abre ticket en https://supabase.com/dashboard/support/new con el Project Ref `cmovllgbckjupficttal` y pide que desbloqueen un restore atascado (COMING_UP / PAUSING).
-5. Si Restore lleva horas o días: **crea un proyecto nuevo** (el viejo no se puede encender desde la app). En la app: Configuración / Ajustes → **Conectar proyecto nuevo**, pega URL + anon key, y corre `supabase-schema.sql` en el SQL Editor. Eso recupera la sync; los pedidos del proyecto viejo solo los saca el soporte de Supabase.
+2. Los pedidos, tiendas y facturas viven en **Supabase**, no en Vercel.
+3. El proyecto viejo `cmovllgbckjupficttal` **está muerto (522)** y ya se eliminó de la app. No intentes Restore: no enciende.
+4. Crea un **proyecto nuevo** en [supabase.com/dashboard](https://supabase.com/dashboard), corre `supabase-schema.sql`, y pega URL + anon key en la app (Configuración / Ajustes → **Conectar proyecto nuevo**) o en `supabase-config.js`.
+5. Los pedidos del proyecto viejo solo los puede sacar el soporte de Supabase (ticket con ref `cmovllgbckjupficttal`).
 6. Usa `https://ordervivapinata.vercel.app` hasta que el dominio `.com` tenga DNS otra vez.
 
 ---
 
 ## Supabase (base de datos en la nube)
 
-- **URL:** `https://cmovllgbckjupficttal.supabase.co`
+- **Proyecto viejo (MUERTO, no usar):** `cmovllgbckjupficttal` — error 522 permanente
+- **Proyecto actual:** *(vacío — conectar uno nuevo)* · URL/key en `supabase-config.js` o en localStorage `viva_supabase_config`
 - **Tablas principales:**
   - `orders` — órdenes de piñatas
   - `app_config` — config global (PIN admin, WhatsApp, **colores/tiendas/figuras/precios/factura** todo en columna `colores` JSONB)
   - `invoices` — facturas que el taller emite a Laureles
 - **Realtime:** habilitado en las 3 tablas via `supabase_realtime` publication
-- **Anon key:** está en `supabase-config.js` (público, OK)
+- **Anon key:** pública (va en el navegador); nunca uses `service_role`
 
 ---
 

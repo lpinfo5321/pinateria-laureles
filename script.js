@@ -1656,6 +1656,16 @@ async function initCloud() {
   if (!conf.url || !conf.anonKey) {
     console.info("ℹ️ Supabase no configurado → modo solo-local");
     updateCloudBadge(false);
+    if (typeof window.showCloudDownBanner === "function") {
+      window.showCloudDownBanner({ missing: true });
+    }
+    // Abrir el asistente una sola vez por sesión para no dejar la sync olvidada
+    try {
+      if (!sessionStorage.getItem("vp_sb_setup_shown") && typeof window.openSupabaseSetup === "function") {
+        sessionStorage.setItem("vp_sb_setup_shown", "1");
+        setTimeout(() => window.openSupabaseSetup(), 600);
+      }
+    } catch (_) {}
     return;
   }
   if (!window.supabase || !window.supabase.createClient) {
