@@ -1,14 +1,14 @@
 /* ============================================================
    SUPABASE CONFIG
    ------------------------------------------------------------
+   Proyecto actual: ookzdtohzhjdlmxgulpa (viva-pinata).
    El proyecto viejo (cmovllgbckjupficttal) quedó APAGADO (522)
-   y ya NO se usa. Deja url/anonKey vacíos aquí, o pega los de
-   un proyecto NUEVO. También puedes conectarlos desde la app:
-   Configuración / Ajustes → Conectar proyecto nuevo.
+   y está bloqueado. Si hace falta, puedes cambiar URL/key desde
+   la app: Configuración / Ajustes → Conectar proyecto nuevo.
    ============================================================ */
 window.SUPABASE_CONFIG = {
-  url:     "",
-  anonKey: "",
+  url:     "https://ookzdtohzhjdlmxgulpa.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9va3pkdG9oemhqZGxteGd1bHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NDIxMDQsImV4cCI6MjEwNDExODEwNH0.VWl2q0mwr8Er-t3nFvzXXFxPpp5ql5HtHD3_RKzHUi4",
 };
 
 /** Proyectos que nunca deben usarse (apagados / irrecuperables). */

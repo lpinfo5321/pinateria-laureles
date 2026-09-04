@@ -49,7 +49,7 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 ## Supabase (base de datos en la nube)
 
 - **Proyecto viejo (MUERTO, no usar):** `cmovllgbckjupficttal` — error 522 permanente
-- **Proyecto actual:** *(vacío — conectar uno nuevo)* · URL/key en `supabase-config.js` o en localStorage `viva_supabase_config`
+- **Proyecto actual:** `ookzdtohzhjdlmxgulpa` · URL: `https://ookzdtohzhjdlmxgulpa.supabase.co`
 - **Tablas principales:**
   - `orders` — órdenes de piñatas
   - `app_config` — config global (PIN admin, WhatsApp, **colores/tiendas/figuras/precios/factura** todo en columna `colores` JSONB)
