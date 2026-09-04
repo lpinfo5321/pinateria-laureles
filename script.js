@@ -203,6 +203,24 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
   if (!activas.length) {
     list.innerHTML = `<div class="device-store-modal__loading">⏳ Cargando tiendas disponibles...</div>`;
     modal.hidden = false;
+    setTimeout(() => {
+      if (!list.querySelector(".device-store-btn")) {
+        list.innerHTML = `<div class="device-store-modal__loading">La nube no respondió. Usa la tienda local o pulsa Reintentar arriba.<br><button type="button" class="device-store-btn" data-local="1" style="margin-top:12px"><span class="device-store-btn__emo">🏬</span><span class="device-store-btn__body"><span class="device-store-btn__name">Continuar en este aparato</span></span></button></div>`;
+        const fallback = list.querySelector("[data-local]");
+        if (fallback) {
+          fallback.addEventListener("click", () => {
+            const local = { id: "t-local", nombre: "Esta tienda", emoji: "🏬", direccion: "", telefono: "", pin: "", activo: true, esDefault: true };
+            TIENDAS_DISPONIBLES = [local];
+            setDeviceTienda(local);
+            state.tienda = { ...local };
+            modal.hidden = true;
+            updateCurrentStorePill();
+            refreshDynamicLabels();
+            if (typeof onPick === "function") onPick(local);
+          });
+        }
+      }
+    }, 8000);
     return;
   }
 
@@ -1632,10 +1650,22 @@ function addHistory(id, accion, nota) {
    SINCRONIZACIÓN CON SUPABASE (realtime)
    ============================================================ */
 async function initCloud() {
-  const conf = window.SUPABASE_CONFIG || {};
+  const conf = typeof window.getSupabaseConfig === "function"
+    ? window.getSupabaseConfig()
+    : (window.SUPABASE_CONFIG || {});
   if (!conf.url || !conf.anonKey) {
     console.info("ℹ️ Supabase no configurado → modo solo-local");
     updateCloudBadge(false);
+    if (typeof window.showCloudDownBanner === "function") {
+      window.showCloudDownBanner({ missing: true });
+    }
+    // Abrir el asistente una sola vez por sesión para no dejar la sync olvidada
+    try {
+      if (!sessionStorage.getItem("vp_sb_setup_shown") && typeof window.openSupabaseSetup === "function") {
+        sessionStorage.setItem("vp_sb_setup_shown", "1");
+        setTimeout(() => window.openSupabaseSetup(), 600);
+      }
+    } catch (_) {}
     return;
   }
   if (!window.supabase || !window.supabase.createClient) {
@@ -1646,11 +1676,15 @@ async function initCloud() {
     _sb = window.supabase.createClient(conf.url, conf.anonKey, {
       realtime: { params: { eventsPerSecond: 10 } },
     });
-    await pullAllFromCloud();
+    const pull = typeof window.withCloudTimeout === "function"
+      ? window.withCloudTimeout(pullAllFromCloud())
+      : pullAllFromCloud();
+    await pull;
     subscribeToCloudChanges();
     startAppConfigPolling();
     _cloudReady = true;
     updateCloudBadge(true);
+    if (typeof window.hideCloudDownBanner === "function") window.hideCloudDownBanner();
     console.info("☁️ Supabase conectado — realtime activo");
 
     // Reconexión cuando la pestaña/app vuelve al frente (móvil, celular)
@@ -1666,7 +1700,13 @@ async function initCloud() {
     });
   } catch (e) {
     console.warn("Supabase falló, sigo con localStorage:", e);
+    try { if (_sb) _sb.removeAllChannels(); } catch (_) {}
+    _sb = null;
+    _cloudReady = false;
     updateCloudBadge(false);
+    showToast("La nube no responde. La app sigue en modo local.");
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+    applyCloudColors({}, [], []);
   }
 }
 
@@ -3127,6 +3167,10 @@ function initModals() {
       }
     });
   }
+  const btnOpenNubeSetup = $("#btnOpenNubeSetup");
+  if (btnOpenNubeSetup && typeof window.openSupabaseSetup === "function") {
+    btnOpenNubeSetup.addEventListener("click", () => window.openSupabaseSetup());
+  }
   $("#btnSaveConfig").addEventListener("click", saveConfigFromModal);
   $("#btnClearOrders").addEventListener("click", async () => {
     if (!confirm("¿Borrar TODAS las órdenes? Esta acción no se puede deshacer.")) return;
@@ -3819,6 +3863,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   renderAdmin();
+
+  // Pintar colores/temas locales YA, para no quedarse en "Cargando…" si la nube no responde
+  applyCloudColors({}, [], []);
 
   // Conectar a la nube (si está configurada) — no bloquea la UI
   initCloud().catch(e => console.warn("Cloud init error:", e));

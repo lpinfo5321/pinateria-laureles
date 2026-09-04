@@ -379,6 +379,7 @@
         <button class="set-tab" data-st="figuras">🖼️ Figuras</button>
         <button class="set-tab" data-st="precios">💰 Precios</button>
         <button class="set-tab" data-st="factura">🧾 Factura</button>
+        <button class="set-tab" data-st="nube">☁️ Nube</button>
       </div>
 
       <div class="settings-body">
@@ -518,6 +519,17 @@
           </div>
           <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Las figuras activas aparecerán como opciones al pedir una piñata estrella con imagen.</p>
           <div id="temasList" class="color-grid"></div>
+        </div>
+
+        <!-- ═══ NUBE ═══ -->
+        <div class="set-pane" data-pane="nube">
+          <div class="settings-section-title" style="margin-top:0">
+            <span style="font-size:16px">☁️</span> Conexión a Supabase
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">El proyecto viejo está apagado (error 522). Restore no lo enciende. Crea un proyecto <strong>nuevo</strong> y conéctalo aquí. Los pedidos del proyecto viejo solo los puede recuperar el soporte de Supabase.</p>
+          <p id="nubeStatus" style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted)">Revisando…</p>
+          <button type="button" class="btn-add-color" id="btnOpenNubeSetup">Conectar proyecto nuevo</button>
+          <button type="button" class="btn-add-color" id="btnCopyNubeSql" style="margin-top:8px;background:#111827">Copiar SQL de tablas</button>
         </div>
 
       </div><!-- /.settings-body -->
@@ -670,13 +682,25 @@ function invoiceOrderIds(data){
 
 /* ── Supabase ── */
 async function initCloud(){
-  const cfg = window.SUPABASE_CONFIG;
-  if(!cfg||!cfg.url||!cfg.anonKey) return;
+  const cfg = typeof window.getSupabaseConfig === "function"
+    ? window.getSupabaseConfig()
+    : window.SUPABASE_CONFIG;
+  if(!cfg||!cfg.url||!cfg.anonKey){
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner({ missing: true });
+    try {
+      if (!sessionStorage.getItem("vp_sb_setup_shown") && typeof window.openSupabaseSetup === "function") {
+        sessionStorage.setItem("vp_sb_setup_shown", "1");
+        setTimeout(() => window.openSupabaseSetup(), 600);
+      }
+    } catch (_) {}
+    return;
+  }
   try {
     _sb = supabase.createClient(cfg.url, cfg.anonKey, {
       realtime:{ params:{ eventsPerSecond:10 } }
     });
-    await Promise.all([pullOrders(), pullConfig(), pullColores()]);
+    const boot = Promise.all([pullOrders(), pullConfig(), pullColores()]);
+    await (typeof window.withCloudTimeout === "function" ? window.withCloudTimeout(boot) : boot);
     document.getElementById("dot").classList.add("online");
     subscribeRealtime();
 
@@ -730,7 +754,15 @@ async function initCloud(){
         resyncarApp();
       }
     }, 60_000);
-  } catch(e){ console.warn("Supabase error:",e); }
+  } catch(e){
+    console.warn("Supabase error:",e);
+    try { if (_sb) _sb.removeAllChannels(); } catch(_){}
+    _sb = null;
+    const dot = document.getElementById("dot");
+    if (dot) dot.classList.remove("online");
+    showToast("La nube no responde. Revisa Supabase (no Vercel).");
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+  }
 }
 
 async function pullOrders(){
@@ -2118,6 +2150,21 @@ function switchSettingsTab(name){
   if(body) body.scrollTop=0;
 }
 
+async function refreshNubeStatus(){
+  const el=document.getElementById("nubeStatus");
+  if(!el) return;
+  const cfg=typeof window.getSupabaseConfig==="function"?window.getSupabaseConfig():{};
+  el.textContent="Probando "+(cfg.url||"sin URL")+" …";
+  try{
+    await window.testSupabaseConfig(cfg);
+    el.style.color="#15803d";
+    el.textContent="Nube conectada: "+cfg.url;
+  }catch(e){
+    el.style.color="#b91c1c";
+    el.textContent=e.message||String(e);
+  }
+}
+
 function openSettings(){
   document.getElementById("settingsModal").style.display="block";
   renderTiendas();
@@ -2127,6 +2174,7 @@ function openSettings(){
   loadPreciosToDOM();
   loadFacturaToDOM();
   applyViewMode();
+  refreshNubeStatus();
   switchSettingsTab("tiendas");
 }
 function closeSettings(){ document.getElementById("settingsModal").style.display="none"; closeColorPicker(); }
@@ -2139,6 +2187,16 @@ document.getElementById("btnAddColorTambor").addEventListener("click",()=>addNew
 document.getElementById("btnAddTema").addEventListener("click", addNewTema);
 document.getElementById("btnAddTienda").addEventListener("click", addNewTienda);
 document.getElementById("btnSaveColors").addEventListener("click", saveColores);
+document.getElementById("btnOpenNubeSetup")?.addEventListener("click", ()=>window.openSupabaseSetup && window.openSupabaseSetup());
+document.getElementById("btnCopyNubeSql")?.addEventListener("click", async ()=>{
+  try{
+    const res=await fetch("/supabase-schema.sql",{cache:"no-store"});
+    await navigator.clipboard.writeText(await res.text());
+    showToast("SQL copiado. Pégalo en SQL Editor de Supabase.");
+  }catch(_){
+    showToast("No pude copiar el SQL");
+  }
+});
 
 document.getElementById("settingsTabs").addEventListener("click", e=>{
   const t=e.target.closest("[data-st]"); if(!t) return;

@@ -482,7 +482,13 @@ async function checkPin(){
     return;
   }
   if(!_sb){showMain();return;}
-  try{const{data}=await _sb.from("app_config").select("pin").eq("id","default").maybeSingle();_pin=data?.pin||"";}catch(_){}
+  try{
+    const pinQ=_sb.from("app_config").select("pin").eq("id","default").maybeSingle();
+    const{data}=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(pinQ):pinQ);
+    _pin=data?.pin||"";
+  }catch(_){
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+  }
   if(!_pin){showMain();return;}
   document.getElementById("pinGate").style.display="block";
 }
@@ -534,11 +540,22 @@ function tryPin(){
 ══════════════════════════════════ */
 async function loadAll(){
   if(!_sb){renderList();return;}
-  const[invRes,ordRes,cfgRes]=await Promise.all([
-    _sb.from("invoices").select("*").order("numero",{ascending:false}),
-    _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false}),
-    _sb.from("app_config").select("colores").eq("id","default").maybeSingle()
-  ]);
+  let invRes,ordRes,cfgRes;
+  try{
+    const boot=Promise.all([
+      _sb.from("invoices").select("*").order("numero",{ascending:false}),
+      _sb.from("orders").select("id,numero,estado,data").in("estado",["pendiente","lista","entregada"]).order("numero",{ascending:false}),
+      _sb.from("app_config").select("colores").eq("id","default").maybeSingle()
+    ]);
+    [invRes,ordRes,cfgRes]=await (typeof window.withCloudTimeout==="function"?window.withCloudTimeout(boot):boot);
+  }catch(e){
+    console.warn("Supabase no responde:",e);
+    try{ if(_sb) _sb.removeAllChannels(); }catch(_){}
+    _sb=null;
+    if (typeof window.showCloudDownBanner === "function") window.showCloudDownBanner();
+    renderList();
+    return;
+  }
   _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   const pp=cfgRes.data?.colores?.precios;
@@ -1439,7 +1456,7 @@ document.getElementById("btnPrint").addEventListener("click",()=>{
 /* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
-function initSb(){const cfg=window.SUPABASE_CONFIG||{};if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
+function initSb(){const cfg=typeof window.getSupabaseConfig==="function"?window.getSupabaseConfig():(window.SUPABASE_CONFIG||{});if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
 initSb();
 checkPin();
 </script>

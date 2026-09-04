@@ -19,9 +19,9 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 | Lugar | URL |
 |---|---|
 | **Producción Vercel** | `https://ordervivapinata.vercel.app` |
-| **Dominio personalizado** | `https://ordervivapinata.com` *(en configuración)* |
+| **Dominio personalizado** | `https://ordervivapinata.com` *(DNS NXDOMAIN — no resuelve; no usar hasta reconfigurar)* |
 | **GitHub repo** | `https://github.com/lpinfo5321/pinateria-laureles` (rama `main`) |
-| **URL antigua (puede seguir activa como redirect)** | `https://pinateria-laureles.vercel.app` |
+| **URL antigua** | `https://pinateria-laureles.vercel.app` *(404 DEPLOYMENT_NOT_FOUND)* |
 
 > **Nota sobre la ñ en el dominio:** Los subdominios `.vercel.app` no aceptan la letra ñ ni acentos por restricciones del DNS estándar. El dominio personalizado `.com` sí podría usar ñ pero el usuario optó por `ordervivapinata.com` (sin ñ) para evitar problemas de búsqueda y compartido.
 
@@ -33,18 +33,29 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 - **Project ID:** `prj_05VrzZtzdjaKWpvKhT4Xn5fX3FjE`
 - **Equipo/Org:** `c35c228c` (visible en la URL del dashboard)
 - **Despliegue:** Auto desde GitHub `main` branch
+- **Restore / Instant Rollback:** en Hobby solo guarda deploys ~30 días. Un deploy de mayo no se puede “Restore”. Para volver a publicar hay que **Redeploy** o hacer `git push` a `main`, no restaurar un deployment viejo.
+
+### Si la app “no arranca” y Vercel no la restablece
+
+1. El frontend en `ordervivapinata.vercel.app` puede estar bien (HTML/CSS/JS estáticos).
+2. Los pedidos, tiendas y facturas viven en **Supabase**, no en Vercel.
+3. El proyecto viejo `cmovllgbckjupficttal` **está muerto (522)** y ya se eliminó de la app. No intentes Restore: no enciende.
+4. Crea un **proyecto nuevo** en [supabase.com/dashboard](https://supabase.com/dashboard), corre `supabase-schema.sql`, y pega URL + anon key en la app (Configuración / Ajustes → **Conectar proyecto nuevo**) o en `supabase-config.js`.
+5. Los pedidos del proyecto viejo solo los puede sacar el soporte de Supabase (ticket con ref `cmovllgbckjupficttal`).
+6. Usa `https://ordervivapinata.vercel.app` hasta que el dominio `.com` tenga DNS otra vez.
 
 ---
 
 ## Supabase (base de datos en la nube)
 
-- **URL:** `https://cmovllgbckjupficttal.supabase.co`
+- **Proyecto viejo (MUERTO, no usar):** `cmovllgbckjupficttal` — error 522 permanente
+- **Proyecto actual:** `ookzdtohzhjdlmxgulpa` · URL: `https://ookzdtohzhjdlmxgulpa.supabase.co`
 - **Tablas principales:**
   - `orders` — órdenes de piñatas
   - `app_config` — config global (PIN admin, WhatsApp, **colores/tiendas/figuras/precios/factura** todo en columna `colores` JSONB)
   - `invoices` — facturas que el taller emite a Laureles
 - **Realtime:** habilitado en las 3 tablas via `supabase_realtime` publication
-- **Anon key:** está en `supabase-config.js` (público, OK)
+- **Anon key:** pública (va en el navegador); nunca uses `service_role`
 
 ---
 
