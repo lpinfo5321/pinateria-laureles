@@ -240,3 +240,321 @@ window.openSupabaseSetup = function () {
     }
   };
 };
+
+/* ============================================================
+   RESPALDO LOCAL + RECUPERACIÓN
+   ------------------------------------------------------------
+   La nube nueva (ookzdtohzhjdlmxgulpa) nació vacía. Al reconectar,
+   un pull vacío sobreescribía localStorage y se perdían tiendas,
+   figuras, pedidos y facturas pendientes. Estas helpers:
+   - guardan un catálogo local (tiendas/figuras/precios)
+   - unen nube + lo que quede en el aparato
+   - suben de nuevo lo local-only (no borramos datos del celular
+     solo porque la nube esté vacía)
+   ============================================================ */
+window.VIVA_ORDERS_KEY = "pinatasOrden_v1";
+window.VIVA_CATALOG_KEY = "viva_catalog_v1";
+window.VIVA_INVOICES_KEY = "viva_invoices_v1";
+window.VIVA_DEVICE_TIENDA_KEY = "viva_device_tienda";
+
+window.readLocalJson = function (key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch (_) {
+    return fallback;
+  }
+};
+
+window.writeLocalJson = function (key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
+window.mergeById = function (primary, extra) {
+  const map = new Map();
+  (primary || []).forEach((x) => {
+    if (x && x.id != null) map.set(String(x.id), x);
+  });
+  (extra || []).forEach((x) => {
+    if (!x || x.id == null) return;
+    const id = String(x.id);
+    if (!map.has(id)) map.set(id, x);
+  });
+  return Array.from(map.values());
+};
+
+window.normalizeTienda = function (t) {
+  if (!t) return null;
+  const id = t.id || (t.nombre ? "t_" + String(t.nombre).toLowerCase().replace(/\s+/g, "-") : "");
+  if (!id) return null;
+  return {
+    id,
+    nombre: String(t.nombre || "Tienda"),
+    emoji: String(t.emoji || "🏬"),
+    direccion: String(t.direccion || ""),
+    telefono: String(t.telefono || ""),
+    pin: String(t.pin || ""),
+    activo: t.activo !== false,
+    esDefault: !!t.esDefault,
+  };
+};
+
+window.getCachedDeviceTienda = function () {
+  return window.normalizeTienda(window.readLocalJson(window.VIVA_DEVICE_TIENDA_KEY, null));
+};
+
+window.getLocalOrdersCache = function () {
+  const mem = window.readLocalJson(window.VIVA_ORDERS_KEY, null);
+  if (!mem) return [];
+  if (Array.isArray(mem)) return mem;
+  return Array.isArray(mem.ordenes) ? mem.ordenes : [];
+};
+
+window.getLocalCatalogCache = function () {
+  const raw = window.readLocalJson(window.VIVA_CATALOG_KEY, null);
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
+  return null;
+};
+
+window.saveLocalCatalogCache = function (catalog) {
+  if (!catalog || typeof catalog !== "object") return;
+  window.writeLocalJson(window.VIVA_CATALOG_KEY, {
+    picos: catalog.picos || [],
+    tambor: catalog.tambor || [],
+    temas: catalog.temas || [],
+    precios: catalog.precios || {},
+    factura: catalog.factura || {},
+    tiendas: catalog.tiendas || [],
+    savedAt: Date.now(),
+  });
+};
+
+window.extractCatalogFromColores = function (colores) {
+  if (!colores || Array.isArray(colores)) {
+    return { picos: [], tambor: [], temas: [], precios: null, factura: null, tiendas: [] };
+  }
+  return {
+    picos: Array.isArray(colores.picos) ? colores.picos : [],
+    tambor: Array.isArray(colores.tambor) ? colores.tambor : [],
+    temas: Array.isArray(colores.temas) ? colores.temas : [],
+    precios: colores.precios || null,
+    factura: colores.factura || null,
+    tiendas: Array.isArray(colores.tiendas) ? colores.tiendas.map(window.normalizeTienda).filter(Boolean) : [],
+  };
+};
+
+window.mergeCatalogs = function (cloudColores, localCatalog, deviceTienda) {
+  const cloud = window.extractCatalogFromColores(cloudColores);
+  const local = localCatalog && typeof localCatalog === "object" ? localCatalog : {};
+  const localTiendas = (local.tiendas || []).map(window.normalizeTienda).filter(Boolean);
+  const tiendas = window.mergeById(cloud.tiendas, localTiendas);
+  const extraStore = window.normalizeTienda(deviceTienda);
+  if (extraStore && !tiendas.some((t) => t.id === extraStore.id)) {
+    extraStore.esDefault = tiendas.length === 0 ? true : false;
+    tiendas.push(extraStore);
+  }
+  if (tiendas.length && !tiendas.some((t) => t.esDefault && t.activo !== false)) {
+    const firstActive = tiendas.find((t) => t.activo !== false) || tiendas[0];
+    if (firstActive) firstActive.esDefault = true;
+  }
+
+  const temas = window.mergeById(cloud.temas || [], local.temas || []);
+  const picos = (cloud.picos && cloud.picos.length) ? cloud.picos : (local.picos || []);
+  const tambor = (cloud.tambor && cloud.tambor.length) ? cloud.tambor : (local.tambor || []);
+
+  const cloudPrecios = cloud.precios || {};
+  const localPrecios = local.precios || {};
+  const cloudHasPrice = Number(cloudPrecios.estrella || 0) > 0 || Number(cloudPrecios.personalizada || 0) > 0 || Number(cloudPrecios.libre?.precio || 0) > 0;
+  const localHasPrice = Number(localPrecios.estrella || 0) > 0 || Number(localPrecios.personalizada || 0) > 0 || Number(localPrecios.libre?.precio || 0) > 0;
+  const precios = cloudHasPrice ? cloudPrecios : (localHasPrice ? localPrecios : (cloud.precios || local.precios || null));
+
+  const cloudFac = cloud.factura || {};
+  const localFac = local.factura || {};
+  const cloudFacCustom = !!(cloudFac.marca && cloudFac.marca !== "PINATAS") || !!cloudFac.subtitulo || !!cloudFac.contacto;
+  const localFacCustom = !!(localFac.marca && localFac.marca !== "PINATAS") || !!localFac.subtitulo || !!localFac.contacto;
+  const factura = cloudFacCustom ? cloudFac : (localFacCustom ? localFac : (cloud.factura || local.factura || null));
+
+  return {
+    picos,
+    tambor,
+    temas,
+    precios: precios || { estrella: 0, personalizada: 0, libre: { nombre: "", precio: 0 } },
+    factura: factura || { marca: "PINATAS", subtitulo: "", cliente: "PINATAS", contacto: "", piePagina: "Gracias por su preferencia", color: "#ec4899" },
+    tiendas,
+  };
+};
+
+window.catalogNeedsCloudWrite = function (cloudColores, merged) {
+  const cloud = window.extractCatalogFromColores(cloudColores);
+  const cloudStores = (cloud.tiendas || []).length;
+  const cloudTemas = (cloud.temas || []).length;
+  const mergedStores = (merged.tiendas || []).length;
+  const mergedTemas = (merged.temas || []).length;
+  const cloudPrice = Number(cloud.precios?.estrella || 0) + Number(cloud.precios?.personalizada || 0);
+  const mergedPrice = Number(merged.precios?.estrella || 0) + Number(merged.precios?.personalizada || 0);
+  return mergedStores > cloudStores || mergedTemas > cloudTemas || mergedPrice > cloudPrice;
+};
+
+window.cloudUpsertOrders = async function (sb, orders) {
+  if (!sb || !orders || !orders.length) return { ok: 0, fail: 0 };
+  let ok = 0;
+  let fail = 0;
+  for (const orden of orders) {
+    if (!orden || !orden.id) continue;
+    const row = {
+      id: orden.id,
+      estado: orden.estado || "pendiente",
+      pagado: !!orden.pagado,
+      data: orden,
+    };
+    if (orden.numero) row.numero = orden.numero;
+    try {
+      const { error } = await sb.from("orders").upsert(row);
+      if (error) fail += 1;
+      else ok += 1;
+    } catch (_) {
+      fail += 1;
+    }
+  }
+  return { ok, fail };
+};
+
+window.cloudUpsertInvoices = async function (sb, invoices) {
+  if (!sb || !invoices || !invoices.length) return { ok: 0, fail: 0 };
+  let ok = 0;
+  let fail = 0;
+  for (const inv of invoices) {
+    if (!inv || !inv.id) continue;
+    const { cliente, items, subtotal, impuesto, total, notas, iva, ordenIds, tienda } = inv;
+    const row = {
+      id: inv.id,
+      estado: inv.estado || "pendiente",
+      data: { cliente, items, subtotal, impuesto, total, notas, iva, ordenIds, tienda, pagado: inv.pagado },
+    };
+    if (inv.numero) row.numero = inv.numero;
+    try {
+      const { error } = await sb.from("invoices").upsert(row);
+      if (error) fail += 1;
+      else ok += 1;
+    } catch (_) {
+      fail += 1;
+    }
+  }
+  return { ok, fail };
+};
+
+window.cloudUpsertCatalog = async function (sb, catalog) {
+  if (!sb || !catalog) return false;
+  const payload = {
+    id: "default",
+    colores: {
+      picos: catalog.picos || [],
+      tambor: catalog.tambor || [],
+      temas: catalog.temas || [],
+      precios: catalog.precios || {},
+      factura: catalog.factura || {},
+      tiendas: catalog.tiendas || [],
+    },
+    colores_picos: catalog.picos || [],
+    colores_tambor: catalog.tambor || [],
+  };
+  try {
+    const { error } = await sb.from("app_config").upsert(payload);
+    return !error;
+  } catch (_) {
+    return false;
+  }
+};
+
+window.buildFullBackup = function (extra) {
+  extra = extra || {};
+  const ordersMem = window.readLocalJson(window.VIVA_ORDERS_KEY, { config: {}, ordenes: [], lastOrderNum: 0 });
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    app: "viva-pinata",
+    catalog: extra.catalog || window.getLocalCatalogCache(),
+    orders: extra.orders || (Array.isArray(ordersMem.ordenes) ? ordersMem.ordenes : []),
+    invoices: extra.invoices || window.readLocalJson(window.VIVA_INVOICES_KEY, []),
+    deviceTienda: window.getCachedDeviceTienda(),
+    config: extra.config || ordersMem.config || null,
+  };
+};
+
+window.downloadVivaBackup = function (extra) {
+  const backup = window.buildFullBackup(extra);
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  const day = new Date().toISOString().slice(0, 10);
+  a.href = URL.createObjectURL(blob);
+  a.download = "viva-pinata-respaldo-" + day + ".json";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 800);
+  return backup;
+};
+
+window.applyImportedBackupLocally = function (backup) {
+  if (!backup || typeof backup !== "object") throw new Error("Archivo inválido");
+  const orders = backup.orders || backup.ordenes || [];
+  const catalog = backup.catalog || null;
+  const invoices = backup.invoices || [];
+  const device = backup.deviceTienda || backup.device_tienda;
+  const prev = window.readLocalJson(window.VIVA_ORDERS_KEY, { config: {}, ordenes: [], lastOrderNum: 0 });
+  const mergedOrders = window.mergeById(orders, prev.ordenes || []);
+  const lastOrderNum = mergedOrders.reduce((m, o) => Math.max(m, Number(o.numero) || 0), Number(prev.lastOrderNum) || 0);
+  window.writeLocalJson(window.VIVA_ORDERS_KEY, {
+    config: backup.config || prev.config || {},
+    ordenes: mergedOrders,
+    lastOrderNum,
+  });
+  if (catalog) {
+    const mergedCat = window.mergeCatalogs(catalog, window.getLocalCatalogCache(), device);
+    window.saveLocalCatalogCache(mergedCat);
+  } else if (device) {
+    window.saveLocalCatalogCache(window.mergeCatalogs({}, window.getLocalCatalogCache(), device));
+  }
+  if (invoices.length) {
+    const prevInv = window.readLocalJson(window.VIVA_INVOICES_KEY, []);
+    window.writeLocalJson(window.VIVA_INVOICES_KEY, window.mergeById(invoices, prevInv));
+  }
+  if (device && device.id) {
+    window.writeLocalJson(window.VIVA_DEVICE_TIENDA_KEY, device);
+  }
+  return {
+    orders: mergedOrders.length,
+    invoices: (invoices || []).length,
+    tiendas: (catalog && catalog.tiendas && catalog.tiendas.length) || 0,
+    temas: (catalog && catalog.temas && catalog.temas.length) || 0,
+  };
+};
+
+window.showRecoveryToast = function (msg) {
+  if (!msg) return;
+  if (typeof window.showToast === "function") {
+    window.showToast(msg);
+    return;
+  }
+  const id = "vpRecoveryToast";
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = id;
+    el.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483646;background:#111827;color:#fff;padding:12px 16px;border-radius:14px;font:700 13px/1.35 'Plus Jakarta Sans',system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.28);max-width:min(92vw,420px);text-align:center";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = "1";
+  clearTimeout(window._vpRecoveryToastTimer);
+  window._vpRecoveryToastTimer = setTimeout(() => { el.style.opacity = "0"; }, 4200);
+};
+
