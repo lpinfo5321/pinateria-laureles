@@ -50,7 +50,7 @@ Aquí está la info crítica del proyecto (URLs, repos, servicios, credenciales 
 
 - **Proyecto viejo (MUERTO, no usar):** `cmovllgbckjupficttal` — DNS ya no resuelve; Restore quedó atascado en `COMING_UP`
 - **Proyecto actual:** `ookzdtohzhjdlmxgulpa` · URL: `https://ookzdtohzhjdlmxgulpa.supabase.co`
-- **Recuperación:** la nube nueva nació vacía. La app ahora une lo local del aparato (`pinatasOrden_v1`, `viva_catalog_v1`, `viva_device_tienda`, `viva_invoices_v1`) y lo vuelve a subir. En Taller → Ajustes → Nube hay **Descargar / Importar respaldo**.
+- **Recuperación:** la nube nueva nació vacía. Se restauró el catálogo **Laureles + Primavera** y 41 figuras en `app_config`. Pedidos/facturas del proyecto viejo no estaban en git. La app une lo local del aparato y hay **Descargar / Importar respaldo** en Taller → Nube.
 - **Tablas principales:**
   - `orders` — órdenes de piñatas
   - `app_config` — config global (PIN admin, WhatsApp, **colores/tiendas/figuras/precios/factura** todo en columna `colores` JSONB)

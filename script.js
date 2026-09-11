@@ -46,9 +46,10 @@ const state = {
 };
 
 // Lista de tiendas activas (poblada desde Supabase). Default: Laureles.
-let TIENDAS_DISPONIBLES = [
-  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true}
-];
+let TIENDAS_DISPONIBLES = (window.VIVA_BASE_TIENDAS || [
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
+  {id:"t-primavera", nombre:"Primavera", emoji:"🌸", direccion:"", telefono:"", pin:"", activo:true, esDefault:false}
+]).map(t => ({...t}));
 
 // Master PIN — siempre funciona en cualquier tienda o panel admin
 const MASTER_PIN = "1020";
@@ -533,25 +534,8 @@ let COLORES_TAMBOR = [
 ];
 
 // Figuras/temas disponibles cargados desde Supabase
-let TEMAS_DISPONIBLES = [
-  {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
-  {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
-  {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
-  {id:"t-unicornio",  nombre:"Unicornio",  emoji:"🦄",  activo:true},
-  {id:"t-princesa",   nombre:"Princesa",   emoji:"👑",  activo:true},
-  {id:"t-sirenita",   nombre:"Sirenita",   emoji:"🧜‍♀️", activo:true},
-  {id:"t-bluey",      nombre:"Bluey",      emoji:"🐾",  activo:true},
-  {id:"t-dinosaurio", nombre:"Dinosaurio", emoji:"🦖",  activo:true},
-  {id:"t-futbol",     nombre:"Fútbol",     emoji:"⚽",  activo:true},
-  {id:"t-carros",     nombre:"Carros",     emoji:"🏎️", activo:true},
-  {id:"t-mario",      nombre:"Mario Bros", emoji:"🍄",  activo:true},
-  {id:"t-mariposa",   nombre:"Mariposa",    emoji:"🦋",  activo:true},
-  {id:"t-espacio",    nombre:"Espacio",    emoji:"🚀",  activo:true},
-  {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
-  {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
-  {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
-];
-const BASE_TEMAS_PC = [
+let TEMAS_DISPONIBLES = (window.VIVA_BASE_TEMAS || []).map(t => ({...t}));
+const BASE_TEMAS_PC = (window.VIVA_BASE_TEMAS || [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
   {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
   {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
@@ -568,7 +552,7 @@ const BASE_TEMAS_PC = [
   {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
   {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
   {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
-];
+]).map(t => ({...t}));
 
 // Colores base idénticos a los del taller (BASE_PICOS / BASE_TAMBOR en taller.html)
 const BASE_PICOS_PC = [

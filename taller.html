@@ -1600,11 +1600,12 @@ let _factura = {
   color:"#ec4899"
 };
 
-const BASE_TIENDAS = [
+const BASE_TIENDAS = (window.VIVA_BASE_TIENDAS || [
   {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
-];
+  {id:"t-primavera", nombre:"Primavera", emoji:"🌸", direccion:"", telefono:"", pin:"", activo:true, esDefault:false},
+]).map(t=>({...t}));
 
-const BASE_TEMAS = [
+const BASE_TEMAS = (window.VIVA_BASE_TEMAS || [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
   {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
   {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
@@ -1621,7 +1622,7 @@ const BASE_TEMAS = [
   {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
   {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
   {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
-];
+]).map(t=>({...t}));
 
 async function pullColores(){
   if(!_sb) return;

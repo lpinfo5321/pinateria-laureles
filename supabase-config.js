@@ -257,6 +257,57 @@ window.VIVA_CATALOG_KEY = "viva_catalog_v1";
 window.VIVA_INVOICES_KEY = "viva_invoices_v1";
 window.VIVA_DEVICE_TIENDA_KEY = "viva_device_tienda";
 
+/** Catálogo reconstruido: Laureles + Primavera y figuras típicas del taller.
+ *  Los pedidos/facturas del proyecto viejo no estaban en git; esto sí se puede
+ *  volver a poner para que la app no quede vacía. */
+window.VIVA_BASE_TIENDAS = [
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
+  {id:"t-primavera", nombre:"Primavera", emoji:"🌸", direccion:"", telefono:"", pin:"", activo:true, esDefault:false},
+];
+window.VIVA_BASE_TEMAS = [
+  {id:"t-spiderman",  nombre:"Spiderman",     emoji:"🕸️", activo:true},
+  {id:"t-superheroe", nombre:"Superhéroe",    emoji:"🦸",  activo:true},
+  {id:"t-batman",     nombre:"Batman",        emoji:"🦇",  activo:true},
+  {id:"t-unicornio",  nombre:"Unicornio",     emoji:"🦄",  activo:true},
+  {id:"t-princesa",   nombre:"Princesa",      emoji:"👑",  activo:true},
+  {id:"t-sirenita",   nombre:"Sirenita",      emoji:"🧜‍♀️", activo:true},
+  {id:"t-bluey",      nombre:"Bluey",         emoji:"🐾",  activo:true},
+  {id:"t-dinosaurio", nombre:"Dinosaurio",    emoji:"🦖",  activo:true},
+  {id:"t-futbol",     nombre:"Fútbol",         emoji:"⚽",  activo:true},
+  {id:"t-carros",     nombre:"Carros",        emoji:"🏎️", activo:true},
+  {id:"t-mario",      nombre:"Mario Bros",    emoji:"🍄",  activo:true},
+  {id:"t-mariposa",   nombre:"Mariposa",      emoji:"🦋",  activo:true},
+  {id:"t-espacio",    nombre:"Espacio",       emoji:"🚀",  activo:true},
+  {id:"t-arcoiris",   nombre:"Arcoíris",      emoji:"🌈",  activo:true},
+  {id:"t-flores",     nombre:"Flores",        emoji:"🌸",  activo:true},
+  {id:"t-corazones",  nombre:"Corazones",     emoji:"💖",  activo:true},
+  {id:"t-frozen",     nombre:"Frozen",        emoji:"❄️", activo:true},
+  {id:"t-mickey",     nombre:"Mickey",        emoji:"🐭",  activo:true},
+  {id:"t-minnie",     nombre:"Minnie",        emoji:"🎀",  activo:true},
+  {id:"t-hello-kitty",nombre:"Hello Kitty",   emoji:"🐱",  activo:true},
+  {id:"t-stitch",     nombre:"Stitch",        emoji:"💙",  activo:true},
+  {id:"t-pawpatrol",  nombre:"Paw Patrol",    emoji:"🐶",  activo:true},
+  {id:"t-peppa",      nombre:"Peppa Pig",     emoji:"🐷",  activo:true},
+  {id:"t-barbie",     nombre:"Barbie",        emoji:"💅",  activo:true},
+  {id:"t-encanto",    nombre:"Encanto",       emoji:"🦋",  activo:true},
+  {id:"t-moana",      nombre:"Moana",         emoji:"🌊",  activo:true},
+  {id:"t-coco",       nombre:"Coco",          emoji:"💀",  activo:true},
+  {id:"t-minions",    nombre:"Minions",       emoji:"💛",  activo:true},
+  {id:"t-avengers",   nombre:"Avengers",      emoji:"🛡️", activo:true},
+  {id:"t-sonic",      nombre:"Sonic",         emoji:"💨",  activo:true},
+  {id:"t-pokemon",    nombre:"Pokémon",       emoji:"⚡",  activo:true},
+  {id:"t-minecraft",  nombre:"Minecraft",     emoji:"🟩",  activo:true},
+  {id:"t-ladybug",    nombre:"Ladybug",       emoji:"🐞",  activo:true},
+  {id:"t-dragonball", nombre:"Dragon Ball",   emoji:"🟠",  activo:true},
+  {id:"t-toystory",   nombre:"Toy Story",      emoji:"🤠",  activo:true},
+  {id:"t-babyshark",  nombre:"Baby Shark",    emoji:"🦈",  activo:true},
+  {id:"t-cocomelon",  nombre:"Cocomelon",     emoji:"🍉",  activo:true},
+  {id:"t-lol",        nombre:"LOL Surprise", emoji:"💄",  activo:true},
+  {id:"t-pony",       nombre:"My Little Pony",emoji:"🐴",  activo:true},
+  {id:"t-rapunzel",   nombre:"Rapunzel",      emoji:"💇",  activo:true},
+  {id:"t-nona",       nombre:"Número / edad", emoji:"🔢",  activo:true},
+];
+
 window.readLocalJson = function (key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -359,12 +410,20 @@ window.mergeCatalogs = function (cloudColores, localCatalog, deviceTienda) {
     extraStore.esDefault = tiendas.length === 0 ? true : false;
     tiendas.push(extraStore);
   }
+  const hasPrimavera = tiendas.some((t) => String(t.id).toLowerCase().includes("primavera") || /primavera/i.test(t.nombre || ""));
+  if (tiendas.length <= 1 || !hasPrimavera) {
+    const baseStores = (window.VIVA_BASE_TIENDAS || []).map(window.normalizeTienda).filter(Boolean);
+    tiendas = window.mergeById(tiendas, baseStores);
+  }
   if (tiendas.length && !tiendas.some((t) => t.esDefault && t.activo !== false)) {
     const firstActive = tiendas.find((t) => t.activo !== false) || tiendas[0];
     if (firstActive) firstActive.esDefault = true;
   }
 
-  const temas = window.mergeById(cloud.temas || [], local.temas || []);
+  let temas = window.mergeById(cloud.temas || [], local.temas || []);
+  if ((cloud.temas || []).length <= 16) {
+    temas = window.mergeById(temas, window.VIVA_BASE_TEMAS || []);
+  }
   const picos = (cloud.picos && cloud.picos.length) ? cloud.picos : (local.picos || []);
   const tambor = (cloud.tambor && cloud.tambor.length) ? cloud.tambor : (local.tambor || []);
 
