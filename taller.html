@@ -1542,7 +1542,7 @@ function closeColorPicker(){
 /* ══════════════════════════════════════════════
    PANEL DE AJUSTES: COLORES
 ══════════════════════════════════════════════ */
-const BASE_PICOS = [
+const BASE_PICOS = (window.VIVA_BASE_PICOS || [
   {id:"rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
   {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
   {id:"fucsia",  nombre:"Fucsia",   hex:"#f72585",activo:true},
@@ -1557,8 +1557,8 @@ const BASE_PICOS = [
   {id:"blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
   {id:"negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
   {id:"plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
-];
-const BASE_TAMBOR = [
+]).map(c=>({...c}));
+const BASE_TAMBOR = (window.VIVA_BASE_TAMBOR || [
   {id:"t-rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
   {id:"t-rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
   {id:"t-naranja", nombre:"Naranja",  hex:"#ff6b35",activo:true},
@@ -1569,7 +1569,7 @@ const BASE_TAMBOR = [
   {id:"t-blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
   {id:"t-negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
   {id:"t-plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
-];
+]).map(c=>({...c}));
 
 let _colores = [];       // legado (colores genéricos)
 let _coloresPicos  = [];

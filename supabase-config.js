@@ -307,6 +307,55 @@ window.VIVA_BASE_TEMAS = [
   {id:"t-rapunzel",   nombre:"Rapunzel",      emoji:"💇",  activo:true},
   {id:"t-nona",       nombre:"Número / edad", emoji:"🔢",  activo:true},
 ];
+window.VIVA_BASE_PICOS = [
+  {id:"rojo",       nombre:"Rojo",        hex:"#e63946", activo:true},
+  {id:"rojoOscuro", nombre:"Rojo vino",   hex:"#9d0208", activo:true},
+  {id:"coral",      nombre:"Coral",        hex:"#ff7f50", activo:true},
+  {id:"salmon",     nombre:"Salmón",      hex:"#fa8072", activo:true},
+  {id:"rosa",       nombre:"Rosa",        hex:"#ff3d8f", activo:true},
+  {id:"fucsia",     nombre:"Fucsia",      hex:"#f72585", activo:true},
+  {id:"magenta",    nombre:"Magenta",     hex:"#ff00aa", activo:true},
+  {id:"pastelRosa", nombre:"Rosa pastel", hex:"#ffafcc", activo:true},
+  {id:"naranja",    nombre:"Naranja",     hex:"#ff6b35", activo:true},
+  {id:"durazno",    nombre:"Durazno",     hex:"#ffcba4", activo:true},
+  {id:"mostaza",    nombre:"Mostaza",     hex:"#e1a400", activo:true},
+  {id:"amarillo",   nombre:"Amarillo",    hex:"#ffd60a", activo:true},
+  {id:"dorado",     nombre:"Dorado",      hex:"#ffba08", activo:true},
+  {id:"crema",      nombre:"Crema",       hex:"#fef3c7", activo:true},
+  {id:"lima",       nombre:"Lima",        hex:"#a8ff78", activo:true},
+  {id:"menta",      nombre:"Menta",       hex:"#98ff98", activo:true},
+  {id:"verde",      nombre:"Verde",       hex:"#52c41a", activo:true},
+  {id:"esmeralda",  nombre:"Esmeralda",    hex:"#2d6a4f", activo:true},
+  {id:"oliva",      nombre:"Oliva",       hex:"#708238", activo:true},
+  {id:"turquesa",   nombre:"Turquesa",    hex:"#2ec4b6", activo:true},
+  {id:"cyan",       nombre:"Cyan",        hex:"#5ee7ff", activo:true},
+  {id:"celeste",    nombre:"Celeste",     hex:"#87ceeb", activo:true},
+  {id:"azul",       nombre:"Azul",        hex:"#3a86ff", activo:true},
+  {id:"azulOscuro", nombre:"Azul noche",   hex:"#023e8a", activo:true},
+  {id:"morado",     nombre:"Morado",      hex:"#8338ec", activo:true},
+  {id:"violeta",    nombre:"Violeta",     hex:"#c77dff", activo:true},
+  {id:"lavanda",    nombre:"Lavanda",     hex:"#b5a8e6", activo:true},
+  {id:"lila",       nombre:"Lila",        hex:"#cdb4db", activo:true},
+  {id:"blanco",     nombre:"Blanco",      hex:"#ffffff", activo:true},
+  {id:"champagne",  nombre:"Champagne",   hex:"#f7e7ce", activo:true},
+  {id:"beige",      nombre:"Beige",       hex:"#e8d5b7", activo:true},
+  {id:"plata",      nombre:"Plateado",    hex:"#c0c0c0", activo:true},
+  {id:"gris",       nombre:"Gris",        hex:"#808080", activo:true},
+  {id:"chocolate",  nombre:"Chocolate",   hex:"#6b4423", activo:true},
+  {id:"marron",     nombre:"Marrón",      hex:"#8b4513", activo:true},
+  {id:"negro",      nombre:"Negro",       hex:"#1a1a1a", activo:true},
+];
+window.VIVA_BASE_TAMBOR = window.VIVA_BASE_PICOS.map(function (c) {
+  return { id: "t-" + c.id, nombre: c.nombre, hex: c.hex, activo: true };
+});
+window.VIVA_BASE_FACTURA = {
+  marca: "VIVA PIÑATA",
+  subtitulo: "Piñatas hechas a mano",
+  cliente: "PINATAS",
+  contacto: "",
+  piePagina: "Gracias por su preferencia",
+  color: "#ec4899",
+};
 
 window.readLocalJson = function (key, fallback) {
   try {
@@ -404,7 +453,7 @@ window.mergeCatalogs = function (cloudColores, localCatalog, deviceTienda) {
   const cloud = window.extractCatalogFromColores(cloudColores);
   const local = localCatalog && typeof localCatalog === "object" ? localCatalog : {};
   const localTiendas = (local.tiendas || []).map(window.normalizeTienda).filter(Boolean);
-  const tiendas = window.mergeById(cloud.tiendas, localTiendas);
+  let tiendas = window.mergeById(cloud.tiendas, localTiendas);
   const extraStore = window.normalizeTienda(deviceTienda);
   if (extraStore && !tiendas.some((t) => t.id === extraStore.id)) {
     extraStore.esDefault = tiendas.length === 0 ? true : false;
@@ -424,8 +473,8 @@ window.mergeCatalogs = function (cloudColores, localCatalog, deviceTienda) {
   if ((cloud.temas || []).length <= 16) {
     temas = window.mergeById(temas, window.VIVA_BASE_TEMAS || []);
   }
-  const picos = (cloud.picos && cloud.picos.length) ? cloud.picos : (local.picos || []);
-  const tambor = (cloud.tambor && cloud.tambor.length) ? cloud.tambor : (local.tambor || []);
+  const picos = ((cloud.picos && cloud.picos.length > 14) ? cloud.picos : window.mergeById(cloud.picos || [], window.VIVA_BASE_PICOS || local.picos || []));
+  const tambor = ((cloud.tambor && cloud.tambor.length > 10) ? cloud.tambor : window.mergeById(cloud.tambor || [], window.VIVA_BASE_TAMBOR || []));
 
   const cloudPrecios = cloud.precios || {};
   const localPrecios = local.precios || {};
@@ -437,7 +486,7 @@ window.mergeCatalogs = function (cloudColores, localCatalog, deviceTienda) {
   const localFac = local.factura || {};
   const cloudFacCustom = !!(cloudFac.marca && cloudFac.marca !== "PINATAS") || !!cloudFac.subtitulo || !!cloudFac.contacto;
   const localFacCustom = !!(localFac.marca && localFac.marca !== "PINATAS") || !!localFac.subtitulo || !!localFac.contacto;
-  const factura = cloudFacCustom ? cloudFac : (localFacCustom ? localFac : (cloud.factura || local.factura || null));
+  const factura = cloudFacCustom ? cloudFac : (localFacCustom ? localFac : (window.VIVA_BASE_FACTURA || cloud.factura || local.factura || null));
 
   return {
     picos,
@@ -457,7 +506,7 @@ window.catalogNeedsCloudWrite = function (cloudColores, merged) {
   const mergedTemas = (merged.temas || []).length;
   const cloudPrice = Number(cloud.precios?.estrella || 0) + Number(cloud.precios?.personalizada || 0);
   const mergedPrice = Number(merged.precios?.estrella || 0) + Number(merged.precios?.personalizada || 0);
-  return mergedStores > cloudStores || mergedTemas > cloudTemas || mergedPrice > cloudPrice;
+  return mergedStores > cloudStores || mergedTemas > cloudTemas || mergedPrice > cloudPrice || (merged.picos || []).length > (cloud.picos || []).length;
 };
 
 window.cloudUpsertOrders = async function (sb, orders) {
