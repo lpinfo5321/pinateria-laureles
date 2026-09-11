@@ -526,10 +526,14 @@
           <div class="settings-section-title" style="margin-top:0">
             <span style="font-size:16px">☁️</span> Conexión a Supabase
           </div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">El proyecto viejo está apagado (error 522). Restore no lo enciende. Crea un proyecto <strong>nuevo</strong> y conéctalo aquí. Los pedidos del proyecto viejo solo los puede recuperar el soporte de Supabase.</p>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Si se corta Vercel o Supabase, este aparato guarda una copia. Al volver a abrir, la app sube sola las tiendas, figuras, pedidos y facturas que todavía estén aquí.</p>
           <p id="nubeStatus" style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted)">Revisando…</p>
           <button type="button" class="btn-add-color" id="btnOpenNubeSetup">Conectar proyecto nuevo</button>
           <button type="button" class="btn-add-color" id="btnCopyNubeSql" style="margin-top:8px;background:#111827">Copiar SQL de tablas</button>
+          <button type="button" class="btn-add-color" id="btnExportBackup" style="margin-top:8px;background:#0f766e">Descargar respaldo</button>
+          <button type="button" class="btn-add-color" id="btnImportBackup" style="margin-top:8px;background:#7c3aed">Importar respaldo</button>
+          <input type="file" id="backupFileInput" accept="application/json,.json" hidden />
+          <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.45">El proyecto viejo de Supabase quedó apagado. Lo que sí se puede recuperar es lo que quedó en celulares/computadoras que usaban la app, o un archivo JSON de respaldo.</p>
         </div>
 
       </div><!-- /.settings-body -->
@@ -767,6 +771,7 @@ async function initCloud(){
 
 async function pullOrders(){
   if(!_sb) return;
+  const localOrders = typeof window.getLocalOrdersCache === "function" ? window.getLocalOrdersCache() : [];
   const [ordRes, invRes] = await Promise.all([
     _sb.from("orders")
       .select("id,numero,estado,data,created_at")
@@ -782,14 +787,37 @@ async function pullOrders(){
       .flatMap(r => invoiceOrderIds(r.data))
       .filter(Boolean)
   );
-  _orders = (ordRes.data||[]).map(r=>({
+  const cloudOrders = (ordRes.data||[]).map(r=>({
     ...r.data, id:r.id, numero:r.numero, estado:r.estado,
     creada: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
   }));
+  const localOnly = localOrders.filter(o => o && o.id && !cloudOrders.some(c => c.id === o.id));
+  if(!cloudOrders.length && localOrders.length){
+    _orders = localOrders.map(o => ({...o}));
+    if(typeof window.cloudUpsertOrders === "function"){
+      const res = await window.cloudUpsertOrders(_sb, localOrders);
+      if(res.ok) showToast("Se recuperaron " + res.ok + " órdenes de este aparato");
+    }
+  } else {
+    _orders = cloudOrders.concat(localOnly);
+    _orders.sort((a,b)=>(b.numero||0)-(a.numero||0));
+    if(localOnly.length && typeof window.cloudUpsertOrders === "function"){
+      const res = await window.cloudUpsertOrders(_sb, localOnly);
+      if(res.ok) showToast("Se subieron " + res.ok + " órdenes que estaban solo aquí");
+    }
+  }
   // Guardar IDs conocidos en la carga inicial (sin notificar)
   if(_initialLoad){
     _orders.forEach(o => _knownIds.add(o.id));
     _initialLoad = false;
+  }
+  if(typeof window.writeLocalJson === "function"){
+    const prev = window.readLocalJson(window.VIVA_ORDERS_KEY, { config: {}, ordenes: [], lastOrderNum: 0 }) || {};
+    window.writeLocalJson(window.VIVA_ORDERS_KEY, {
+      config: prev.config || {},
+      ordenes: _orders,
+      lastOrderNum: _orders.reduce((m,o)=>Math.max(m, o.numero||0), Number(prev.lastOrderNum)||0)
+    });
   }
   render();
 }
@@ -1514,7 +1542,7 @@ function closeColorPicker(){
 /* ══════════════════════════════════════════════
    PANEL DE AJUSTES: COLORES
 ══════════════════════════════════════════════ */
-const BASE_PICOS = [
+const BASE_PICOS = (window.VIVA_BASE_PICOS || [
   {id:"rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
   {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
   {id:"fucsia",  nombre:"Fucsia",   hex:"#f72585",activo:true},
@@ -1529,8 +1557,8 @@ const BASE_PICOS = [
   {id:"blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
   {id:"negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
   {id:"plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
-];
-const BASE_TAMBOR = [
+]).map(c=>({...c}));
+const BASE_TAMBOR = (window.VIVA_BASE_TAMBOR || [
   {id:"t-rojo",    nombre:"Rojo",     hex:"#e63946",activo:true},
   {id:"t-rosa",    nombre:"Rosa",     hex:"#ff3d8f",activo:true},
   {id:"t-naranja", nombre:"Naranja",  hex:"#ff6b35",activo:true},
@@ -1541,7 +1569,7 @@ const BASE_TAMBOR = [
   {id:"t-blanco",  nombre:"Blanco",   hex:"#ffffff",activo:true},
   {id:"t-negro",   nombre:"Negro",    hex:"#1a1a1a",activo:true},
   {id:"t-plata",   nombre:"Plateado", hex:"#c0c0c0",activo:true},
-];
+]).map(c=>({...c}));
 
 let _colores = [];       // legado (colores genéricos)
 let _coloresPicos  = [];
@@ -1572,11 +1600,12 @@ let _factura = {
   color:"#ec4899"
 };
 
-const BASE_TIENDAS = [
+const BASE_TIENDAS = (window.VIVA_BASE_TIENDAS || [
   {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
-];
+  {id:"t-primavera", nombre:"Primavera", emoji:"🌸", direccion:"", telefono:"", pin:"", activo:true, esDefault:false},
+]).map(t=>({...t}));
 
-const BASE_TEMAS = [
+const BASE_TEMAS = (window.VIVA_BASE_TEMAS || [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
   {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
   {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
@@ -1593,7 +1622,7 @@ const BASE_TEMAS = [
   {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
   {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
   {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
-];
+]).map(t=>({...t}));
 
 async function pullColores(){
   if(!_sb) return;
@@ -1674,6 +1703,38 @@ async function pullColores(){
       _tiendas = BASE_TIENDAS.map(t=>({...t}));
     }
 
+    // Unir con catálogo local + tienda de este aparato (recupera sucursales/figuras tras un corte)
+    if(typeof window.mergeCatalogs === "function"){
+      const localCat = typeof window.getLocalCatalogCache === "function" ? window.getLocalCatalogCache() : null;
+      const device = typeof window.getCachedDeviceTienda === "function" ? window.getCachedDeviceTienda() : null;
+      const cloudColores = (data?.colores && !Array.isArray(data.colores)) ? data.colores : {
+        picos: _coloresPicos, tambor: _coloresTambor, temas: _temas, precios: _precios, factura: _factura, tiendas: _tiendas
+      };
+      const merged = window.mergeCatalogs(cloudColores, localCat, device);
+      if(merged.picos?.length) _coloresPicos = merged.picos;
+      if(merged.tambor?.length) _coloresTambor = merged.tambor;
+      if(merged.temas?.length) _temas = merged.temas;
+      if(merged.tiendas?.length) _tiendas = merged.tiendas;
+      if(merged.precios) _precios = {
+        estrella: Number(merged.precios.estrella)||_precios.estrella||0,
+        personalizada: Number(merged.precios.personalizada)||_precios.personalizada||0,
+        libre: { nombre: String(merged.precios.libre?.nombre||_precios.libre?.nombre||""), precio: Number(merged.precios.libre?.precio)||0 }
+      };
+      if(merged.factura) _factura = {
+        marca: String(merged.factura.marca||_factura.marca||"PINATAS"),
+        subtitulo: String(merged.factura.subtitulo||""),
+        cliente: String(merged.factura.cliente||_factura.cliente||"PINATAS"),
+        contacto: String(merged.factura.contacto||""),
+        piePagina: String(merged.factura.piePagina||_factura.piePagina||"Gracias por su preferencia"),
+        color: String(merged.factura.color||_factura.color||"#ec4899")
+      };
+      if(typeof window.saveLocalCatalogCache === "function") window.saveLocalCatalogCache(_buildColoresPayload());
+      if(typeof window.catalogNeedsCloudWrite === "function" && window.catalogNeedsCloudWrite(cloudColores, merged)){
+        await _saveColoresInternal();
+        showToast("Se recuperaron tiendas o figuras de este aparato");
+      }
+    }
+
     // Si no había nada guardado, sembrar y guardar
     const eraVacio = !data?.colores_picos?.length && !(data?.colores && !Array.isArray(data.colores) && data.colores.picos?.length);
     if(eraVacio) _saveColoresInternal();
@@ -1702,6 +1763,7 @@ async function _saveColoresInternal(){
       colores_tambor: _coloresTambor
     }).catch(()=>{});
   }
+  if(typeof window.saveLocalCatalogCache === "function") window.saveLocalCatalogCache(_buildColoresPayload());
 }
 
 function collectPreciosFromDOM(){
@@ -1832,6 +1894,7 @@ async function saveColores(){
     showToast("❌ Error al guardar: "+error.message);
     return;
   }
+  if(typeof window.saveLocalCatalogCache === "function") window.saveLocalCatalogCache(_buildColoresPayload());
   showToast("✅ Cambios guardados");
 }
 
@@ -2195,6 +2258,50 @@ document.getElementById("btnCopyNubeSql")?.addEventListener("click", async ()=>{
     showToast("SQL copiado. Pégalo en SQL Editor de Supabase.");
   }catch(_){
     showToast("No pude copiar el SQL");
+  }
+});
+document.getElementById("btnExportBackup")?.addEventListener("click", ()=>{
+  if(typeof window.downloadVivaBackup !== "function"){ showToast("No se pudo exportar"); return; }
+  window.downloadVivaBackup({
+    catalog: _buildColoresPayload(),
+    orders: _orders,
+    config: _config
+  });
+  showToast("Respaldo descargado");
+});
+document.getElementById("btnImportBackup")?.addEventListener("click", ()=>{
+  document.getElementById("backupFileInput")?.click();
+});
+document.getElementById("backupFileInput")?.addEventListener("change", async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(!file) return;
+  try{
+    const backup = JSON.parse(await file.text());
+    const stats = window.applyImportedBackupLocally(backup);
+    const cat = backup.catalog || {};
+    if(cat.tiendas?.length) _tiendas = cat.tiendas;
+    if(cat.temas?.length) _temas = cat.temas;
+    if(cat.picos?.length) _coloresPicos = cat.picos;
+    if(cat.tambor?.length) _coloresTambor = cat.tambor;
+    if(cat.precios) _precios = cat.precios;
+    if(cat.factura) _factura = {..._factura, ...cat.factura};
+    if(backup.orders?.length && _sb && typeof window.cloudUpsertOrders === "function"){
+      await window.cloudUpsertOrders(_sb, backup.orders);
+    }
+    if(backup.invoices?.length && _sb && typeof window.cloudUpsertInvoices === "function"){
+      await window.cloudUpsertInvoices(_sb, backup.invoices);
+    }
+    if(_sb) await _saveColoresInternal();
+    await pullOrders().catch(()=>{});
+    renderTiendas();
+    renderTemaSection();
+    loadPreciosToDOM();
+    loadFacturaToDOM();
+    showToast("Respaldo importado: " + (stats.orders||0) + " órdenes, " + (stats.tiendas||0) + " tiendas");
+  }catch(err){
+    showToast("No pude leer ese archivo");
+    console.error(err);
   }
 });
 

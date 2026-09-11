@@ -46,9 +46,10 @@ const state = {
 };
 
 // Lista de tiendas activas (poblada desde Supabase). Default: Laureles.
-let TIENDAS_DISPONIBLES = [
-  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true}
-];
+let TIENDAS_DISPONIBLES = (window.VIVA_BASE_TIENDAS || [
+  {id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", pin:"", activo:true, esDefault:true},
+  {id:"t-primavera", nombre:"Primavera", emoji:"🌸", direccion:"", telefono:"", pin:"", activo:true, esDefault:false}
+]).map(t => ({...t}));
 
 // Master PIN — siempre funciona en cualquier tienda o panel admin
 const MASTER_PIN = "1020";
@@ -274,14 +275,31 @@ function showDeviceStoreModal({ allowClose = false, onPick } = {}) {
 
 /** Verifica si necesita preguntar la tienda. Llamar después de cargar tiendas. */
 function maybeAskDeviceStore() {
-  const activas = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
-  if (!activas.length) return; // sin tiendas configuradas, no preguntar
   let dev = getDeviceTienda();
-  // Si la tienda guardada ya no existe o está inactiva, resetear
-  if (dev && !activas.some(t => t.id === dev.id)) {
-    setDeviceTienda(null);
-    dev = null;
+  // Si este aparato recuerda una tienda que la nube vacía ya no trae, NO la borres:
+  // regrésala al catálogo (así se recuperan sucursales después de un corte).
+  if (dev && !TIENDAS_DISPONIBLES.some(t => t.id === dev.id)) {
+    const recovered = {
+      id: dev.id,
+      nombre: dev.nombre || "Tienda",
+      emoji: dev.emoji || "🏬",
+      direccion: dev.direccion || "",
+      telefono: dev.telefono || "",
+      pin: dev.pin || "",
+      activo: true,
+      esDefault: TIENDAS_DISPONIBLES.length === 0
+    };
+    TIENDAS_DISPONIBLES = [...TIENDAS_DISPONIBLES, recovered];
+    if (typeof window.saveLocalCatalogCache === "function") {
+      const cached = typeof window.getLocalCatalogCache === "function" ? window.getLocalCatalogCache() : {};
+      window.saveLocalCatalogCache({
+        ...(cached || {}),
+        tiendas: TIENDAS_DISPONIBLES
+      });
+    }
   }
+  const activasAhora = TIENDAS_DISPONIBLES.filter(t => t.activo !== false);
+  if (!activasAhora.length) return;
   if (!dev) {
     showDeviceStoreModal();
   } else {
@@ -489,12 +507,35 @@ $$(".type-card").forEach(card => {
    ============================================================ */
 
 // Colores por categoría cargados desde Supabase (se llenan en applyCloudColors)
-let COLORES_PICOS  = [];
-let COLORES_TAMBOR = [];
+let COLORES_PICOS  = [
+  {id:"rojo",    nombre:"Rojo",     hex:"#e63946"},
+  {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f"},
+  {id:"fucsia",  nombre:"Fucsia",   hex:"#f72585"},
+  {id:"naranja", nombre:"Naranja",  hex:"#ff6b35"},
+  {id:"amarillo",nombre:"Amarillo", hex:"#ffd60a"},
+  {id:"dorado",  nombre:"Dorado",   hex:"#ffba08"},
+  {id:"verde",   nombre:"Verde",    hex:"#52c41a"},
+  {id:"turquesa",nombre:"Turquesa", hex:"#2ec4b6"},
+  {id:"azul",    nombre:"Azul",     hex:"#3a86ff"},
+  {id:"morado",  nombre:"Morado",   hex:"#8338ec"},
+  {id:"blanco",  nombre:"Blanco",   hex:"#ffffff"},
+  {id:"negro",   nombre:"Negro",    hex:"#1a1a1a"},
+];
+let COLORES_TAMBOR = [
+  {id:"rojo",    nombre:"Rojo",     hex:"#e63946"},
+  {id:"rosa",    nombre:"Rosa",     hex:"#ff3d8f"},
+  {id:"naranja", nombre:"Naranja",  hex:"#ff6b35"},
+  {id:"amarillo",nombre:"Amarillo", hex:"#ffd60a"},
+  {id:"verde",   nombre:"Verde",    hex:"#52c41a"},
+  {id:"azul",    nombre:"Azul",     hex:"#3a86ff"},
+  {id:"morado",  nombre:"Morado",   hex:"#8338ec"},
+  {id:"blanco",  nombre:"Blanco",   hex:"#ffffff"},
+  {id:"negro",   nombre:"Negro",    hex:"#1a1a1a"},
+];
 
 // Figuras/temas disponibles cargados desde Supabase
-let TEMAS_DISPONIBLES = [];
-const BASE_TEMAS_PC = [
+let TEMAS_DISPONIBLES = (window.VIVA_BASE_TEMAS || []).map(t => ({...t}));
+const BASE_TEMAS_PC = (window.VIVA_BASE_TEMAS || [
   {id:"t-spiderman",  nombre:"Spiderman",  emoji:"🕸️", activo:true},
   {id:"t-superheroe", nombre:"Superhéroe", emoji:"🦸",  activo:true},
   {id:"t-batman",     nombre:"Batman",     emoji:"🦇",  activo:true},
@@ -511,7 +552,7 @@ const BASE_TEMAS_PC = [
   {id:"t-arcoiris",   nombre:"Arcoíris",   emoji:"🌈",  activo:true},
   {id:"t-flores",     nombre:"Flores",     emoji:"🌸",  activo:true},
   {id:"t-corazones",  nombre:"Corazones",  emoji:"💖",  activo:true},
-];
+]).map(t => ({...t}));
 
 // Colores base idénticos a los del taller (BASE_PICOS / BASE_TAMBOR en taller.html)
 const BASE_PICOS_PC = [
@@ -590,6 +631,17 @@ function applyCloudColors(cloudColores, cloudPicos, cloudTambor) {
 
   // Si ya llegaron las tiendas y nunca preguntamos en este dispositivo, preguntar ahora
   maybeAskDeviceStore();
+
+  if (typeof window.saveLocalCatalogCache === "function" && cloudColores && !Array.isArray(cloudColores)) {
+    window.saveLocalCatalogCache({
+      picos: picosRaw.length ? picosRaw : COLORES_PICOS,
+      tambor: tamborRaw.length ? tamborRaw : COLORES_TAMBOR,
+      temas: temasRaw.length ? temasRaw : TEMAS_DISPONIBLES,
+      tiendas: (cloudColores.tiendas && cloudColores.tiendas.length) ? cloudColores.tiendas : TIENDAS_DISPONIBLES,
+      precios: cloudColores.precios,
+      factura: cloudColores.factura
+    });
+  }
 
   // Actualizar etiquetas dinámicas (welcome, etc.)
   refreshDynamicLabels();
@@ -1722,6 +1774,10 @@ function updateCloudBadge(online) {
 
 async function pullAllFromCloud() {
   if (!_sb) return;
+  const localOrdersBefore = Array.isArray(_mem.ordenes) ? _mem.ordenes.slice() : [];
+  const localCatalog = typeof window.getLocalCatalogCache === "function" ? window.getLocalCatalogCache() : null;
+  const deviceStore = typeof window.getCachedDeviceTienda === "function" ? window.getCachedDeviceTienda() : getDeviceTienda();
+
   const [ord, cfg] = await Promise.all([
     _sb.from("orders").select("*").order("numero", { ascending: false }),
     _sb.from("app_config").select("*").eq("id", "default").maybeSingle(),
@@ -1729,7 +1785,22 @@ async function pullAllFromCloud() {
   if (ord.error)  throw ord.error;
   if (cfg.error)  throw cfg.error;
 
-  _mem.ordenes = (ord.data || []).map(rowToOrder);
+  const cloudOrders = (ord.data || []).map(rowToOrder);
+  const localOnlyOrders = localOrdersBefore.filter(o => o && o.id && !cloudOrders.some(c => c.id === o.id));
+  if (!cloudOrders.length && localOrdersBefore.length) {
+    _mem.ordenes = localOrdersBefore;
+    if (typeof window.cloudUpsertOrders === "function") {
+      const res = await window.cloudUpsertOrders(_sb, localOrdersBefore);
+      if (res.ok) window.showRecoveryToast("Se recuperaron " + res.ok + " órdenes de este aparato");
+    }
+  } else {
+    _mem.ordenes = cloudOrders.concat(localOnlyOrders);
+    _mem.ordenes.sort((a, b) => (b.numero || 0) - (a.numero || 0));
+    if (localOnlyOrders.length && typeof window.cloudUpsertOrders === "function") {
+      const res = await window.cloudUpsertOrders(_sb, localOnlyOrders);
+      if (res.ok) window.showRecoveryToast("Se subieron " + res.ok + " órdenes que estaban solo en este aparato");
+    }
+  }
   _mem.lastOrderNum = _mem.ordenes.reduce((m, o) => Math.max(m, o.numero || 0), 0);
   if (cfg.data) {
     _mem.config = {
@@ -1738,7 +1809,20 @@ async function pullAllFromCloud() {
       direccion:        cfg.data.direccion || "Laureles",
       pin:              cfg.data.pin       || "",
     };
-    applyCloudColors(cfg.data.colores || [], cfg.data.colores_picos || [], cfg.data.colores_tambor || []);
+    const merged = typeof window.mergeCatalogs === "function"
+      ? window.mergeCatalogs(cfg.data.colores || {}, localCatalog, deviceStore)
+      : null;
+    if (merged) {
+      applyCloudColors(merged, merged.picos || [], merged.tambor || []);
+      if (typeof window.saveLocalCatalogCache === "function") window.saveLocalCatalogCache(merged);
+      if (typeof window.catalogNeedsCloudWrite === "function" && window.catalogNeedsCloudWrite(cfg.data.colores, merged)) {
+        await window.cloudUpsertCatalog(_sb, merged);
+        const extraStores = (merged.tiendas || []).length - ((cfg.data.colores && cfg.data.colores.tiendas) || []).length;
+        if (extraStores > 0) window.showRecoveryToast("Se recuperaron tiendas de este aparato");
+      }
+    } else {
+      applyCloudColors(cfg.data.colores || [], cfg.data.colores_picos || [], cfg.data.colores_tambor || []);
+    }
   }
   persistLocal();
   if (state.step === "admin") renderAdmin();
@@ -1774,7 +1858,11 @@ async function pollAppConfigOnce(){
       direccion:        data.direccion || "",
       pin:              data.pin       || "",
     };
-    applyCloudColors(data.colores || [], data.colores_picos || [], data.colores_tambor || []);
+    const merged = typeof window.mergeCatalogs === "function"
+      ? window.mergeCatalogs(data.colores || {}, window.getLocalCatalogCache?.(), window.getCachedDeviceTienda?.())
+      : null;
+    if (merged) applyCloudColors(merged, merged.picos || [], merged.tambor || []);
+    else applyCloudColors(data.colores || [], data.colores_picos || [], data.colores_tambor || []);
     persistLocal();
     if (state.step === "admin") renderAdmin();
     console.log("[poll] app_config cambió → app actualizada");
@@ -1823,7 +1911,11 @@ function subscribeToCloudChanges() {
           direccion:        p.new.direccion || "",
           pin:              p.new.pin       || "",
         };
-        applyCloudColors(p.new.colores || [], p.new.colores_picos || [], p.new.colores_tambor || []);
+        const merged = typeof window.mergeCatalogs === "function"
+          ? window.mergeCatalogs(p.new.colores || {}, window.getLocalCatalogCache?.(), window.getCachedDeviceTienda?.())
+          : null;
+        if (merged) applyCloudColors(merged, merged.picos || [], merged.tambor || []);
+        else applyCloudColors(p.new.colores || [], p.new.colores_picos || [], p.new.colores_tambor || []);
         persistLocal();
         if (state.step === "admin") renderAdmin();
         console.log("[realtime] app_config actualizado");
@@ -3225,6 +3317,10 @@ async function updateCloudStoreProfile(updatedStore) {
     }
     const { error: writeErr } = await _sb.from("app_config").upsert({ id: "default", colores: col });
     if (writeErr) throw writeErr;
+    if (typeof window.saveLocalCatalogCache === "function") {
+      const cached = typeof window.getLocalCatalogCache === "function" ? (window.getLocalCatalogCache() || {}) : {};
+      window.saveLocalCatalogCache({ ...cached, ...col, tiendas: col.tiendas });
+    }
     return true;
   } catch(e) {
     console.error("updateCloudStoreProfile:", e);
@@ -3865,7 +3961,12 @@ document.addEventListener("DOMContentLoaded", () => {
   renderAdmin();
 
   // Pintar colores/temas locales YA, para no quedarse en "Cargando…" si la nube no responde
-  applyCloudColors({}, [], []);
+  const cachedCatalog = typeof window.getLocalCatalogCache === "function" ? window.getLocalCatalogCache() : null;
+  if (cachedCatalog && (cachedCatalog.tiendas?.length || cachedCatalog.temas?.length || cachedCatalog.picos?.length)) {
+    applyCloudColors(cachedCatalog, cachedCatalog.picos || [], cachedCatalog.tambor || []);
+  } else {
+    applyCloudColors({}, [], []);
+  }
 
   // Conectar a la nube (si está configurada) — no bloquea la UI
   initCloud().catch(e => console.warn("Cloud init error:", e));

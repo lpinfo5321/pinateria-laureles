@@ -557,6 +557,22 @@ async function loadAll(){
     return;
   }
   _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
+  const localInv = typeof window.readLocalJson === "function" ? window.readLocalJson(window.VIVA_INVOICES_KEY, []) : [];
+  const localOnlyInv = (Array.isArray(localInv)?localInv:[]).filter(i => i && i.id && !_invoices.some(c => c.id === i.id));
+  if(!_invoices.length && localInv.length){
+    _invoices = localInv.slice();
+    if(typeof window.cloudUpsertInvoices === "function"){
+      const res = await window.cloudUpsertInvoices(_sb, localInv);
+      if(res.ok) toast("Se recuperaron " + res.ok + " facturas de este aparato");
+    }
+  } else if(localOnlyInv.length){
+    _invoices = _invoices.concat(localOnlyInv);
+    if(typeof window.cloudUpsertInvoices === "function"){
+      const res = await window.cloudUpsertInvoices(_sb, localOnlyInv);
+      if(res.ok) toast("Se subieron " + res.ok + " facturas que estaban solo aquí");
+    }
+  }
+  if(typeof window.writeLocalJson === "function") window.writeLocalJson(window.VIVA_INVOICES_KEY, _invoices);
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   const pp=cfgRes.data?.colores?.precios;
   if(pp){
@@ -590,6 +606,10 @@ async function loadAll(){
   } else {
     _tiendas = [{id:"t-laureles", nombre:"Laureles", emoji:"🏬", direccion:"", telefono:"", activo:true, esDefault:true}];
   }
+  if(typeof window.mergeCatalogs === "function"){
+    const merged = window.mergeCatalogs(cfgRes.data?.colores || {}, window.getLocalCatalogCache?.(), window.getCachedDeviceTienda?.());
+    if(merged.tiendas?.length) _tiendas = merged.tiendas;
+  }
   renderTiendaFilter();
   renderList();
   // Si el editor está abierto (modo taller), refrescar lista de órdenes
@@ -609,8 +629,14 @@ async function saveInvoice(inv){
   const ordenIds = invoiceOrderIds(inv);
   inv.ordenIds = ordenIds;
   const{cliente,items,subtotal,impuesto,total,notas,estado,iva}=inv;
-  const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}});
+  const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds,tienda:inv.tienda}});
   if(error){toast("Error: "+error.message);return false;}
+  if(typeof window.readLocalJson === "function" && typeof window.writeLocalJson === "function"){
+    const prev = window.readLocalJson(window.VIVA_INVOICES_KEY, []);
+    const next = (Array.isArray(prev)?prev:[]).filter(x => x && x.id !== inv.id);
+    next.unshift(inv);
+    window.writeLocalJson(window.VIVA_INVOICES_KEY, next);
+  }
   await syncInvoiceOrderStates(inv);
   await loadAll();return true;
 }
