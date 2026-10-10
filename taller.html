@@ -646,10 +646,38 @@
       .topbar > .filters{flex-basis:300px!important}
       .topbar > .filters .fchip{padding:9px 8px!important;font-size:12.5px!important}
     }
+    /* V5: tarjetas aún más pequeñas en tableta (caben más en pantalla) */
+    @media (min-width:600px) and (min-height:440px){
+      .container{padding-top:12px;padding-left:calc(12px + var(--safe-l));padding-right:calc(12px + var(--safe-r))}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))!important;gap:10px;align-items:start}
+      .card{border-radius:16px;border-top-width:4px!important;box-shadow:0 1px 3px rgba(27,19,48,.05),0 8px 20px -12px rgba(124,58,237,.3)}
+      .card::before{height:80px}
+      .card__body{padding:10px 11px 4px;gap:6px}
+      .card__num{font-size:18px}
+      .card__badge{font-size:9px;padding:3px 7px;gap:4px}
+      .card__badge::before{width:5px;height:5px;box-shadow:none}
+      .card__client{font-size:14px;line-height:1.15}
+      .card__date{font-size:10.5px;padding:5px 8px;border-radius:9px;gap:4px}
+      .card__date svg{width:11px;height:11px}
+      .card__pinata{padding:7px 9px;border-radius:11px;font-size:11.5px}
+      .card__pinata-type{font-size:9px;padding:3px 8px;margin-bottom:4px}
+      .card__cat-label{font-size:9.5px;margin:4px 0 3px}
+      .card__colors{gap:4px;margin-bottom:2px}
+      .card__color-chip{font-size:11px;padding:2px 9px 2px 2px;gap:5px;border-width:1px}
+      .card__color-dot{width:20px;height:20px;border-width:2px}
+      .card__tematica{font-size:11.5px;padding:4px 9px;margin-top:2px}
+      .card__imagen-badge{font-size:10.5px;padding:3px 8px}
+      .card__desc{font-size:11.5px;-webkit-line-clamp:2}
+      .card__thumb{max-height:90px}
+      .card__footer{margin:0 10px;padding:8px 0 10px;gap:6px}
+      .btn-base{min-height:36px;font-size:11.5px;border-radius:10px;padding:6px;gap:4px}
+      .btn-base svg{width:12px;height:12px}
+      .btn-verde{min-height:38px;font-size:12.5px}
+    }
     .app-ver{position:fixed;right:8px;bottom:calc(4px + env(safe-area-inset-bottom,0px));font-size:10px;font-weight:700;color:rgba(27,19,48,.35);z-index:5;pointer-events:none}
     /* Tableta en vertical: un poco más compacto aún */
     @media (min-width:600px) and (max-width:1000px) and (min-height:440px){
-      .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))!important}
       .topbar > .filters{flex-basis:330px}
       .topbar > .filters .fchip{padding:9px 12px;font-size:13px}
       .btn-fact__txt{display:none}
@@ -945,7 +973,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <div class="app-ver" id="appVer">v3.9.2</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.2 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+  <div class="app-ver" id="appVer">v3.9.3</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.3 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 
   <!-- Popup rueda de colores -->
   <div class="cp-popup" id="cpPopup">
