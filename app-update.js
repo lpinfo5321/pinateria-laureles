@@ -39,7 +39,7 @@
       <div class="vp-update-card">
         <div class="vp-update-icon">↻</div>
         <h2 class="vp-update-title">Nueva actualización lista</h2>
-        <p class="vp-update-text">Se publicó una versión nueva de Viva Piñata. Actualiza ahora para ver los últimos cambios.</p>
+        <p class="vp-update-text">Nuevo diseño del Taller más moderno, adaptado a celular y tableta, y ahora funciona en horizontal. Actualiza ahora para verlo.</p>
         <button type="button" class="vp-update-btn" id="vpUpdateNow">Actualizar ahora</button>
       </div>
     `;
