@@ -266,7 +266,7 @@
   <style>
     /* ═══════ SECCIÓN FACTURAS DEL TALLER · ADAPTACIÓN TABLETA (celulares casi sin cambios) ═══════ */
     .topbar__sec{display:none}
-    @media (min-width:768px) and (min-height:560px){
+    @media (min-width:600px) and (min-height:480px){
       :root{ --grad:linear-gradient(135deg,#f43f8e 0%,#c026d3 55%,#7c3aed 100%); --bg:#f6f1fb; }
       html,body{ font-family:'Plus Jakarta Sans','Inter',sans-serif; }
       body{ background:radial-gradient(900px 500px at 0% -10%,rgba(244,63,142,.14),transparent 60%),radial-gradient(800px 500px at 100% 0%,rgba(124,58,237,.14),transparent 60%),var(--bg); background-attachment:fixed; }
@@ -320,11 +320,19 @@
       .det-card{ border-radius:26px; max-width:560px; }
       .modal-foot,.prev-foot{ background:rgba(255,255,255,.95); }
     }
-    @media (min-width:768px) and (max-width:1000px) and (min-height:560px){
+    @media (min-width:600px) and (max-width:1000px) and (min-height:480px){
       .topbar > .filter-bar{ flex-basis:430px; }
       .topbar > .filter-bar .filter-btn{ padding:10px 8px; font-size:12.5px; }
       .topbar__sub{ display:none; }
     }
+    @media (min-width:600px) and (max-width:767px) and (min-height:480px){
+      .topbar{ gap:10px; padding:0 12px; }
+      .topbar__brand > div{ display:none; }
+      .topbar > .filter-bar{ flex-basis:300px; }
+      .topbar > .filter-bar .filter-btn{ padding:10px 6px; font-size:12px; }
+      .btn-new{ padding:10px 12px; }
+    }
+    .app-ver{ position:fixed; right:8px; bottom:4px; font-size:10px; font-weight:700; color:rgba(17,24,39,.35); z-index:5; pointer-events:none; }
   </style>
 </head>
 <body>
@@ -488,6 +496,7 @@
   </div>
 </div>
 
+<div class="app-ver">v3.9.1</div>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -1530,7 +1539,7 @@ checkPin();
   const fb=document.querySelector("#mainApp .filter-bar"), bar=document.querySelector("#mainApp .topbar"), btnNew=document.getElementById("btnNew");
   if(!fb||!bar||!btnNew) return;
   const home=fb.parentNode, after=fb.nextElementSibling;
-  const mq=matchMedia("(min-width:768px) and (min-height:560px)");
+  const mq=matchMedia("(min-width:600px) and (min-height:480px)");
   function place(){
     if(mq.matches){ if(fb.parentNode!==bar) bar.insertBefore(fb, btnNew); }
     else if(fb.parentNode!==home){ home.insertBefore(fb, after); }

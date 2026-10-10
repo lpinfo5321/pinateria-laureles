@@ -39,7 +39,7 @@
       <div class="vp-update-card">
         <div class="vp-update-icon">↻</div>
         <h2 class="vp-update-title">Nueva actualización lista</h2>
-        <p class="vp-update-text">Taller mejorado para tableta: tarjetas más compactas, filtros en la barra superior y sección de Facturas integrada al Taller. Actualiza ahora para verlo.</p>
+        <p class="vp-update-text">Taller mejorado para tabletas de todos los tamaños: tarjetas más compactas, filtros en la barra superior y Facturas integrada al Taller. Actualiza ahora para verlo.</p>
         <button type="button" class="vp-update-btn" id="vpUpdateNow">Actualizar ahora</button>
       </div>
     `;
