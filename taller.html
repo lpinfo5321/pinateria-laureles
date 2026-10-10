@@ -598,7 +598,7 @@
   <style>
     /* ═══════════════ V4 · SOLO TABLETA / PANTALLA GRANDE (celulares no cambian) ═══════════════ */
     .btn-fact__txt{display:none}
-    @media (min-width:600px) and (min-height:480px){
+    @media (min-width:600px) and (min-height:440px){
       :root{--topbar-h:68px}
       /* Barra superior unificada: marca | filtros | acciones */
       .topbar{gap:18px}
@@ -640,7 +640,7 @@
       .modal-box{max-width:700px}
     }
     /* Tabletas pequeñas (600–767px): barra más apretada */
-    @media (min-width:600px) and (max-width:767px) and (min-height:480px){
+    @media (min-width:600px) and (max-width:767px) and (min-height:440px){
       .topbar{gap:10px;padding-left:calc(12px + var(--safe-l));padding-right:calc(12px + var(--safe-r))}
       .topbar__brand > div{display:none}
       .topbar > .filters{flex-basis:300px!important}
@@ -648,7 +648,7 @@
     }
     .app-ver{position:fixed;right:8px;bottom:calc(4px + env(safe-area-inset-bottom,0px));font-size:10px;font-weight:700;color:rgba(27,19,48,.35);z-index:5;pointer-events:none}
     /* Tableta en vertical: un poco más compacto aún */
-    @media (min-width:600px) and (max-width:1000px) and (min-height:480px){
+    @media (min-width:600px) and (max-width:1000px) and (min-height:440px){
       .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}
       .topbar > .filters{flex-basis:330px}
       .topbar > .filters .fchip{padding:9px 12px;font-size:13px}
@@ -945,7 +945,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <div class="app-ver">v3.9.1</div>
+  <div class="app-ver" id="appVer">v3.9.2</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.2 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 
   <!-- Popup rueda de colores -->
   <div class="cp-popup" id="cpPopup">
@@ -2629,7 +2629,7 @@ btnClose?.addEventListener("click", () => {
   const f=document.getElementById("filters"), bar=document.querySelector(".topbar"), grid=document.getElementById("grid");
   if(!f||!bar||!grid) return;
   const home=grid.parentNode;
-  const mq=window.matchMedia("(min-width:600px) and (min-height:480px)");
+  const mq=window.matchMedia("(min-width:600px) and (min-height:440px)");
   function place(){
     if(mq.matches){ if(f.parentNode!==bar) bar.insertBefore(f, bar.children[1]||null); }
     else if(f.parentNode!==home){ home.insertBefore(f, grid); }
