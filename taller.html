@@ -517,6 +517,84 @@
     }
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
+  <style>
+    /* ═══════════════ V3 · HORIZONTAL + MÁS VISUAL ═══════════════ */
+    html,body{overflow-x:hidden}
+    /* Rejilla fluida: se acomoda sola en cualquier ancho/orientación */
+    .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr))!important}
+
+    /* Tarjeta con tinte según estado */
+    .card{isolation:isolate}
+    .card::before{content:"";position:absolute;inset:0 0 auto 0;height:130px;z-index:-1;opacity:.9;
+      background:linear-gradient(180deg,rgba(245,158,11,.16),transparent)}
+    .card:has(.card__bar--con-duda)::before{background:linear-gradient(180deg,rgba(236,72,153,.18),transparent)}
+    .card:has(.card__bar--lista)::before{background:linear-gradient(180deg,rgba(34,197,94,.18),transparent)}
+    .card__bar{display:none}
+    .card:has(.card__bar--pendiente){border-top:5px solid #f59e0b}
+    .card:has(.card__bar--con-duda){border-top:5px solid #ec4899}
+    .card:has(.card__bar--lista){border-top:5px solid #22c55e}
+    .card__head{align-items:flex-start}
+    .card__num{font-size:30px;line-height:1}
+    .card__badge{display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(6px)}
+    .card__badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 22%,transparent)}
+    .badge--pendiente::before{animation:pulseDot 1.6s ease-in-out infinite}
+    @keyframes pulseDot{50%{transform:scale(1.35);opacity:.65}}
+    .card__client{font-size:21px;font-weight:800}
+    .card__date{width:fit-content;max-width:100%;font-weight:800}
+    .card__pinata-type{display:inline-flex;align-items:center;gap:6px;background:var(--grad);color:#fff;padding:5px 12px;border-radius:999px;font-size:11px;letter-spacing:.07em}
+    .card__cat-label{font-size:12px;color:var(--violet);opacity:.85}
+    .card__color-chip{background:#fff;border:1.5px solid rgba(27,19,48,.08);box-shadow:0 4px 12px -6px rgba(27,19,48,.25)}
+    .card__color-dot{width:34px;height:34px;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(27,19,48,.12),0 4px 10px -2px rgba(27,19,48,.3)}
+    .card__tematica{display:inline-flex;align-items:center;gap:8px;font-size:15px;background:rgba(236,72,153,.08);padding:8px 14px;border-radius:12px}
+    .card__footer{border-top:1px dashed rgba(27,19,48,.1);margin:0 16px;padding:14px 0 16px}
+    .btn-verde{background:linear-gradient(135deg,#34d399,#16a34a);font-size:15px;min-height:54px}
+    .btn-wa{background:linear-gradient(135deg,#34d399,#0d9488)}
+
+    /* Filtros: píldoras más vistosas */
+    .fchip{font-weight:800;letter-spacing:.01em}
+    .fchip:not(.active):hover{color:var(--magenta)}
+
+    /* Modales con encabezado degradado */
+    .modal-header{background:linear-gradient(135deg,rgba(244,63,142,.10),rgba(124,58,237,.10)),#fff}
+    .det-star-wrap{border-radius:22px;background:radial-gradient(circle at 50% 30%,#fff,#fdf2f8 55%,#ede9fe)}
+    .det-row{padding:9px 0}
+
+    /* ───── HORIZONTAL ───── */
+    /* Tableta horizontal (≥900px de ancho, poca altura): contenido más ancho, 3 columnas */
+    @media(orientation:landscape) and (min-width:900px){
+      .container{max-width:1440px}
+      .modal-box{max-width:860px}
+      .settings-panel{width:min(560px,60vw)}
+    }
+    /* Celular horizontal */
+    @media(orientation:landscape) and (max-height:520px){
+      .topbar{position:static;min-height:54px;padding-top:calc(6px + var(--safe-t));padding-bottom:6px}
+      .filters{position:static;margin-bottom:12px;padding:6px 0}
+      .fchip{min-height:40px;padding:8px 14px}
+      .container{padding-top:12px;padding-bottom:calc(40px + var(--safe-b))}
+      .grid{gap:14px}
+      .card__body{padding:14px 16px 8px;gap:10px}
+      .card__num{font-size:24px}
+      .card__client{font-size:18px}
+      .card__footer{padding:10px 0 12px}
+      .btn-base{min-height:44px}
+      /* modales: ocupan toda la altura, cabecera pegada */
+      .modal-backdrop.open{align-items:center;padding:calc(8px + var(--safe-t)) calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) calc(8px + var(--safe-l))}
+      .modal-box{max-height:100%;border-radius:20px;max-width:760px}
+      .modal-box::before{display:none}
+      .modal-body{padding:14px 18px 18px}
+      .det-star-svg{width:130px;height:130px}
+      .settings-panel{width:min(520px,70vw);border-radius:24px 0 0 24px}
+      .settings-head{padding:12px 18px 8px}
+      .settings-tabs{padding:6px 10px}
+      .set-tab{min-height:38px;padding:8px 14px}
+      .settings-foot{padding:8px 14px calc(8px + var(--safe-b));flex-direction:row;align-items:center}
+      .settings-foot .ft-add-row.is-active{flex:1}
+      .btn-save-colors{flex:1;min-height:46px;margin-top:0}
+      .btn-add-color{min-height:46px}
+      .order-toast{top:12px}
+    }
+  </style>
 </head>
 <body>
 
