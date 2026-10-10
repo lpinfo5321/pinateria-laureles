@@ -6,7 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <title>Facturas · Viva Piñata</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#ec4899" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -262,6 +263,69 @@
     .pin-inp:focus { outline:none; border-color:var(--pink); }
     .pin-err { color:#dc2626; font-size:13px; font-weight:700; min-height:18px; }
   </style>
+  <style>
+    /* ═══════ SECCIÓN FACTURAS DEL TALLER · ADAPTACIÓN TABLETA (celulares casi sin cambios) ═══════ */
+    .topbar__sec{display:none}
+    @media (min-width:768px) and (min-height:560px){
+      :root{ --grad:linear-gradient(135deg,#f43f8e 0%,#c026d3 55%,#7c3aed 100%); --bg:#f6f1fb; }
+      html,body{ font-family:'Plus Jakarta Sans','Inter',sans-serif; }
+      body{ background:radial-gradient(900px 500px at 0% -10%,rgba(244,63,142,.14),transparent 60%),radial-gradient(800px 500px at 100% 0%,rgba(124,58,237,.14),transparent 60%),var(--bg); background-attachment:fixed; }
+
+      /* Barra superior: volver | marca | filtros | nueva */
+      .topbar{ height:68px; padding:0 24px; gap:16px; background:rgba(255,255,255,.75); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); border-bottom:1px solid rgba(255,255,255,.7); box-shadow:0 8px 30px -18px rgba(124,58,237,.35); }
+      .topbar__brand{ flex-shrink:0; gap:12px; }
+      .topbar__emoji{ width:40px; height:40px; border-radius:13px; background:var(--grad); display:grid; place-items:center; font-size:21px; box-shadow:0 8px 18px -6px rgba(192,38,211,.55); }
+      .topbar__title{ font-family:'Fraunces',serif; font-size:18px; font-weight:900; }
+      .topbar__sub{ font-size:11.5px; font-weight:600; }
+      .topbar > .filter-bar{ flex:0 1 560px; min-width:0; padding:0; background:transparent; border:0; gap:0; overflow:visible; margin-left:auto; }
+      .topbar > .filter-bar .filter-btn{ flex:1; border:0; background:rgba(27,19,48,.05); border-radius:0; padding:10px 14px; font-size:13px; font-weight:800; min-height:42px; white-space:nowrap; }
+      .topbar > .filter-bar .filter-btn:first-child{ border-radius:14px 0 0 14px; }
+      .topbar > .filter-bar .filter-btn:last-child{ border-radius:0 14px 14px 0; }
+      .topbar > .filter-bar .filter-btn.is-active{ background:var(--grad); color:#fff; box-shadow:0 6px 16px -6px rgba(192,38,211,.6); }
+      .btn-back-home{ margin-right:0; width:42px; height:42px; border-radius:14px; background:rgba(27,19,48,.05); border:0; }
+      .btn-new{ background:var(--grad); padding:11px 18px; border-radius:14px; min-height:42px; font-size:13.5px; box-shadow:0 8px 18px -8px rgba(192,38,211,.6); }
+
+      /* Filtro de tienda: barra fina centrada */
+      .tienda-filter{ background:transparent; border:0; padding:14px 24px 0; max-width:1400px; margin:0 auto; }
+      .tienda-chip{ padding:8px 14px; font-size:12.5px; background:rgba(255,255,255,.8); }
+      .tienda-chip.is-active{ background:var(--grad); }
+
+      /* Lista en rejilla */
+      .list-wrap{ max-width:1400px; padding:16px 24px 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; align-items:start; }
+      .list-wrap > .empty{ grid-column:1/-1; }
+      .inv-card{ margin:0; border:1px solid rgba(255,255,255,.9); border-radius:20px; padding:16px; box-shadow:0 2px 4px rgba(27,19,48,.04),0 14px 34px -16px rgba(124,58,237,.28); transition:transform .2s,box-shadow .2s; }
+      .inv-card:hover{ transform:translateY(-3px); box-shadow:0 22px 44px -18px rgba(124,58,237,.38); }
+      .inv-card__num{ font-family:'Fraunces',serif; font-size:13px; }
+      .inv-card__client{ font-size:16px; }
+      .inv-card__total{ font-family:'Fraunces',serif; font-size:20px; background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+      .act-btn{ min-height:38px; padding:7px 12px; border-radius:11px; }
+
+      /* Editor: panel centrado y selección de piñatas en 2 columnas */
+      .ed-head{ height:68px; padding:0 24px; background:rgba(255,255,255,.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+      .ed-back{ width:42px; height:42px; border-radius:14px; }
+      .ed-body{ padding:20px 24px 110px; }
+      .ed-body .ed-step{ max-width:1100px; margin:0 auto; }
+      #ordersList{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+      #ordersList .pin-card, #manualList .pin-card{ margin-bottom:0; }
+      #manualList{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; }
+      .pin-card{ border-radius:18px; }
+      .pin-card.sel{ border-color:#c026d3; box-shadow:0 10px 26px -12px rgba(192,38,211,.4); }
+      .ed-foot{ padding:12px max(24px,calc((100vw - 1100px)/2)) calc(12px + env(safe-area-inset-bottom,0px)); background:rgba(255,255,255,.9); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+      .btn-next{ background:var(--grad); min-height:48px; padding:12px 26px; border-radius:15px; }
+      .foot-total-val{ font-family:'Fraunces',serif; }
+
+      /* Vista previa y detalle: ventanas centradas */
+      .overlay{ padding:24px; align-items:center; }
+      .modal{ border-radius:26px; max-width:820px; overflow:hidden; }
+      .det-card{ border-radius:26px; max-width:560px; }
+      .modal-foot,.prev-foot{ background:rgba(255,255,255,.95); }
+    }
+    @media (min-width:768px) and (max-width:1000px) and (min-height:560px){
+      .topbar > .filter-bar{ flex-basis:430px; }
+      .topbar > .filter-bar .filter-btn{ padding:10px 8px; font-size:12.5px; }
+      .topbar__sub{ display:none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -283,12 +347,12 @@
 <!-- ═══ MAIN LIST ═══ -->
 <div id="mainApp" style="display:none">
   <header class="topbar">
-    <a href="/" class="btn-back-home" id="btnBackHome" title="Volver a la app de piñatas">
+    <a href="/taller" class="btn-back-home" id="btnBackHome" title="Volver al Taller">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </a>
     <div class="topbar__brand">
       <span class="topbar__emoji">🪅</span>
-      <div><div class="topbar__title">Viva Piñata</div><div class="topbar__sub">Facturas</div></div>
+      <div><div class="topbar__title">Taller · Facturas</div><div class="topbar__sub">Facturación del taller</div></div>
     </div>
     <button class="btn-new" id="btnNew">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1459,6 +1523,21 @@ document.getElementById("btnPrint").addEventListener("click",()=>{
 function initSb(){const cfg=typeof window.getSupabaseConfig==="function"?window.getSupabaseConfig():(window.SUPABASE_CONFIG||{});if(cfg.url&&cfg.anonKey)_sb=supabase.createClient(cfg.url,cfg.anonKey);}
 initSb();
 checkPin();
+</script>
+<script>
+/* Tableta: los filtros de estado se integran a la barra superior; en celular quedan como antes. */
+(function(){
+  const fb=document.querySelector("#mainApp .filter-bar"), bar=document.querySelector("#mainApp .topbar"), btnNew=document.getElementById("btnNew");
+  if(!fb||!bar||!btnNew) return;
+  const home=fb.parentNode, after=fb.nextElementSibling;
+  const mq=matchMedia("(min-width:768px) and (min-height:560px)");
+  function place(){
+    if(mq.matches){ if(fb.parentNode!==bar) bar.insertBefore(fb, btnNew); }
+    else if(fb.parentNode!==home){ home.insertBefore(fb, after); }
+  }
+  place();
+  (mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place));
+})();
 </script>
 </body>
 </html>

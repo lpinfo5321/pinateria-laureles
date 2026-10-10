@@ -595,6 +595,59 @@
       .order-toast{top:12px}
     }
   </style>
+  <style>
+    /* ═══════════════ V4 · SOLO TABLETA / PANTALLA GRANDE (celulares no cambian) ═══════════════ */
+    .btn-fact__txt{display:none}
+    @media (min-width:768px) and (min-height:560px){
+      :root{--topbar-h:68px}
+      /* Barra superior unificada: marca | filtros | acciones */
+      .topbar{gap:18px}
+      .topbar > .filters{
+        position:static;margin:0;padding:0;width:auto;max-width:none;flex:0 1 400px;min-width:0;
+        background:transparent;overflow:visible;
+      }
+      .topbar > .filters .fchip{min-height:42px;padding:9px 18px;font-size:13.5px;
+        background:rgba(27,19,48,.05);border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+      .topbar > .filters .fchip:first-child{border-radius:14px 0 0 14px}
+      .topbar > .filters .fchip:last-child{border-radius:0 14px 14px 0}
+      .topbar > .filters .fchip.active{background:var(--grad);color:#fff;box-shadow:0 6px 16px -6px rgba(192,38,211,.6)}
+      .btn-fact{width:auto!important;padding:0 14px!important;gap:8px}
+      .btn-fact__txt{display:inline;font-size:13px;font-weight:800}
+      .topbar__sub{display:none}
+
+      /* Contenido: tarjetas compactas, rejilla que se adapta al ancho */
+      .container{max-width:none;padding-top:18px;padding-left:calc(20px + var(--safe-l));padding-right:calc(20px + var(--safe-r))}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(235px,1fr))!important;gap:14px}
+      .card{border-radius:20px}
+      .card__body{padding:14px 15px 6px;gap:9px}
+      .card__num{font-size:22px}
+      .card__badge{font-size:10px;padding:4px 9px}
+      .card__client{font-size:16.5px}
+      .card__date{font-size:12px;padding:7px 11px;border-radius:11px}
+      .card__pinata{padding:10px 12px;border-radius:14px;font-size:13px}
+      .card__pinata-type{font-size:10px;padding:4px 10px}
+      .card__cat-label{font-size:11px;margin:6px 0 4px}
+      .card__colors{gap:6px;margin-bottom:4px}
+      .card__color-chip{font-size:12.5px;padding:4px 12px 4px 4px;gap:7px}
+      .card__color-dot{width:26px;height:26px}
+      .card__tematica{font-size:13px;padding:6px 11px}
+      .card__imagen-badge{font-size:12px;padding:4px 10px}
+      .card__desc{font-size:13px}
+      .card__thumb{max-height:130px}
+      .card__footer{margin:0 14px;padding:10px 0 13px;gap:8px}
+      .btn-base{min-height:42px;font-size:13px;border-radius:13px;padding:9px}
+      .btn-verde{min-height:46px;font-size:14px}
+      .modal-box{max-width:700px}
+    }
+    /* Tableta en vertical: un poco más compacto aún */
+    @media (min-width:768px) and (max-width:1000px) and (min-height:560px){
+      .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}
+      .topbar > .filters{flex-basis:330px}
+      .topbar > .filters .fchip{padding:9px 12px;font-size:13px}
+      .btn-fact__txt{display:none}
+      .btn-fact{width:42px!important;padding:0!important}
+    }
+  </style>
 </head>
 <body>
 
@@ -607,8 +660,9 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:4px">
-      <a href="/facturas" target="_blank" class="btn-bell" title="Facturas para Laureles" style="text-decoration:none">
+      <a href="/facturas" class="btn-bell btn-fact" title="Facturas para Laureles" style="text-decoration:none">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="btn-fact__txt">Facturas</span>
       </a>
       <button class="btn-bell" id="btnBell" title="Notificaciones">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -2559,6 +2613,21 @@ btnInstall?.addEventListener("click", async () => {
 btnClose?.addEventListener("click", () => {
   installBar.style.display = "none";
 });
+</script>
+<script>
+/* En tableta/pantalla grande, los filtros se integran a la barra superior. En celular se quedan donde estaban. */
+(function(){
+  const f=document.getElementById("filters"), bar=document.querySelector(".topbar"), grid=document.getElementById("grid");
+  if(!f||!bar||!grid) return;
+  const home=grid.parentNode;
+  const mq=window.matchMedia("(min-width:768px) and (min-height:560px)");
+  function place(){
+    if(mq.matches){ if(f.parentNode!==bar) bar.insertBefore(f, bar.children[1]||null); }
+    else if(f.parentNode!==home){ home.insertBefore(f, grid); }
+  }
+  place();
+  (mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place));
+})();
 </script>
 </body>
 </html>
