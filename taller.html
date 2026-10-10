@@ -598,7 +598,7 @@
   <style>
     /* ═══════════════ V4 · SOLO TABLETA / PANTALLA GRANDE (celulares no cambian) ═══════════════ */
     .btn-fact__txt{display:none}
-    @media (min-width:600px) and (min-height:440px){
+    @media (min-width:600px) and (min-height:440px), (min-width:520px) and (min-height:700px){
       :root{--topbar-h:68px}
       /* Barra superior unificada: marca | filtros | acciones */
       .topbar{gap:18px}
@@ -640,14 +640,14 @@
       .modal-box{max-width:700px}
     }
     /* Tabletas pequeñas (600–767px): barra más apretada */
-    @media (min-width:600px) and (max-width:767px) and (min-height:440px){
+    @media (min-width:600px) and (max-width:767px) and (min-height:440px), (min-width:520px) and (max-width:599px) and (min-height:700px){
       .topbar{gap:10px;padding-left:calc(12px + var(--safe-l));padding-right:calc(12px + var(--safe-r))}
       .topbar__brand > div{display:none}
       .topbar > .filters{flex-basis:300px!important}
       .topbar > .filters .fchip{padding:9px 8px!important;font-size:12.5px!important}
     }
     /* V5: tarjetas aún más pequeñas en tableta (caben más en pantalla) */
-    @media (min-width:600px) and (min-height:440px){
+    @media (min-width:600px) and (min-height:440px), (min-width:520px) and (min-height:700px){
       .container{padding-top:12px;padding-left:calc(12px + var(--safe-l));padding-right:calc(12px + var(--safe-r))}
       .grid{grid-template-columns:repeat(auto-fill,minmax(185px,1fr))!important;gap:10px;align-items:start}
       .card{border-radius:16px;border-top-width:4px!important;box-shadow:0 1px 3px rgba(27,19,48,.05),0 8px 20px -12px rgba(124,58,237,.3)}
@@ -973,7 +973,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <div class="app-ver" id="appVer">v3.9.3</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.3 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+  <div class="app-ver" id="appVer">v3.9.4</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.4 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 
   <!-- Popup rueda de colores -->
   <div class="cp-popup" id="cpPopup">
@@ -2657,7 +2657,7 @@ btnClose?.addEventListener("click", () => {
   const f=document.getElementById("filters"), bar=document.querySelector(".topbar"), grid=document.getElementById("grid");
   if(!f||!bar||!grid) return;
   const home=grid.parentNode;
-  const mq=window.matchMedia("(min-width:600px) and (min-height:440px)");
+  const mq=window.matchMedia("(min-width:600px) and (min-height:440px), (min-width:520px) and (min-height:700px)");
   function place(){
     if(mq.matches){ if(f.parentNode!==bar) bar.insertBefore(f, bar.children[1]||null); }
     else if(f.parentNode!==home){ home.insertBefore(f, grid); }

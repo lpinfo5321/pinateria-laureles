@@ -266,7 +266,7 @@
   <style>
     /* ═══════ SECCIÓN FACTURAS DEL TALLER · ADAPTACIÓN TABLETA (celulares casi sin cambios) ═══════ */
     .topbar__sec{display:none}
-    @media (min-width:600px) and (min-height:440px){
+    @media (min-width:600px) and (min-height:440px), (min-width:520px) and (min-height:700px){
       :root{ --grad:linear-gradient(135deg,#f43f8e 0%,#c026d3 55%,#7c3aed 100%); --bg:#f6f1fb; }
       html,body{ font-family:'Plus Jakarta Sans','Inter',sans-serif; }
       body{ background:radial-gradient(900px 500px at 0% -10%,rgba(244,63,142,.14),transparent 60%),radial-gradient(800px 500px at 100% 0%,rgba(124,58,237,.14),transparent 60%),var(--bg); background-attachment:fixed; }
@@ -325,7 +325,7 @@
       .topbar > .filter-bar .filter-btn{ padding:10px 8px; font-size:12.5px; }
       .topbar__sub{ display:none; }
     }
-    @media (min-width:600px) and (max-width:767px) and (min-height:440px){
+    @media (min-width:600px) and (max-width:767px) and (min-height:440px), (min-width:520px) and (max-width:599px) and (min-height:700px){
       .topbar{ gap:10px; padding:0 12px; }
       .topbar__brand > div{ display:none; }
       .topbar > .filter-bar{ flex-basis:300px; }
@@ -1539,7 +1539,7 @@ checkPin();
   const fb=document.querySelector("#mainApp .filter-bar"), bar=document.querySelector("#mainApp .topbar"), btnNew=document.getElementById("btnNew");
   if(!fb||!bar||!btnNew) return;
   const home=fb.parentNode, after=fb.nextElementSibling;
-  const mq=matchMedia("(min-width:600px) and (min-height:440px)");
+  const mq=matchMedia("(min-width:600px) and (min-height:440px), (min-width:520px) and (min-height:700px)");
   function place(){
     if(mq.matches){ if(fb.parentNode!==bar) bar.insertBefore(fb, btnNew); }
     else if(fb.parentNode!==home){ home.insertBefore(fb, after); }
