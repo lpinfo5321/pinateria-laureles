@@ -334,6 +334,60 @@
     }
     .app-ver{ position:fixed; right:8px; bottom:4px; font-size:10px; font-weight:700; color:rgba(17,24,39,.35); z-index:5; pointer-events:none; }
   </style>
+<style>
+    /* ═══ FACTURAS · tarjetas con la tienda destacada + ventanas más bonitas (todas las pantallas) ═══ */
+    .inv-card{ position:relative; overflow:hidden; padding:16px 16px 14px 20px !important; border-radius:20px !important; border:1px solid #ece7f4 !important;
+      background:#fff; box-shadow:0 1px 2px rgba(27,19,48,.04),0 12px 30px -18px rgba(124,58,237,.35) !important; }
+    .inv-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--st,#94a3b8); }
+    .inv-card__top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .inv-card__shop{ display:flex; align-items:center; gap:11px; min-width:0; }
+    .inv-card__shop-emo{ width:46px; height:46px; border-radius:15px; display:grid; place-items:center; font-size:24px; flex-shrink:0;
+      background:linear-gradient(135deg,#fdf2f8,#f3e8ff); border:1px solid #f0e3f7; }
+    .inv-card__for{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--soft); }
+    .inv-card__shop-name{ font-size:18px; font-weight:900; color:var(--text); line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+    .inv-card__mid{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px dashed #e7e1ef; }
+    .inv-card__num{ font-size:13px !important; font-weight:800; color:var(--pink); letter-spacing:.04em; }
+    .inv-card__date{ font-size:12px; color:var(--soft); margin-top:2px; }
+    .inv-card__total{ font-size:26px !important; font-weight:900; line-height:1; letter-spacing:-.02em; color:var(--text) !important; background:none !important; -webkit-text-fill-color:currentColor !important; }
+    .inv-card--pagado .inv-card__total{ color:#15803d !important; }
+    .inv-card--cancelado .inv-card__total{ color:#94a3b8 !important; text-decoration:line-through; }
+    .inv-card__items{ margin-top:10px !important; padding:9px 12px; background:#faf7fc; border-radius:12px; font-size:12.5px !important; }
+    .inv-card__actions{ margin-top:12px !important; }
+    .act-btn{ min-height:40px; padding:8px 14px !important; border-radius:12px !important; font-size:13px !important; }
+    .act-btn{ white-space:nowrap; }
+    .inv-card__actions .act-btn--pink{ flex:1 1 100%; order:-1; }
+    .act-btn--pink{ justify-content:center; background:linear-gradient(135deg,#ec4899,#a855f7) !important; color:#fff !important; border-color:transparent !important; box-shadow:0 8px 18px -8px rgba(192,38,211,.6); }
+
+    /* Ventana de la factura */
+    .overlay{ background:rgba(20,10,40,.6) !important; backdrop-filter:blur(8px) !important; -webkit-backdrop-filter:blur(8px) !important; }
+    .modal{ background:#f6f2fb !important; }
+    @media(min-width:700px){ .modal{ border-radius:28px !important; box-shadow:0 40px 100px -20px rgba(20,10,40,.6); } }
+    .modal-head{ background:rgba(246,242,251,.92) !important; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px 20px !important; }
+    .modal-head h2{ font-size:18px !important; font-weight:900 !important; display:flex; align-items:center; gap:10px; }
+    .modal-head h2::before{ content:"🧾"; font-size:20px; }
+    .btn-x{ width:38px !important; height:38px !important; border-radius:12px !important; background:#fff !important; box-shadow:0 2px 8px rgba(27,19,48,.08); }
+    .modal-body{ padding:6px 16px 16px !important; }
+    .pdf-wrap{ border:0 !important; border-radius:22px !important; box-shadow:0 18px 50px -22px rgba(27,19,48,.4) !important; background:#fff; }
+    .pdf-head{ padding:26px 24px !important; align-items:center !important; }
+    .pdf-head h2{ font-size:22px !important; letter-spacing:.03em; }
+    .pdf-head-right .fac{ font-size:12px !important; letter-spacing:.2em; opacity:.85; font-weight:800; }
+    .pdf-head-right .num{ font-size:24px !important; font-weight:900; opacity:1 !important; }
+    .pdf-body{ padding:20px 22px 22px !important; }
+    .pdf-client--shop{ display:flex; align-items:center; gap:14px; background:#faf7fc !important; border:1px solid #efe8f6; border-radius:18px !important; padding:14px 16px !important; }
+    .pdf-shop-emo{ width:52px; height:52px; border-radius:16px; display:grid; place-items:center; font-size:26px; flex-shrink:0; box-shadow:0 10px 20px -10px rgba(0,0,0,.4); }
+    .pdf-client-name{ font-size:19px !important; font-weight:900; letter-spacing:-.01em; }
+    .pdf-table{ border-collapse:separate !important; border-spacing:0; border-radius:14px; overflow:hidden; border:1px solid #efe8f6; }
+    .pdf-table tbody td{ padding:12px 10px !important; font-size:14px !important; }
+    .pdf-table th:nth-child(2),.pdf-table td:nth-child(2){ text-align:left !important; }
+    .prev-foot__row:last-child{ grid-template-columns:1fr !important; }
+    .pdf-totals-inner{ width:240px !important; }
+    .pdf-tot-row.grand{ font-size:22px !important; border-top:2px dashed #e7e1ef !important; padding-top:12px !important; }
+    .pdf-footer{ border-top:1px dashed #e7e1ef !important; }
+    .prev-foot{ background:rgba(246,242,251,.96) !important; border-top:1px solid #e9e2f2 !important; gap:10px !important; }
+    .btn-prev{ min-height:46px !important; border-radius:14px !important; background:#fff; }
+    .btn-prev--primary{ min-height:52px !important; background:linear-gradient(135deg,#ec4899,#a855f7) !important; box-shadow:0 12px 24px -10px rgba(192,38,211,.65) !important; }
+    .btn-prev--danger{ background:#fff !important; font-size:12.5px !important; }
+  </style>
 </head>
 <body>
 
@@ -496,7 +550,7 @@
   </div>
 </div>
 
-<div class="app-ver" id="appVer">v3.9.2</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.2 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+<div class="app-ver" id="appVer">v3.9.5</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.5 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -783,18 +837,27 @@ function renderList(){
   wrap.innerHTML=list.map(inv=>{
     const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
     const items=(inv.items||[]).map(it=>it.desc||it.descripcion).filter(Boolean).slice(0,3).join(" · ")||"Sin artículos";
-    const t = inv.tienda;
-    return `<div class="inv-card">
-      <div class="inv-card__row">
-        <div style="min-width:0;flex:1">
-          <div class="inv-card__num">${num}${t?` <span style="font-size:11px;font-weight:700;color:var(--soft);margin-left:4px">${t.emoji||"🏬"} ${esc(t.nombre)}</span>`:""}</div>
-          <div class="inv-card__client">${esc(inv.cliente?.nombre||"Sin cliente")}</div>
-          <div class="inv-card__date">${fmtDate(inv.creada)}${inv.cliente?.empresa?" · "+esc(inv.cliente.empresa):""}</div>
+    const t = inv.tienda || _tiendas.find(x=>x.id===getInvTiendaId(inv)) || null;
+    const tn = t?.nombre || _factura.cliente || "Sin tienda";
+    const colors = {pendiente:"#f59e0b",pagado:"#16a34a",cancelado:"#94a3b8"};
+    const nPin = (inv.items||[]).reduce((a,it)=>a+(Number(it.cantidad)||1),0);
+    return `<div class="inv-card inv-card--${inv.estado}" style="--st:${colors[inv.estado]||"#94a3b8"}">
+      <div class="inv-card__top">
+        <div class="inv-card__shop">
+          <div class="inv-card__shop-emo">${t?.emoji||"🏬"}</div>
+          <div style="min-width:0">
+            <div class="inv-card__for">Factura para</div>
+            <div class="inv-card__shop-name">${esc(tn)}</div>
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-          <div class="inv-card__total">${fmt(inv.total)}</div>
-          <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
+        <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
+      </div>
+      <div class="inv-card__mid">
+        <div>
+          <div class="inv-card__num">${num}</div>
+          <div class="inv-card__date">${fmtDate(inv.creada)} · ${nPin} piñata${nPin===1?"":"s"}</div>
         </div>
+        <div class="inv-card__total">${fmt(inv.total)}</div>
       </div>
       <div class="inv-card__items">${esc(items)}</div>
       <div class="inv-card__actions">
@@ -1285,6 +1348,7 @@ document.getElementById("btnDeletePrev").addEventListener("click",async()=>{
 });
 
 function renderPreview(inv){
+  if(!inv.tienda){ const tt=_tiendas.find(x=>x.id===getInvTiendaId(inv)); if(tt) inv={...inv,tienda:tt}; }
   const num=`FAC-${String(inv.numero).padStart(4,"0")}`;
   const items=inv.items||[];
   const c1 = _factura.color || "#ec4899";
@@ -1302,10 +1366,11 @@ function renderPreview(inv){
       <div class="pdf-head-right"><div class="fac">FACTURA</div><div class="num">${num}</div></div>
     </div>
     <div class="pdf-body">
-      <div class="pdf-client" style="display:flex;justify-content:space-between;align-items:center">
-        <div>
+      <div class="pdf-client pdf-client--shop">
+        <div class="pdf-shop-emo" style="background:linear-gradient(135deg,${c1},${c2})">${inv.tienda?.emoji||"🏬"}</div>
+        <div style="flex:1;min-width:0">
           <div class="pdf-client-lbl">Factura para</div>
-          <div class="pdf-client-name">${esc(tNombre)}</div>
+          <div class="pdf-client-name">${esc(inv.tienda?.nombre||_factura.cliente||"PINATAS")}</div>
           ${tInfo?`<div class="pdf-client-sub">${esc(tInfo)}</div>`:""}
         </div>
         <span class="badge badge--${inv.estado}">${LABELS[inv.estado]||inv.estado}</span>
