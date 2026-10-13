@@ -550,7 +550,7 @@
   </div>
 </div>
 
-<div class="app-ver" id="appVer">v3.9.5</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.5 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+<div class="app-ver" id="appVer">v3.9.6</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.6 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -1611,6 +1611,15 @@ checkPin();
   }
   place();
   (mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place));
+})();
+</script>
+<script>
+/* Si se llegó desde la app de órdenes, el botón de volver regresa allá */
+(function(){
+  if(new URLSearchParams(location.search).get("from")!=="ordenes") return;
+  var a=document.getElementById("btnBackHome"); if(a){ a.href="/"; a.title="Volver a órdenes"; }
+  var t=document.querySelector("#mainApp .topbar__title"); if(t) t.textContent="Facturas";
+  var s=document.querySelector("#mainApp .topbar__sub"); if(s) s.textContent="Imprimir y descargar PDF";
 })();
 </script>
 </body>
