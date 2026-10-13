@@ -335,6 +335,13 @@
     .app-ver{ position:fixed; right:8px; bottom:4px; font-size:10px; font-weight:700; color:rgba(17,24,39,.35); z-index:5; pointer-events:none; }
   </style>
 <style>
+    /* Modo tienda: solo lectura (ver, PDF, imprimir, compartir) */
+    .store-mode #btnNew,.store-mode [data-act="edit"],.store-mode [data-act="pagar"],.store-mode [data-act="del"],
+    .store-mode #btnEditPrev,.store-mode #btnTogglePago,.store-mode #btnDeletePrev{ display:none !important; }
+    .store-mode .prev-foot__row:not(.prev-foot__row--main){ grid-template-columns:1fr 1fr !important; }
+    .store-mode .prev-foot__row:last-child{ display:none !important; }
+    .store-mode .topbar{ justify-content:flex-start; }
+    .store-mode .topbar__brand{ flex:1; }
     /* ═══ FACTURAS · tarjetas con la tienda destacada + ventanas más bonitas (todas las pantallas) ═══ */
     .inv-card{ position:relative; overflow:hidden; padding:16px 16px 14px 20px !important; border-radius:20px !important; border:1px solid #ece7f4 !important;
       background:#fff; box-shadow:0 1px 2px rgba(27,19,48,.04),0 12px 30px -18px rgba(124,58,237,.35) !important; }
@@ -550,7 +557,7 @@
   </div>
 </div>
 
-<div class="app-ver" id="appVer">v3.9.6</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.6 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+<div class="app-ver" id="appVer">v3.9.7</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.7 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -563,6 +570,11 @@
    GLOBALS
 ══════════════════════════════════ */
 let _sb=null, _invoices=[], _orders=[], _filter="todas";
+/* Modo tienda: se entra desde la app de órdenes (?from=tienda). Solo ve SUS facturas, sin PIN extra, sin editar. */
+const _from=new URLSearchParams(location.search).get("from");
+let _storeMode=false,_storeId=null,_storeObj=null;
+if(_from==="tienda"){ try{ const d=JSON.parse(localStorage.getItem("viva_device_tienda")||"null"); if(d&&d.id){ _storeMode=true;_storeId=d.id;_storeObj=d; } }catch(_){} }
+if(_storeMode) document.documentElement.classList.add("store-mode");
 let _editing=null, _preview=null;
 let _selPicker="terminadas";   // tab activo del selector
 let _curStep=0;                 // 0=piñatas, 1=cliente
@@ -597,6 +609,12 @@ const PIN_KEY = _tallerMode ? "fac_ok_taller" : "fac_ok";
 const PIN_STORE = _tallerMode ? localStorage : sessionStorage;
 
 async function checkPin(){
+  if(_from==="tienda" && !_storeMode){
+    document.getElementById("pinGate").style.display="block";
+    document.querySelector("#pinGate .pin-wrap").innerHTML='<div style="font-size:40px;margin-bottom:10px">🏬</div><h1 style="font-size:20px;font-weight:900;margin-bottom:6px">Elige tu tienda primero</h1><p style="font-size:13px;color:var(--soft);margin-bottom:16px">Entra a tu tienda en la app de órdenes y luego abre Facturas.</p><a class="btn btn-pink" href="/" style="justify-content:center;text-decoration:none">Ir a la app de órdenes</a>';
+    return;
+  }
+  if(_storeMode){ showMain(); return; }
   // Si ya hay PIN guardado previamente, abrir directo sin esperar a Supabase.
   const cached = PIN_STORE.getItem(PIN_KEY);
   if(cached){
@@ -683,7 +701,8 @@ async function loadAll(){
     renderList();
     return;
   }
-  _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
+  $1
+  if(_storeMode) _invoices=_invoices.filter(i=>getInvTiendaId(i)===_storeId);
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   const pp=cfgRes.data?.colores?.precios;
   if(pp){
@@ -790,6 +809,7 @@ function getInvTiendaId(inv){
 
 function renderTiendaFilter(){
   const bar = document.getElementById("tiendaFilterBar");
+  if(_storeMode){ bar.style.display="none"; return; }
   if(!bar) return;
   const activas = _tiendas.filter(t=>t.activo!==false);
   if(activas.length <= 1){
@@ -948,6 +968,7 @@ function renderEdTiendas(){
 }
 
 function openEditor(inv){
+  if(_storeMode) return;
   _editing=inv||null;
   _selOrders=new Map();
   _manuals=[];
@@ -1616,10 +1637,15 @@ checkPin();
 <script>
 /* Si se llegó desde la app de órdenes, el botón de volver regresa allá */
 (function(){
-  if(new URLSearchParams(location.search).get("from")!=="ordenes") return;
+  var from=new URLSearchParams(location.search).get("from");
+  if(from!=="ordenes" && from!=="tienda") return;
   var a=document.getElementById("btnBackHome"); if(a){ a.href="/"; a.title="Volver a órdenes"; }
-  var t=document.querySelector("#mainApp .topbar__title"); if(t) t.textContent="Facturas";
-  var s=document.querySelector("#mainApp .topbar__sub"); if(s) s.textContent="Imprimir y descargar PDF";
+  var t=document.querySelector("#mainApp .topbar__title"); if(t) t.textContent=(from==="tienda"?"Mis facturas":"Facturas");
+  var s=document.querySelector("#mainApp .topbar__sub");
+  if(s){
+    if(from==="tienda" && typeof _storeObj!=="undefined" && _storeObj) s.textContent=(_storeObj.emoji||"🏬")+" "+(_storeObj.nombre||"Mi tienda");
+    else s.textContent="Imprimir y descargar PDF";
+  }
 })();
 </script>
 </body>
