@@ -557,7 +557,7 @@
   </div>
 </div>
 
-<div class="app-ver" id="appVer">v3.9.7</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.7 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+<div class="app-ver" id="appVer">v3.9.8</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.8 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -701,8 +701,7 @@ async function loadAll(){
     renderList();
     return;
   }
-  $1
-  if(_storeMode) _invoices=_invoices.filter(i=>getInvTiendaId(i)===_storeId);
+  _invoices=(invRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,creada:r.created_at,...(r.data||{})}));
   _orders=(ordRes.data||[]).map(r=>({id:r.id,numero:r.numero,estado:r.estado,...(r.data||{})}));
   const pp=cfgRes.data?.colores?.precios;
   if(pp){
@@ -842,7 +841,9 @@ function renderTiendaFilter(){
   });
 }
 
+function _belongsStore(i){ var id=getInvTiendaId(i); if(id) return id===_storeId; var d=(_tiendas.find(function(t){return t.esDefault})||_tiendas[0]||{}).id; return d===_storeId; }
 function renderList(){
+  if(_storeMode) _invoices=_invoices.filter(_belongsStore);
   updateCounts();
   renderTiendaFilter();
   const wrap=document.getElementById("listWrap");
