@@ -336,8 +336,8 @@
   </style>
 <style>
     /* Modo tienda: solo lectura (ver, PDF, imprimir, compartir) */
-    .store-mode #btnNew,.store-mode [data-act="edit"],.store-mode [data-act="pagar"],.store-mode [data-act="del"],
-    .store-mode #btnEditPrev,.store-mode #btnTogglePago,.store-mode #btnDeletePrev{ display:none !important; }
+    .store-mode #btnNew,.store-mode [data-act="edit"],.store-mode [data-act="del"],
+    .store-mode #btnEditPrev,.store-mode #btnDeletePrev{ display:none !important; }
     .store-mode .prev-foot__row:not(.prev-foot__row--main){ grid-template-columns:1fr 1fr !important; }
     .store-mode .prev-foot__row:last-child{ display:none !important; }
     .store-mode .topbar{ justify-content:flex-start; }
@@ -557,7 +557,7 @@
   </div>
 </div>
 
-<div class="app-ver" id="appVer">v3.9.8</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.8 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
+<div class="app-ver" id="appVer">v3.9.9</div><script>(function(){var e=document.getElementById("appVer");function u(){e.textContent="v3.9.9 \u00b7 "+innerWidth+"\u00d7"+innerHeight}u();addEventListener("resize",u)})()</script>
 <!-- Toast -->
 <div id="toast" style="position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;transition:bottom .3s;z-index:999;pointer-events:none;white-space:nowrap;max-width:90vw;opacity:0"></div>
 
@@ -753,8 +753,8 @@ async function saveInvoice(inv){
   if(!_sb){toast("Sin conexión");return false;}
   const ordenIds = invoiceOrderIds(inv);
   inv.ordenIds = ordenIds;
-  const{cliente,items,subtotal,impuesto,total,notas,estado,iva}=inv;
-  const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds}});
+  const{cliente,items,subtotal,impuesto,total,notas,estado,iva,tienda}=inv;
+  const{error}=await _sb.from("invoices").upsert({id:inv.id,estado,data:{cliente,items,subtotal,impuesto,total,notas,iva,ordenIds,...(tienda?{tienda}:{})}});
   if(error){toast("Error: "+error.message);return false;}
   await syncInvoiceOrderStates(inv);
   await loadAll();return true;
@@ -884,7 +884,7 @@ function renderList(){
       <div class="inv-card__actions">
         <button class="act-btn act-btn--pink" data-act="view" data-id="${inv.id}">👁 Ver</button>
         <button class="act-btn" data-act="edit" data-id="${inv.id}">✏️ Editar</button>
-        ${inv.estado!=="pagado"?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagar</button>`:""}
+        ${(_storeMode?inv.estado==="pendiente":inv.estado!=="pagado")?`<button class="act-btn act-btn--green" data-act="pagar" data-id="${inv.id}">✅ Pagar</button>`:""}
         <button class="act-btn act-btn--danger" data-act="del" data-id="${inv.id}">🗑</button>
       </div>
     </div>`;
@@ -907,7 +907,7 @@ document.getElementById("listWrap").addEventListener("click",async e=>{
     toast(tienOrdenes ? "🗑 Eliminada · piñatas regresadas" : "🗑 Factura eliminada");
     return;
   }
-  if(act==="pagar"){await saveInvoice({...inv,estado:"pagado"});toast("✅ Marcada como pagada");}
+  if(act==="pagar"){ if(_storeMode && !confirm("¿Marcar la factura FAC-"+String(inv.numero).padStart(4,"0")+" como PAGADA?")) return; await saveInvoice({...inv,estado:"pagado"});toast("✅ Marcada como pagada");}
 });
 document.querySelector(".filter-bar").addEventListener("click",e=>{
   const btn=e.target.closest("[data-f]");if(!btn)return;
@@ -1339,6 +1339,7 @@ function openPreview(inv){
   _preview=inv;
   document.getElementById("prevTitle").textContent=`FAC-${String(inv.numero).padStart(4,"0")}`;
   document.getElementById("btnTogglePago").textContent=inv.estado==="pagado"?"↩ Pendiente":"✅ Pagar";
+  document.getElementById("btnTogglePago").style.display=(_storeMode && inv.estado!=="pendiente")?"none":"";
   renderPreview(inv);
   document.getElementById("prevOverlay").classList.add("open");
   document.body.style.overflow="hidden";
@@ -1350,6 +1351,8 @@ function closePreview(){
 document.getElementById("prevClose").addEventListener("click",closePreview);
 document.getElementById("btnEditPrev").addEventListener("click",()=>{closePreview();openEditor(_preview);});
 document.getElementById("btnTogglePago").addEventListener("click",async()=>{
+  if(_storeMode && _preview.estado!=="pendiente") return;
+  if(_storeMode && !confirm("¿Marcar la factura como PAGADA?")) return;
   const nuevo=_preview.estado==="pagado"?"pendiente":"pagado";
   await saveInvoice({..._preview,estado:nuevo});
   _preview=_invoices.find(i=>i.id===_preview.id)||_preview;
